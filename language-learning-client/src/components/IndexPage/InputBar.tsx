@@ -48,39 +48,60 @@ export const InputBar: React.FC<InputBarProps> = ({ inputText, setInputText, han
     }, [audioUrl])
 
     return (
-        <div className="mt-5 w-full max-w-3xl px-4">
-            <div className="w-full">
-                <textarea   rows={6}
-                            className="placeholder:italic appearance-none block w-full text-base sm:text-lg text-gray-700 border border-gray-200 rounded py-4 px-4 mb-3 leading-relaxed focus:outline-none focus:bg-white focus:border-gray-500"
+        <div className="w-full">
+            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-600 mb-3">Enter your text</label>
+                        <textarea   
+                            rows={6}
+                            className="placeholder:italic appearance-none block w-full text-base sm:text-lg text-slate-700 border border-slate-300 rounded-lg py-4 px-4 leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                             value={inputText}
                             onChange={handleInputChange}
-                            placeholder={ready ? "Type in your sentence here. Note: A sentence is better for us to handle." :  "Approximately wait time is 60 seconds. Please be patient. It's gonna worth the wait. So basically the words will appear below, when the 'Loading' button is not 'Loading' anymore. Pss: I'm making this long so that you have something to do while waiting. Enjoyyyy"}
+                            placeholder={ready ? "Type in your sentence here. Complete sentences work better for context-aware translations!" :  "Please wait while we prepare the translation service..."}
                             disabled={!ready}
                             data-testid="input-bar"
-                />
-            </div>
-            <div className="flex flex-col sm:flex-row justify-between w-full items-center">
-                {ready ? (
-                    <>
-                        <button onClick={handleTranslation} className="w-full sm:w-auto shadow bg-indigo-600 hover:bg-indigo-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-6 rounded mt-2 sm:mt-0" type="submit">
-                            Translate
-                        </button>      
-                        <button onClick={handleSpeak} className="w-full sm:w-auto shadow bg-indigo-600 hover:bg-indigo-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-6 rounded mt-2 sm:mt-0" type="button" disabled={loadingTTS}>
-                            {loadingTTS ? "Speaking..." : "Speak"}
-                        </button>              
-                    </>
-
-                ) : (
-                    <div className="flex flex-col sm:flex-row justify-between w-full items-center mt-2 sm:mt-0">
-                        <span className="mb-2 sm:mb-0 sm:mr-4 text-center sm:text-left">
-                            It will take approximately {countdown} seconds for us to translate.
-                        </span> 
-                        <button type="button" className="w-full sm:w-auto inline-flex items-center shadow bg-indigo-600 hover:bg-indigo-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-6 rounded disabled:opacity-50 disabled:pointer-events-none" disabled>
-                            <span className="mr-2 animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-white rounded-full" role="status" aria-label="loading"></span>
-                            Loading
-                        </button>                    
+                        />
                     </div>
-                )}
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                        {ready ? (
+                            <>
+                                <button 
+                                    onClick={handleTranslation} 
+                                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                                    type="submit"
+                                >
+                                    🔤 Translate
+                                </button>      
+                                <button 
+                                    onClick={handleSpeak} 
+                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    type="button" 
+                                    disabled={loadingTTS}
+                                >
+                                    {loadingTTS ? "🎙️ Speaking..." : "🔊 Speak"}
+                                </button>              
+                            </>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row justify-between w-full items-center gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-slate-600 font-medium">
+                                        Preparing translation service... ({countdown}s)
+                                    </span>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    className="w-full sm:w-auto bg-slate-400 text-white font-semibold py-3 px-8 rounded-lg cursor-not-allowed opacity-50"
+                                    disabled
+                                >
+                                    Loading...
+                                </button>                    
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

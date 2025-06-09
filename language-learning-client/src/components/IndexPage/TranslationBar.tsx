@@ -10,38 +10,49 @@ export const TranslationBar: React.FC<{
         setFromLanguage(language);
     }
     return (
-        <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 lg:gap-8 w-full md:w-auto mt-4 p-2 rounded-lg">
-            <div className="relative inline-flex w-full md:w-auto">
-                <div className="w-full md:w-64 lg:w-80">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button className="w-full py-2 px-3 lg:py-3 lg:px-4 border border-gray-300 rounded-lg bg-white text-gray-800 font-medium shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <div className="text-lg lg:text-xl">{fromLanguage}</div>
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-full md:w-64 lg:w-80">
-                            <DropdownMenuRadioGroup>
-                                {languages.map(language => (
-                                    language !== fromLanguage && (
-                                        <DropdownMenuRadioItem onClick={() => handleLanguageChange(language)} key={language} value={language}>
-                                            <div className="text-base lg:text-lg">{language}</div>
-                                        </DropdownMenuRadioItem>
-                                    )
-                                ))}
-                            </DropdownMenuRadioGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+        <div className="w-full">
+            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+                    {/* Source Language */}
+                    <div className="flex-1 max-w-xs">
+                        <label className="block text-sm font-medium text-slate-600 mb-2">From</label>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="w-full py-3 px-4 border border-slate-300 rounded-lg bg-white text-slate-800 font-medium shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                    <div className="text-lg font-semibold">{fromLanguage}</div>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-full max-w-xs">
+                                <DropdownMenuRadioGroup>
+                                    {languages.map(language => (
+                                        language !== fromLanguage && (
+                                            <DropdownMenuRadioItem onClick={() => handleLanguageChange(language)} key={language} value={language}>
+                                                <div className="text-base font-medium">{language}</div>
+                                            </DropdownMenuRadioItem>
+                                        )
+                                    ))}
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    
+                    {/* Arrow */}
+                    <div className="flex items-center justify-center py-2">
+                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5 text-white">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    {/* Target Language */}
+                    <div className="flex-1 max-w-xs">
+                        <label className="block text-sm font-medium text-slate-600 mb-2">To</label>
+                        <button type="button" className="w-full py-3 px-4 inline-flex items-center justify-center text-lg font-semibold rounded-lg border border-slate-300 bg-slate-50 text-slate-700 cursor-default">
+                            English
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div className="flex justify-center md:justify-start w-full md:w-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 lg:w-8 lg:h-8 text-indigo-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-            </div>
-            <div className="relative inline-flex w-full md:w-auto">
-                <button type="button" className="w-full md:w-64 lg:w-80 py-2 px-3 lg:py-3 lg:px-4 inline-flex items-center justify-center gap-x-2 text-base lg:text-lg font-medium rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <div className="text-lg lg:text-xl">English</div>
-                </button>
             </div>
         </div>
     );

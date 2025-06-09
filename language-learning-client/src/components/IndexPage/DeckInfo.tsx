@@ -19,53 +19,93 @@ export const DeckInfo = () => {
         return null;
     }
     return (
-        <div className="w-full max-w-md mx-auto px-4">
-            <div className="flex flex-col items-center my-4">
-                <SortableSelect sortBy={sortBy} setSortBy={setSortBy} allLanguages={allLanguages} />
+        <div className="w-full space-y-6">
+            {/* Header with Sort */}
+            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-slate-800">Your Decks</h2>
+                    <div className="min-w-0">
+                        <SortableSelect sortBy={sortBy} setSortBy={setSortBy} allLanguages={allLanguages} />
+                    </div>
+                </div>
             </div>
+
+            {/* Deck Cards */}
             <div className="space-y-4">
                 {displayedDecks.map((deck: Deck) => (
-                    <div key={deck._id} className="bg-white border border-t-4 border-t-blue-600 shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
-                        <div className="p-4">
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                    <div key={deck._id} className="bg-white rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-all duration-200 overflow-hidden">
+                        {/* Header with deck name and language indicator */}
+                        <div className="bg-blue-600 p-4">
+                            <h3 className="text-lg font-bold text-white truncate">
                                 {deck.deckName}
-                            </h2>
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Language</h3>
-                                    <span className="text-sm text-gray-800 dark:text-white">{deck.deckTags[0].charAt(0).toUpperCase() + deck.deckTags[0].slice(1)}</span>
+                            </h3>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="p-4 space-y-3">
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600 font-medium">Language</span>
+                                        <span className="text-slate-800 font-semibold">
+                                            {deck.deckTags[0].charAt(0).toUpperCase() + deck.deckTags[0].slice(1)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600 font-medium">Set</span>
+                                        <span className="text-slate-800 font-semibold">{deck.cards.length} cards</span>    
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Set</h3>
-                                    <span className="text-sm text-gray-800 dark:text-white">{deck.cards.length} flashcards</span>    
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Progress</h3>
-                                    <span className="text-sm text-gray-800 dark:text-white">
-                                        {calculateCompletePercentage(deck.cards)}%
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Created</h3>
-                                    <span className="text-sm text-gray-800 dark:text-white">
-                                        {formatDistance(getTimeStamp(deck._id), new Date(), { addSuffix: true })}
-                                    </span>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600 font-medium">Progress</span>
+                                        <span className="text-slate-800 font-semibold">
+                                            {calculateCompletePercentage(deck.cards)}%
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600 font-medium">Created</span>
+                                        <span className="text-slate-800 font-semibold text-xs">
+                                            {formatDistance(getTimeStamp(deck._id), new Date(), { addSuffix: true })}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="mt-4 flex justify-center">
-                                <Button>
-                                    <Link to={`/view-decks/${deck._id}`} data-testid={`view-details-link-${deck._id}`}>
-                                        View Details
-                                    </Link>
-                                </Button>
+                            
+                            {/* Progress Bar */}
+                            <div className="space-y-1">
+                                <div className="w-full bg-slate-200 rounded-full h-2">
+                                    <div 
+                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${calculateCompletePercentage(deck.cards)}%` }}
+                                    ></div>
+                                </div>
                             </div>
-                        </div>  
+
+                            {/* Action Button */}
+                            <div className="pt-2">
+                                <Link 
+                                    to={`/view-decks/${deck._id}`} 
+                                    data-testid={`view-details-link-${deck._id}`}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center"
+                                >
+                                    View Details
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
-            <div className="mt-6 flex justify-center">
-                <Button><Link to={'/view-all-decks'}>View All Your Decks</Link></Button>
-            </div>    
+            
+            {/* View All Button */}
+            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4">
+                <Link 
+                    to={'/view-all-decks'}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center"
+                >
+                    📚 View All Your Decks
+                </Link>
+            </div>
         </div>
     );
 };
