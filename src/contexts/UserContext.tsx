@@ -21,6 +21,7 @@ export interface User {
     username: string;
     name: string;
     avatarUrl?: string;
+    authProvider?: 'local' | 'google' | 'both';
     level?: number;
     xp?: number;
     currentStreak?: number;

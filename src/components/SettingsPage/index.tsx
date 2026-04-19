@@ -85,6 +85,7 @@ export const SettingsPage = () => {
           editMode={profileEditProps.editMode}
           showPassword={profileEditProps.showPassword}
           isEditing={profileEditProps.isEditing}
+          isGoogleUser={user?.authProvider === 'google'}
           onInputChange={profileEditProps.handleInputChange}
           onToggleEdit={profileEditProps.toggleEdit}
           onTogglePasswordVisibility={() => profileEditProps.setShowPassword(!profileEditProps.showPassword)}
