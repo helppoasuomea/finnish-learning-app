@@ -4,7 +4,8 @@ import { useProfileEdit } from "@/state/hooks/useProfileEdit"
 import { useSettingsData } from "@/state/hooks/useSettingsData"
 import { useTour } from "@/state/hooks/useTour"
 import { getXpProgress } from "@/utils/xpCalculations"
-import { useContext } from "react"
+import { useContext, useEffect } from "react"
+import { useSearchParams } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import ProfilePicture from "./ProfilePicture"
 import { StatsCard } from "./StatsCard"
@@ -13,6 +14,8 @@ import { AchievementsCard } from "./AchivementsCard"
 import { PersonalInfoCard } from "./PersonalInfoCard"
 import { TourOverlay } from "@/composables/TourOverlay"
 import { LearningPreferences } from "./LearningPreferences"
+import { GoogleConsentCard } from "./GoogleConsentCard"
+import { useToast } from "../ui/use-toast"
 
 export const SettingsPage = () => {
   const { user } = useContext(UserContext)
@@ -20,6 +23,22 @@ export const SettingsPage = () => {
   const tourProps = useTour(TOUR_CONFIGS.settings)
   const profileEditProps = useProfileEdit()
   const xpProgress = getXpProgress(user)
+  const { toast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { refreshUserStats } = useContext(UserContext)
+
+  useEffect(() => {
+    const calendar = searchParams.get('calendar')
+    if (!calendar) return
+    if (calendar === 'success') {
+      refreshUserStats()
+      toast({ title: '📅 Google Calendar connected', description: 'The app can now create study reminders in your calendar.' })
+    } else {
+      const reason = searchParams.get('reason') || 'unknown'
+      toast({ title: 'Calendar connection failed', description: `Could not connect Google Calendar (${reason}).`, variant: 'destructive' })
+    }
+    setSearchParams({}, { replace: true })
+  }, [])
 
   // CONVERTS INTO DATES
   const loginDays: Date[] = loginHistory?.loginDatesArray
@@ -91,6 +110,7 @@ export const SettingsPage = () => {
           onTogglePasswordVisibility={() => profileEditProps.setShowPassword(!profileEditProps.showPassword)}
           onSaveChanges={profileEditProps.saveChanges}
         />
+        {user?.authProvider === 'google' && <GoogleConsentCard />}
         <LearningPreferences
           flashcardWordForm={user?.flashcardWordForm || 'original'} 
           handleFlashcardFormChange={profileEditProps.handleFlashcardFormChange}

@@ -32,7 +32,11 @@ export interface User {
     xpMultiplierExpiration?: Date | null;
     achievements?: Achievement[];
     badges?: Badge[];
-    flashcardWordForm: 'original'
+    flashcardWordForm: 'original';
+    googleConsents?: {
+        calendar: boolean
+    }
+    hasCalendarToken?: boolean
 }
 
 interface UserContextType {

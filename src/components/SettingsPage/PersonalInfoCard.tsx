@@ -57,21 +57,23 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="username">Username</Label>
-          <div className="flex gap-2">
-            <Input 
-              id="username"
-              value={formData.username}
-              onChange={(e) => onInputChange('username', e.target.value)}
-              readOnly={!editMode.username}
-              className={!editMode.username ? 'bg-slate-50' : ''}
-            />
-            <Button variant="outline" size="sm" onClick={() => onToggleEdit('username')}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
+        {!isGoogleUser && (
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <div className="flex gap-2">
+              <Input 
+                id="username"
+                value={formData.username}
+                onChange={(e) => onInputChange('username', e.target.value)}
+                readOnly={!editMode.username}
+                className={!editMode.username ? 'bg-slate-50' : ''}
+              />
+              <Button variant="outline" size="sm" onClick={() => onToggleEdit('username')}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {isGoogleUser ? (
           <div className="space-y-2">
