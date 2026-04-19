@@ -1,17 +1,21 @@
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { useFetchHistory, useFetchNextQuizDate } from "@/state/hooks/useLearningHistoryHooks";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { CalendarCheck2, CalendarX2, ChevronDown, ChevronUp } from "lucide-react";
+import { UserContext } from "@/contexts/UserContext";
 
 
 export const LearningHistory = ({ deckId }: { deckId: any }) => {
     const userId = localStorage.getItem('userId')
+    const { user } = useContext(UserContext)
     const { history, fetchHistory } = useFetchHistory(userId, deckId)
     const { nextQuizDate, fetchNextQuizDate } = useFetchNextQuizDate(userId, deckId)
     const today = new Date()
+    const hasGoogleAccount = user?.authProvider === 'google' || user?.authProvider === 'both'
+    const isGoogleCalendarSynced = hasGoogleAccount && !!user?.googleConsents?.calendar
     useEffect(() => {
         if (userId && deckId) {
             fetchHistory()
@@ -126,6 +130,23 @@ export const LearningHistory = ({ deckId }: { deckId: any }) => {
                     <CardTitle>Next Quiz</CardTitle>
                 </CardHeader>
                 <CardContent>
+                    {isGoogleCalendarSynced ? (
+                        <div className="mb-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 flex items-start gap-2">
+                            <CalendarCheck2 className="h-4 w-4 mt-0.5" />
+                            <span>This schedule is synced to your Google Calendar automatically.</span>
+                        </div>
+                    ) : hasGoogleAccount ? (
+                        <div className="mb-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+                            <span>Connect Google Calendar in </span>
+                            <Link to="/settings" className="underline font-medium">Settings</Link>
+                            <span> to sync this schedule automatically.</span>
+                        </div>
+                    ) : (
+                        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 flex items-start gap-2">
+                            <CalendarX2 className="h-4 w-4 mt-0.5" />
+                            <span>Local schedule only — this quiz date is not synced to Google Calendar.</span>
+                        </div>
+                    )}
                     {nextQuizDate && nextQuizDate > today ? (
                         <>
                             <Calendar mode="single" selected={nextQuizDate} className="rounded-md border" />
