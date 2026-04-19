@@ -106,9 +106,9 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
             </div>
 
             {/* User Profile Section */}
-            <div className={`border-b border-blue-100 transition-all duration-300 ${isCollapsed ? 'p-2' : 'p-6'}`}>
+            <div className={`border-b border-blue-100 transition-all duration-300 ${isCollapsed ? 'p-2' : 'p-8 pb-6'}`}>
                 {user ? (
-                    <div className={`flex flex-col items-center gap-3 ${isCollapsed ? 'gap-2' : ''}`}>
+                    <div className={`flex flex-col items-center gap-4 ${isCollapsed ? 'gap-2' : ''}`}>
                         <Avatar className={`border-2 border-blue-200 ${isCollapsed ? 'w-12 h-12' : 'w-16 h-16'}`}>
                             <AvatarImage 
                                 src={user.avatarUrl || "https://github.com/shadcn.png"} 
@@ -116,14 +116,17 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
                             />
                         </Avatar>
                         {!isCollapsed && (
-                            <div className="text-center">
+                            <div className="text-center w-full">
                                 <p className="font-semibold text-gray-800">{user.name || user.username}</p>
-                                <p className="text-sm text-gray-600">{user.username || 'user'}</p>
+                                <p className="text-sm text-gray-600">@{user.username || 'user'}</p>
+                                {user.isPremium && (
+                                    <p className="text-xs font-semibold text-blue-600 mt-2 uppercase tracking-wider">Premium Member</p>
+                                )}
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div className={`flex flex-col items-center gap-3 ${isCollapsed ? 'gap-2' : ''}`}>
+                    <div className={`flex flex-col items-center gap-4 ${isCollapsed ? 'gap-2' : ''}`}>
                         <Avatar className={`border-2 border-blue-200 ${isCollapsed ? 'w-12 h-12' : 'w-16 h-16'}`}>
                             <AvatarImage src="https://github.com/shadcn.png" alt="Guest" />
                         </Avatar>
@@ -138,7 +141,7 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
             </div>
 
             {/* Main Navigation */}
-            <nav className={`flex-1 py-6 space-y-2 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+            <nav className={`flex-1 py-6 space-y-3 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
                 <TooltipProvider>
                     {navItems.map((item) => {
                         const Icon = item.icon;
@@ -181,17 +184,17 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
 
                 {/* My Decks Section */}
                 {user && recentDecks.length > 0 && !isCollapsed && (
-                    <div className="mt-8">
-                        <div className="flex items-center justify-between px-4 mb-3">
-                            <h3 className="text-sm font-semibold text-gray-700">My Decks</h3>
+                    <div className="mt-10 pt-6 border-t border-blue-100">
+                        <div className="flex items-center justify-between px-4 mb-4">
+                            <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider">My Decks</h3>
                             <Link 
                                 to="/view-all-decks" 
-                                className="text-xs text-blue-600 hover:text-blue-700"
+                                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                             >
                                 See all
                             </Link>
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                             {recentDecks.map((deck) => (
                                 <Link
                                     key={deck._id}
@@ -215,7 +218,7 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
             </nav>
 
             {/* Bottom Navigation */}
-            <div className={`border-t border-blue-100 space-y-1 transition-all duration-300 ${isCollapsed ? 'p-2' : 'p-4'}`}>
+            <div className={`border-t border-blue-100 space-y-2 transition-all duration-300 ${isCollapsed ? 'p-2' : 'p-4 pt-6'}`}>
                 <TooltipProvider>
                     {isCollapsed ? (
                         <Tooltip>
