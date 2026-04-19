@@ -5,6 +5,7 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Edit2, EyeOff, Eye, Save } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 
 interface PersonalInfoCardProps {
   highlightedElement: string | null;
@@ -12,6 +13,7 @@ interface PersonalInfoCardProps {
   editMode: any;
   showPassword: boolean;
   isEditing: boolean;
+  isGoogleUser?: boolean;
   onInputChange: (field: 'name' | 'username' | 'password', value: string) => void;
   onToggleEdit: (field: 'name' | 'username' | 'password') => void;
   onTogglePasswordVisibility: () => void;
@@ -24,6 +26,7 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
   editMode,
   showPassword,
   isEditing,
+  isGoogleUser = false,
   onInputChange,
   onToggleEdit,
   onTogglePasswordVisibility,
@@ -54,51 +57,63 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="username">Username</Label>
-          <div className="flex gap-2">
-            <Input 
-              id="username"
-              value={formData.username}
-              onChange={(e) => onInputChange('username', e.target.value)}
-              readOnly={!editMode.username}
-              className={!editMode.username ? 'bg-slate-50' : ''}
-            />
-            <Button variant="outline" size="sm" onClick={() => onToggleEdit('username')}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={editMode.password ? formData.password : '••••••••'}
-                onChange={(e) => onInputChange('password', e.target.value)}
-                readOnly={!editMode.password}
-                className={!editMode.password ? 'bg-slate-50' : ''}
+        {!isGoogleUser && (
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <div className="flex gap-2">
+              <Input 
+                id="username"
+                value={formData.username}
+                onChange={(e) => onInputChange('username', e.target.value)}
+                readOnly={!editMode.username}
+                className={!editMode.username ? 'bg-slate-50' : ''}
               />
-              {editMode.password && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={onTogglePasswordVisibility}
-                  type="button"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              )}
+              <Button variant="outline" size="sm" onClick={() => onToggleEdit('username')}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={() => onToggleEdit('password')}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
           </div>
-        </div>
+        )}
+
+        {isGoogleUser ? (
+          <div className="space-y-2">
+            <Label>Password</Label>
+            <div className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-2 text-sm text-slate-500">
+              <FcGoogle className="h-4 w-4 shrink-0" />
+              Managed by Google — no password needed
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={editMode.password ? formData.password : '••••••••'}
+                  onChange={(e) => onInputChange('password', e.target.value)}
+                  readOnly={!editMode.password}
+                  className={!editMode.password ? 'bg-slate-50' : ''}
+                />
+                {editMode.password && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                    onClick={onTogglePasswordVisibility}
+                    type="button"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                )}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => onToggleEdit('password')}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {isEditing && (
           <Button onClick={onSaveChanges} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">

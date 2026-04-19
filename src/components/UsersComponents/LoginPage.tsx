@@ -1,7 +1,7 @@
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
@@ -10,9 +10,89 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { FaExclamationTriangle } from "react-icons/fa";
 
 export function LoginPage() {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     const [formData, setFormData] = useState({ username: '', pin: '' });
     const [errorMessage, setErrorMessage] = useState('');
     const [errors, setErrors] = useState({ username: '', pin: '' });
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const googleButtonRef = useRef<HTMLDivElement | null>(null);
+
+    const handleGoogleCredential = useCallback(async (credential: string) => {
+        setIsGoogleLoading(true);
+        setErrorMessage('');
+        try {
+            await axios.post('/auth/google/token', { idToken: credential });
+            window.location.reload();
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError<{ error?: string } | string>;
+                const responseData = axiosError.response?.data;
+                if (typeof responseData === 'string') {
+                    setErrorMessage(responseData);
+                } else {
+                    setErrorMessage(responseData?.error || 'Google login failed. Please try again.');
+                }
+            } else {
+                setErrorMessage('Google login failed. Please try again.');
+            }
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!googleClientId || !googleButtonRef.current) {
+            return;
+        }
+
+        const initializeGoogleButton = () => {
+            if (!window.google?.accounts?.id || !googleButtonRef.current) {
+                return;
+            }
+
+            window.google.accounts.id.initialize({
+                client_id: googleClientId,
+                callback: (response) => {
+                    if (response?.credential) {
+                        handleGoogleCredential(response.credential);
+                    } else {
+                        setErrorMessage('Google login failed. No credential was returned.');
+                    }
+                }
+            });
+
+            googleButtonRef.current.innerHTML = '';
+            window.google.accounts.id.renderButton(googleButtonRef.current, {
+                theme: 'outline',
+                size: 'large',
+                text: 'signin_with',
+                shape: 'rectangular',
+                width: 240
+            });
+        };
+
+        if (window.google?.accounts?.id) {
+            initializeGoogleButton();
+            return;
+        }
+
+        const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement | null;
+        if (existingScript) {
+            existingScript.addEventListener('load', initializeGoogleButton, { once: true });
+            return () => existingScript.removeEventListener('load', initializeGoogleButton);
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeGoogleButton;
+        document.head.appendChild(script);
+
+        return () => {
+            script.onload = null;
+        };
+    }, [googleClientId, handleGoogleCredential]);
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
@@ -96,6 +176,15 @@ export function LoginPage() {
             <div className="flex justify-end mt-2">
                 <Button type="submit" onClick={handleLogin}>Login</Button>
             </div>
+            {googleClientId && (
+                <div className="mt-4 flex flex-col items-center gap-2">
+                    <div className="text-sm text-muted-foreground">or continue with</div>
+                    <div ref={googleButtonRef} />
+                    {isGoogleLoading && (
+                        <div className="text-xs text-muted-foreground">Signing in with Google...</div>
+                    )}
+                </div>
+            )}
             <div className="mt-2 flex justify-center italic gap-1">
                 <div className="mt-[3px]">Don't have an account yet? </div>
                 <Dialog>

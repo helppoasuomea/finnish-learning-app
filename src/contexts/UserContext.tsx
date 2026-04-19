@@ -21,6 +21,7 @@ export interface User {
     username: string;
     name: string;
     avatarUrl?: string;
+    authProvider?: 'local' | 'google' | 'both';
     level?: number;
     xp?: number;
     currentStreak?: number;
@@ -31,7 +32,11 @@ export interface User {
     xpMultiplierExpiration?: Date | null;
     achievements?: Achievement[];
     badges?: Badge[];
-    flashcardWordForm: 'original'
+    flashcardWordForm: 'original';
+    googleConsents?: {
+        calendar: boolean
+    }
+    hasCalendarToken?: boolean
 }
 
 interface UserContextType {
