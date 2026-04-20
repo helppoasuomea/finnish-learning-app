@@ -1,133 +1,205 @@
-import { TOUR_CONFIGS } from "@/config/tourConfigs"
 import { UserContext } from "@/contexts/UserContext"
+import { DeckContext } from "@/contexts/DeckContext"
 import { useProfileEdit } from "@/state/hooks/useProfileEdit"
 import { useSettingsData } from "@/state/hooks/useSettingsData"
-import { useTour } from "@/state/hooks/useTour"
-import { getXpProgress } from "@/utils/xpCalculations"
-import { useContext, useEffect } from "react"
+import { getTimeStamp } from "@/utils/getTimestamp"
+import { useContext, useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import ProfilePicture from "./ProfilePicture"
-import { StatsCard } from "./StatsCard"
-import { StreakCard } from "./StreakCard"
-import { AchievementsCard } from "./AchivementsCard"
 import { PersonalInfoCard } from "./PersonalInfoCard"
-import { TourOverlay } from "@/composables/TourOverlay"
-import { LearningPreferences } from "./LearningPreferences"
 import { GoogleConsentCard } from "./GoogleConsentCard"
+import { Switch } from "../ui/switch"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
+import ProfilePicture from "./ProfilePicture"
 import { useToast } from "../ui/use-toast"
+import axios from "axios"
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+
+function joinedLabel(id: string) {
+    const d = getTimeStamp(id)
+    return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`
+}
+
+const DEFAULT_AVATAR = "https://github.com/shadcn.png"
+
+interface PrefRowProps {
+    label: string
+    desc: string
+    checked: boolean
+    onChange: (v: boolean) => void
+}
+function PrefRow({ label, desc, checked, onChange }: PrefRowProps) {
+    return (
+        <div className="st-pref-row">
+            <div>
+                <div className="st-pref-label">{label}</div>
+                <div className="st-pref-desc">{desc}</div>
+            </div>
+            <Switch checked={checked} onCheckedChange={onChange} />
+        </div>
+    )
+}
 
 export const SettingsPage = () => {
-  const { user } = useContext(UserContext)
-  const { loginHistory, xpHistory, loading } = useSettingsData()
-  const tourProps = useTour(TOUR_CONFIGS.settings)
-  const profileEditProps = useProfileEdit()
-  const xpProgress = getXpProgress(user)
-  const { toast } = useToast()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const { refreshUserStats } = useContext(UserContext)
+    const { user, refreshUserStats } = useContext(UserContext)
+    const { decks } = useContext(DeckContext)
+    const { gamificationStats } = useSettingsData()
+    const profileEditProps = useProfileEdit()
+    const { toast } = useToast()
+    const [searchParams, setSearchParams] = useSearchParams()
+    const [avatarOpen, setAvatarOpen] = useState(false)
 
-  useEffect(() => {
-    const calendar = searchParams.get('calendar')
-    if (!calendar) return
-    if (calendar === 'success') {
-      refreshUserStats()
-      toast({ title: '📅 Google Calendar connected', description: 'The app can now create study reminders in your calendar.' })
-    } else {
-      const reason = searchParams.get('reason') || 'unknown'
-      toast({ title: 'Calendar connection failed', description: `Could not connect Google Calendar (${reason}).`, variant: 'destructive' })
+    // Preferences state — seeded from user object
+    const [baseForm, setBaseForm] = useState(user?.flashcardWordForm === 'base')
+    const [audioFlip, setAudioFlip] = useState(user?.audioOnCardFlip ?? false)
+    const [reminder, setReminder] = useState(user?.dailyReviewReminder ?? true)
+
+    useEffect(() => {
+        const calendar = searchParams.get('calendar')
+        if (!calendar) return
+        if (calendar === 'success') {
+            refreshUserStats()
+            toast({ title: 'Google Calendar connected', description: 'Study reminders will appear in your calendar.' })
+        } else {
+            const reason = searchParams.get('reason') || 'unknown'
+            toast({ title: 'Calendar connection failed', description: `Could not connect (${reason}).`, variant: 'destructive' })
+        }
+        setSearchParams({}, { replace: true })
+    }, [])
+
+    const handlePref = async (field: string, value: boolean) => {
+        if (field === 'baseForm') setBaseForm(value)
+        if (field === 'audioFlip') setAudioFlip(value)
+        if (field === 'reminder') setReminder(value)
+        try {
+            await axios.put('/update', {
+                name: user?.name,
+                username: user?.username,
+                avatarUrl: user?.avatarUrl,
+                flashcardWordForm: field === 'baseForm' ? (value ? 'base' : 'original') : user?.flashcardWordForm,
+                audioOnCardFlip: field === 'audioFlip' ? value : audioFlip,
+                dailyReviewReminder: field === 'reminder' ? value : reminder,
+            })
+            refreshUserStats()
+        } catch {
+            toast({ title: 'Failed to save preference', variant: 'destructive' })
+        }
     }
-    setSearchParams({}, { replace: true })
-  }, [])
 
-  // CONVERTS INTO DATES
-  const loginDays: Date[] = loginHistory?.loginDatesArray
-  ? loginHistory.loginDatesArray.map((d) => new Date(d))
-  : []
+    // Stats derived from gamification endpoint + deck data
+    const currentStreak = gamificationStats?.currentStreak ?? user?.currentStreak ?? 0
+    const maxStreak = gamificationStats?.maxStreak ?? user?.maxStreak ?? 0
+    const totalReviews = gamificationStats?.totalReviews ?? 0
+    const cardsLearned = decks.reduce((sum: number, d: any) =>
+        sum + d.cards.filter((c: any) => (c.cardScore ?? 0) >= 5).length, 0)
 
-  // Transforms the XP history data into a flattened array of experience events
-  // Each event contains the date it occurred, the formatted action name (capitalized with spaces), 
-  // and the XP amount earned. If no history exists, returns empty array.
-  const experienceHistory = xpHistory?.xpHistory
-    ? xpHistory.xpHistory.flatMap((day) =>
-        day.events.map((event) => ({
-          date: day.date,
-          action: event.eventType.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-          xp: event.xpAmount,
-        }))
-      )
-    : [];
+    const displayName = user?.name || user?.username || "You"
+    const initial = displayName[0]?.toUpperCase() ?? "?"
+    const showImg = user?.avatarUrl && user.avatarUrl !== DEFAULT_AVATAR
+    const handle = user?.username ? `@${user.username}` : user?.email ?? ""
+    const joined = user?._id ? joinedLabel(user._id) : ""
 
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  return (
-    <div className="min-h-screen pt-8 bg-tk-paper">
-      <div className="w-full max-w-screen-2xl mx-auto p-6 space-y-6 overflow-auto">
-        <h1 className="tk-page-title flex items-center gap-3">Settings</h1>
-        {/* Profile Picture Card */}
-        <Card className={`overflow-hidden transition-all duration-300 ${
-          tourProps.highlightedElement === 'profile-picture' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg' : ''
-        }`}>
-          <CardHeader>
-            <CardTitle>Profile Picture</CardTitle>
-            <p className="text-sm text-slate-600">Choose your avatar from our Moomin collection!</p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4 mb-4">
-              <ProfilePicture
-                selectedAvatar={profileEditProps.selectedAvatar}
-                setSelectedAvatar={profileEditProps.setSelectedAvatar}
-              />
+    return (
+        <div className="tk-page">
+            {/* Header */}
+            <div style={{ marginBottom: 28 }}>
+                <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Your Account</div>
+                <h1 className="tk-page-title">Settings</h1>
             </div>
-          </CardContent>
-        </Card>
-        {/* User Stats with Experience and Streak */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <StatsCard
-            user={user}
-            xpProgress={xpProgress}
-            experienceHistory={experienceHistory}
-            highlightedElement={tourProps.highlightedElement}
-          />
-          <StreakCard user={user} loginDays={loginDays} />
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Profile card */}
+                <div className="st-profile-card">
+                    <div className="st-avatar">
+                        {showImg ? <img src={user!.avatarUrl} alt={displayName} /> : initial}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <div className="st-profile-name">{displayName}</div>
+                        <div className="st-profile-meta">
+                            {handle}{handle && joined ? " · " : ""}{joined ? `joined ${joined}` : ""}
+                        </div>
+                    </div>
+                    <Dialog open={avatarOpen} onOpenChange={setAvatarOpen}>
+                        <DialogTrigger asChild>
+                            <button className="tk-btn" style={{ whiteSpace: "nowrap" }}>
+                                Change avatar seal
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl overflow-y-auto max-h-[90vh]">
+                            <DialogHeader>
+                                <DialogTitle>Pick an avatar</DialogTitle>
+                            </DialogHeader>
+                            <ProfilePicture
+                                selectedAvatar={profileEditProps.selectedAvatar}
+                                setSelectedAvatar={profileEditProps.setSelectedAvatar}
+                            />
+                        </DialogContent>
+                    </Dialog>
+                </div>
+
+                {/* Stats card */}
+                <div className="st-section">
+                    <div className="st-section-title">Stats</div>
+                    <div className="st-section-sub">Quiet numbers, quiet progress.</div>
+                    <div className="st-stat-grid">
+                        <div className="st-stat">
+                            <div className="st-stat-label">🔥 Current streak</div>
+                            <div className="st-stat-num">{currentStreak}<span className="st-stat-unit">days</span></div>
+                        </div>
+                        <div className="st-stat" style={{ paddingLeft: 20 }}>
+                            <div className="st-stat-label">Longest streak</div>
+                            <div className="st-stat-num">{maxStreak}<span className="st-stat-unit">days</span></div>
+                        </div>
+                        <div className="st-stat" style={{ paddingLeft: 20 }}>
+                            <div className="st-stat-label">Cards learned</div>
+                            <div className="st-stat-num">{cardsLearned}</div>
+                        </div>
+                        <div className="st-stat" style={{ paddingLeft: 20 }}>
+                            <div className="st-stat-label">Total reviews</div>
+                            <div className="st-stat-num">{totalReviews}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Preferences */}
+                <div className="st-section">
+                    <div className="st-section-title">Preferences</div>
+                    <PrefRow
+                        label="Save as base form by default"
+                        desc="Use dictionary form instead of the inflection you saw."
+                        checked={baseForm}
+                        onChange={v => handlePref('baseForm', v)}
+                    />
+                    <PrefRow
+                        label="Audio on card flip"
+                        desc="Play pronunciation automatically."
+                        checked={audioFlip}
+                        onChange={v => handlePref('audioFlip', v)}
+                    />
+                    <PrefRow
+                        label="Daily review reminder"
+                        desc="A gentle nudge at 20:00."
+                        checked={reminder}
+                        onChange={v => handlePref('reminder', v)}
+                    />
+                </div>
+
+                {/* Personal info */}
+                <PersonalInfoCard
+                    highlightedElement={null}
+                    formData={profileEditProps.formData}
+                    editMode={profileEditProps.editMode}
+                    showPassword={profileEditProps.showPassword}
+                    isEditing={profileEditProps.isEditing}
+                    isGoogleUser={user?.authProvider === 'google'}
+                    onInputChange={profileEditProps.handleInputChange}
+                    onToggleEdit={profileEditProps.toggleEdit}
+                    onTogglePasswordVisibility={() => profileEditProps.setShowPassword(!profileEditProps.showPassword)}
+                    onSaveChanges={profileEditProps.saveChanges}
+                />
+
+                {user?.authProvider === 'google' && <GoogleConsentCard />}
+            </div>
         </div>
-
-        {/* Achievements */}
-        <AchievementsCard highlightedElement={tourProps.highlightedElement} />
-
-        {/* Personal Information */}
-        <PersonalInfoCard
-          highlightedElement={tourProps.highlightedElement}
-          formData={profileEditProps.formData}
-          editMode={profileEditProps.editMode}
-          showPassword={profileEditProps.showPassword}
-          isEditing={profileEditProps.isEditing}
-          isGoogleUser={user?.authProvider === 'google'}
-          onInputChange={profileEditProps.handleInputChange}
-          onToggleEdit={profileEditProps.toggleEdit}
-          onTogglePasswordVisibility={() => profileEditProps.setShowPassword(!profileEditProps.showPassword)}
-          onSaveChanges={profileEditProps.saveChanges}
-        />
-        {user?.authProvider === 'google' && <GoogleConsentCard />}
-        <LearningPreferences
-          flashcardWordForm={user?.flashcardWordForm || 'original'} 
-          handleFlashcardFormChange={profileEditProps.handleFlashcardFormChange}
-        />
-      </div>
-
-      {tourProps.isTourActive && (
-        <TourOverlay
-          currentStep={tourProps.currentStep}
-          totalSteps={tourProps.totalSteps}
-          steps={tourProps.steps}
-          onNext={tourProps.handleNext}
-          onPrev={tourProps.handlePrev}
-          onSkip={tourProps.handleSkip}
-          onFinish={tourProps.handleFinish}
-        />
-      )}
-    </div>
-  )
+    )
 }

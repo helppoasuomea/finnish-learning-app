@@ -1123,3 +1123,120 @@
   color: var(--tk-ink-4);
   font-size: 14px;
 }
+
+/* ── Settings page (st-*) ── */
+.st-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--tk-card);
+  border: 1px solid var(--tk-rule);
+  border-radius: 20px;
+  padding: 24px;
+}
+.st-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--tk-accent);
+  color: var(--tk-paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.st-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.st-profile-name {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--tk-ink);
+}
+.st-profile-meta {
+  font-size: 13px;
+  color: var(--tk-ink-3);
+  margin-top: 2px;
+}
+
+.st-section {
+  background: var(--tk-card);
+  border: 1px solid var(--tk-rule);
+  border-radius: 20px;
+  padding: 24px;
+}
+.st-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--tk-ink);
+  margin-bottom: 4px;
+}
+.st-section-sub {
+  font-size: 13px;
+  color: var(--tk-ink-3);
+  margin-bottom: 20px;
+}
+
+.st-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+@media (max-width: 600px) {
+  .st-stat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px 0; }
+}
+.st-stat {
+  padding: 0 20px 0 0;
+  border-right: 1px solid var(--tk-rule-soft);
+}
+.st-stat:first-child { padding-left: 0; }
+.st-stat:last-child { border-right: none; }
+.st-stat-label {
+  font-family: "IBM Plex Mono", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tk-ink-4);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.st-stat-num {
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--tk-ink);
+  line-height: 1;
+}
+.st-stat-unit {
+  font-size: 13px;
+  color: var(--tk-ink-3);
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+.st-pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--tk-rule-soft);
+  gap: 20px;
+}
+.st-pref-row:last-child { border-bottom: none; padding-bottom: 0; }
+.st-pref-row:first-child { padding-top: 0; }
+.st-pref-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tk-ink);
+  margin-bottom: 2px;
+}
+.st-pref-desc {
+  font-size: 12.5px;
+  color: var(--tk-ink-3);
+}
