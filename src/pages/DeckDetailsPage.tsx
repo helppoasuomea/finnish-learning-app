@@ -1,367 +1,255 @@
-import { useEffect, useState } from "react";
-import { Progress } from "@/components/ui/progress";
-import { CreatorBar } from "../components/DeckDetailsComponents/Creator";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useState, useCallback, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import { ChevronRight, Pencil, Play, Clipboard } from "lucide-react";
 import { organizeCardsByScore } from "../composables/SortCard";
-import { NoCard } from "../components/FlashCardComponents/NoCard";
-import { CardCategory } from "../components/DeckDetailsComponents/CardCategory";
-import { moveLeft, moveRight } from "../utils/cardNavigation";
-import { useKeyboardNavigation } from "../utils/useKeyboardNavigation";
-import { LearningHistory } from "../components/DeckDetailsComponents/LearningHistory";
-import { useUpdateFavorite } from "../state/hooks/useUpdateFavorite";
 import useFetchDeck from "../state/hooks/useFetchDeck";
-import { useHint } from "../state/hooks/useHint";
-import { useAutoPlay } from "../state/hooks/useAutoPlay";
-import { DeckControls, DeckLinks, DeckNavigation, FlashCard } from "../components/DeckDetailsComponents/DeckDetailsComponents";
-import { AnimatePresence } from "framer-motion";
-import { Input } from "../components/ui/input";
-import { useDebounce } from "@uidotdev/usehooks";
-import { Card } from "../types";
-import CoachMark from "../components/DeckDetailsComponents/CoachMark";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { calculateCompletePercentage } from "@/utils/calculatePercentage";
+import { DeckOverview } from "../components/DeckDetailsComponents/DeckOverview";
+import { TermsList } from "../components/DeckDetailsComponents/TermsList";
+import { AddCardDrawer } from "../components/DeckDetailsComponents/AddCardDrawer";
+import { PasteImportDrawer } from "../components/DeckDetailsComponents/PasteImportDrawer";
+import { EditDetailsModal } from "../components/DeckDetailsComponents/EditDetailsModal";
+import { DeckDetailsSidebar } from "../components/DeckDetailsComponents/DeckDetailsSidebar";
+import { Card } from "@/types";
+
+type Tab = "overview" | "terms";
 
 export const DeckDetailsPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const { deck, cards, deckName } = useFetchDeck(id);
-    const location = useLocation();
-    const navigate = useNavigate();
-    
-    const [isFlipped, setIsFlipped] = useState<boolean>(false);
-    const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
-    const [autoPlay, setAutoPlay] = useState<boolean>(false);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { deck, cards, deckName, deckTags, setDeck, setCards } = useFetchDeck(id);
 
-    const [searchTerm, setSearchTerm] = useState('')
-    const [results, setResults] = useState<Card[]>([])
-    const [isSearching, setIsSearching] = useState(false)
-    const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [tab, setTab] = useState<Tab>("overview");
+  const [addCardOpen, setAddCardOpen] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-    // Tour state management
-    const [currentStep, setCurrentStep] = useState(0);
-    const [highlightedElement, setHighlightedElement] = useState<string | null>(null);
-    const totalSteps = 6;
-    const isTourActive = new URLSearchParams(location.search).get('tour') === 'true';
+  const { stillLearning, notStudied, completed } = organizeCardsByScore(cards);
+  const percentage = calculateCompletePercentage(cards);
 
-    // Tour step data
-    const tourSteps = [
-      {
-        title: "Study Mode Navigation 🎯",
-        content: "Welcome to your deck! These navigation buttons let you switch between different study modes like flashcards, learn, match, and test. Each mode offers a unique way to master your vocabulary!",
-        position: "bottom" as const,
-        highlight: "deck-navigation"
-      },
-      {
-        title: "Interactive Flashcard Area 📱",
-        content: "This is your main flashcard area. Click the card to flip it and see the translation. Use the hint button if you need help, star your favorites, and hear pronunciations!",
-        position: "bottom" as const,
-        highlight: "flashcard-area"
-      },
-      {
-        title: "Study Controls 🎮",
-        content: "Use these controls to play through cards automatically, shuffle the deck, or access advanced settings for your study session. Perfect for hands-free learning!",
-        position: "bottom" as const,
-        highlight: "deck-controls"
-      },
-      {
-        title: "Card Navigation 🔄",
-        content: "Navigate between cards using these arrows and see your progress. You can also use your keyboard arrow keys for quick navigation. The progress bar shows how far you've come!",
-        position: "bottom" as const,
-        highlight: "card-navigation"
-      },
-      {
-        title: "Vocabulary Browser 📖",
-        content: "Browse all terms in your deck organized by learning progress. Use the search bar to quickly find specific cards you want to review. Cards are categorized by your mastery level!",
-        position: "top" as const,
-        highlight: "terms-section"
-      },
-      {
-        title: "Learning Analytics 📊",
-        content: "Track your learning progress and history in this sidebar. See your recent activity, upcoming quiz schedules, and detailed analytics about your study patterns!",
-        position: "left" as const,
-        highlight: "learning-history"
-      }
-    ];
-    
-    const { hint, generateHint, clearHint } = useHint();
-    const { updateFavorite } = useUpdateFavorite();
-  
-    const { stillLearning, notStudied, completed } = organizeCardsByScore(cards);
-  
-    useAutoPlay(autoPlay, isFlipped, currentCardIndex, cards.length, setIsFlipped, setCurrentCardIndex, setAutoPlay);
+  const existingFi = useMemo(
+    () => new Set(cards.map(c => c.userLangCard.toLowerCase())),
+    [cards]
+  );
 
-    // Reset hint whenever the current card changes
-    useEffect(() => {
-      clearHint();
-      setIsFlipped(false);
-    }, [currentCardIndex]);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
 
-    // When switching decks via sidebar (same route, new :id), reset per-deck UI state
-    useEffect(() => {
-      setCurrentCardIndex(0);
-      setIsFlipped(false);
-      setAutoPlay(false);
-      clearHint();
-      setSearchTerm('');
-      setResults([]);
-    }, [id]);
-
-    // Tour step highlights
-    useEffect(() => {
-      if (isTourActive) {
-        const stepHighlights = [
-          'deck-navigation', 'flashcard-area', 'deck-controls', 'card-navigation', 'terms-section', 'learning-history'
-        ];
-        setHighlightedElement(stepHighlights[currentStep]);
-        
-        // Auto-scroll to highlighted element
-        setTimeout(() => {
-          const element = document.querySelector(`[data-tour-id="${stepHighlights[currentStep]}"]`);
-          if (element) {
-            element.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'center',
-              inline: 'nearest' 
-            });
-          }
-        }, 100);
-      } else {
-        setHighlightedElement(null);
-      }
-    }, [currentStep, isTourActive]);
-
-    const handleNext = () => {
-      if (currentStep < totalSteps - 1) {
-        setCurrentStep(currentStep + 1);
-      }
-    };
-
-    const handlePrev = () => {
-      if (currentStep > 0) {
-        setCurrentStep(currentStep - 1);
-      }
-    };
-
-    const handleSkip = () => {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('tour');
-      navigate(newUrl.pathname);
-      setCurrentStep(0);
-      setHighlightedElement(null);
-    };
-
-    const handleFinish = () => {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('tour');
-      navigate(newUrl.pathname);
-      setCurrentStep(0);
-      setHighlightedElement(null);
-    };
-  
-    const handleMoveLeft = () => {
-      moveLeft(currentCardIndex, setCurrentCardIndex);
-    };
-  
-    const handleMoveRight = () => {
-      moveRight(currentCardIndex, cards.length, setCurrentCardIndex);
-    };
-
-    useKeyboardNavigation(handleMoveLeft, handleMoveRight, currentCardIndex, cards.length);
-
-  
-    const handleToggleFavorite = async () => {
-      if (!deck || cards.length === 0) return;
-      const currentCard = cards[currentCardIndex];
-      try {
-        await updateFavorite(id!, currentCard._id, !currentCard.favorite);
-      } catch (error) {
-        console.error('Error updating favorite status: ', error);
-      }
-    };
-  
-    const handleCardClick = (event: React.MouseEvent) => {
-      if (!(event.target as HTMLElement).closest('button')) {
-        clearHint();
-        setIsFlipped(!isFlipped);
-      }
-    };
-  
-    const handleGenerateHintClick = () => {
-      if (cards[currentCardIndex]) {
-        generateHint(cards[currentCardIndex].engCard);
-      }
-    };
-
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchTerm(e.target.value)
+  const handleAddCard = useCallback(async (newCard: { userLangCard: string; engCard: string; type: string; pronunciation: string }) => {
+    if (!id) return;
+    try {
+      const res = await axios.put(`/decks/${id}/add-card`, newCard);
+      setDeck(res.data);
+      setCards(res.data.cards);
+      showToast(`Added "${newCard.userLangCard}"`);
+    } catch {
+      showToast("Failed to add card");
     }
+  }, [id, setDeck, setCards]);
 
-    useEffect(() => {
-      const searchCards = async () => {
-        setIsSearching(false)
-        if (debouncedSearchTerm) {
-          const searchResults = cards.filter(card => 
-            card.engCard.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-            card.userLangCard.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-          )
-          setResults(searchResults)
-        } else {
-          setResults([])
-        }
-        setIsSearching(false)
-      }
-      searchCards()
-    }, [debouncedSearchTerm, cards])
+  const handleImport = useCallback(async (items: { fi: string; en: string }[]) => {
+    if (!id) return;
+    const newCards = items.map(it => ({ userLangCard: it.fi, engCard: it.en, type: "other", pronunciation: "", cardScore: 0, favorite: false }));
+    try {
+      const res = await axios.put(`/decks/${id}`, { cards: newCards });
+      setDeck(res.data);
+      setCards(res.data.cards);
+      showToast(`Imported ${items.length} words`);
+    } catch {
+      showToast("Failed to import");
+    }
+  }, [id, setDeck, setCards]);
 
+  const handleSaveDeck = useCallback(async (patch: { deckName: string; description: string; deckTags: string[] }) => {
+    if (!id || !deck) return;
+    try {
+      const res = await axios.put(`/decks/update/${id}`, {
+        deckName: patch.deckName,
+        deckTags: patch.deckTags,
+        deckPercentage: percentage,
+        cards,
+      });
+      setDeck(res.data);
+      setCards(res.data.cards);
+      showToast("Deck details updated");
+    } catch {
+      showToast("Failed to save");
+    }
+  }, [id, deck, cards, percentage, setDeck, setCards]);
+
+  const handleDeleteCard = useCallback(async (cardId: string) => {
+    if (!id) return;
+    try {
+      const res = await axios.delete(`/decks/${id}/cards/${cardId}`);
+      setDeck(res.data);
+      setCards(res.data.cards);
+      showToast("Card deleted");
+    } catch {
+      showToast("Failed to delete card");
+    }
+  }, [id, setDeck, setCards]);
+
+  const handleEditCard = useCallback((card: Card) => {
+    showToast(`Edit for "${card.userLangCard}" coming soon`);
+  }, []);
+
+  if (!deck) {
     return (
-      <div className="min-h-screen bg-tk-paper">
-        {/* Main container with proper max width and centering */}
-        <div className="max-w-7xl mx-auto pt-6 px-4 md:px-6 lg:px-8 pb-12">
-          <div className="flex flex-col xl:flex-row gap-8 xl:gap-12">
-            {/* Main content area */}
-            <div className="flex-1 xl:max-w-[65%]">
-              {/* Header Section */}
-              <div className="mb-8">
-                <h1 className="tk-page-title mb-4">{deckName}</h1>
-                
-                {/* Deck Navigation Links */}
-                <div className={`transition-all duration-300 ${
-                  highlightedElement === 'deck-navigation' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg rounded-lg p-2' : ''
-                }`} data-tour-id="deck-navigation">
-                  <DeckLinks id={id!} cardsLength={cards.length} />
-                </div>
-              </div>
-              
-              {cards.length > 0 ? (
-                <>
-                  {/* FlashCard section - Cleaner spacing */}
-                  <div
-                    className={`rounded-xl p-6 mb-8 transition-all duration-300 ${
-                      highlightedElement === 'flashcard-area' ? 'ring-4 ring-opacity-75 shadow-lg' : ''
-                    }`}
-                    style={{
-                      background: "var(--tk-card)",
-                      border: "1px solid var(--tk-rule)",
-                      boxShadow: "var(--tk-sh-1)",
-                      ...(highlightedElement === 'flashcard-area' ? { outlineColor: "var(--tk-accent)" } : {}),
-                    }}
-                    data-tour-id="flashcard-area"
-                  >
-                    <div className="flex flex-col items-center">
-                      <AnimatePresence>
-                        <FlashCard 
-                          card={cards[currentCardIndex]} 
-                          isFlipped={isFlipped} 
-                          onFlip={handleCardClick}
-                          hint={hint}
-                          onGenerateHint={handleGenerateHintClick}
-                          onToggleFavorite={handleToggleFavorite}
-                        />
-                      </AnimatePresence>
-                      
-                      {/* Controls with better spacing */}
-                      <div className="w-full max-w-[875px] mt-8 space-y-4">
-                        <div className={`transition-all duration-300 ${
-                          highlightedElement === 'deck-controls' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg rounded-lg p-2' : ''
-                        }`} data-tour-id="deck-controls">
-                          <DeckControls 
-                            onPlay={() => setAutoPlay(!autoPlay)}
-                            onShuffle={() => {/* Implement shuffle */}}
-                            id={id}
-                          />
-                        </div>
-                        
-                        <div className={`transition-all duration-300 ${
-                          highlightedElement === 'card-navigation' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg rounded-lg p-2' : ''
-                        }`} data-tour-id="card-navigation">
-                          <DeckNavigation 
-                            currentCardIndex={currentCardIndex}
-                            cardsLength={cards.length}
-                            onMoveLeft={handleMoveLeft}
-                            onMoveRight={handleMoveRight}
-                          />
-                        </div>
-                        <Progress value={(currentCardIndex + 1) / cards.length * 100} className="w-full h-2" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Creator Bar - Better positioned */}
-                  <div className="mb-10">
-                    <CreatorBar id={id!} />
-                  </div>
-                  
-                  {/* Terms section - Cleaner layout */}
-                  <div className={`bg-gray-50 rounded-xl shadow-sm p-6 transition-all duration-300 ${
-                    highlightedElement === 'terms-section' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg' : ''
-                  }`} data-tour-id="terms-section">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900">Terms in this set ({cards.length})</h2>
-                      <form className="relative flex-1 max-w-md"> 
-                        <Input  
-                          type="text" 
-                          placeholder="Find any term/definition..." 
-                          className="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white transition-all duration-200"
-                          value={searchTerm}
-                          onChange={handleSearchChange} 
-                        />
-                        <button disabled={isSearching} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                          {isSearching ? (
-                            "..."
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>                          
-                          )}
-                        </button>
-                      </form>
-                    </div>
-                    
-                    <div className="space-y-8">
-                      {searchTerm ? (
-                        <CardCategory categoryName="Search Results" cards={results} id={id!} />
-                      ) : (
-                        <>
-                          <CardCategory categoryName="Still learning" cards={stillLearning} id={id!} />
-                          <CardCategory categoryName="Not studied" cards={notStudied} id={id!} />
-                          <CardCategory categoryName="Completed" cards={completed} id={id!} />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="bg-white rounded-xl shadow-sm p-8">
-                  <NoCard />
-                  <div className="mt-8">
-                    <CreatorBar id={id!} />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Sidebar for learning history - Better spacing */}
-            <div className={`w-full xl:w-[320px] xl:flex-shrink-0 transition-all duration-300 ${
-              highlightedElement === 'learning-history' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg rounded-lg p-2' : ''
-            }`} data-tour-id="learning-history">
-              <div className="xl:sticky xl:top-6">
-                <LearningHistory deckId={id!} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Beautiful Coach Mark Component */}
-        {isTourActive && (
-          <CoachMark
-            step={currentStep}
-            totalSteps={totalSteps}
-            onNext={handleNext}
-            onPrev={handlePrev}
-            onSkip={handleSkip}
-            onFinish={handleFinish}
-            title={tourSteps[currentStep].title}
-            content={tourSteps[currentStep].content}
-            position={tourSteps[currentStep].position}
-          />
-        )}
+      <div className="tk-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "50vh" }}>
+        <div style={{ color: "var(--tk-ink-3)", fontSize: 14 }}>Loading deck…</div>
       </div>
     );
-}
+  }
+
+  const lastStudied = (() => {
+    try {
+      const sorted = [...cards].sort((a, b) => {
+        if (!a.nextReviewDate || !b.nextReviewDate) return 0;
+        return new Date(b.nextReviewDate).getTime() - new Date(a.nextReviewDate).getTime();
+      });
+      return sorted.length ? "recently" : "—";
+    } catch { return "—"; }
+  })();
+
+  return (
+    <div className="tk-page" style={{ maxWidth: 1200 }}>
+      {/* Breadcrumb */}
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--tk-ink-3)" }}>
+        <Link to="/decks" style={{ color: "var(--tk-ink-3)", textDecoration: "none" }}>Library</Link>
+        <ChevronRight size={12} />
+        <span style={{ color: "var(--tk-ink)" }}>{deckName}</span>
+      </div>
+
+      <div className="dd-layout">
+        <div>
+          {/* Hero */}
+          <div className="dd-hero">
+            <button className="dd-hero-edit" onClick={() => setEditOpen(true)} title="Edit deck details">
+              <Pencil size={14} />
+            </button>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, paddingRight: 40 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+                  {deckTags.map(t => (
+                    <span key={t} className="tk-chip" style={{ background: "var(--tk-accent-wash)", borderColor: "var(--tk-accent-soft)", color: "var(--tk-accent-deep)" }}>{t}</span>
+                  ))}
+                </div>
+                <h1 className="dd-hero-title">{deckName}</h1>
+                <p style={{ color: "var(--tk-ink-3)", fontSize: 14, maxWidth: 480, lineHeight: 1.55 }}>
+                  {deck.description || ""}
+                </p>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <ProgressRing value={percentage} size={64} stroke={3} />
+                <div style={{ fontSize: 11, color: "var(--tk-ink-3)", marginTop: 6, textAlign: "center" }}>complete</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 32, marginTop: 22, paddingTop: 22, borderTop: "1px solid var(--tk-rule-soft)", flexWrap: "wrap" }}>
+              {[
+                { label: "Total",         value: cards.length, isText: false },
+                { label: "Still learning", value: stillLearning.length, tone: "clay" as const },
+                { label: "Completed",     value: completed.length, tone: "accent" as const },
+                { label: "Last studied",  value: lastStudied, isText: true },
+              ].map(s => (
+                <div key={s.label}>
+                  <div className="tk-eyebrow" style={{ marginBottom: 4 }}>{s.label}</div>
+                  <div style={{
+                    fontSize: s.isText ? 14 : 22, lineHeight: 1, fontWeight: s.isText ? 500 : 500,
+                    letterSpacing: s.isText ? 0 : "-0.025em",
+                    color: s.tone === "accent" ? "var(--tk-accent)" : s.tone === "clay" ? "var(--tk-persimmon)" : "var(--tk-ink)",
+                  }}>{String(s.value)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab bar */}
+          <div className="dd-tabs">
+            {(["overview", "terms"] as Tab[]).map(t => (
+              <button key={t} className={`dd-tab ${tab === t ? "is-active" : ""}`} onClick={() => setTab(t)}>
+                {t === "overview" ? "Overview" : "Terms"}
+              </button>
+            ))}
+            <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 1 }}>
+              <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setPasteOpen(true)}>
+                <Clipboard size={13} />Paste import
+              </button>
+              <button className="tk-btn tk-btn-accent tk-btn-sm" onClick={() => navigate(`/learn/${id}`)}>
+                <Play size={13} />Practice this deck
+              </button>
+            </div>
+          </div>
+
+          {/* Tab content */}
+          {tab === "overview" && (
+            <DeckOverview
+              deckId={id!}
+              deckName={deckName}
+              cards={cards}
+              stillLearning={stillLearning}
+              notStudied={notStudied}
+              completed={completed}
+              onEditDeck={() => setEditOpen(true)}
+            />
+          )}
+          {tab === "terms" && (
+            <TermsList
+              cards={cards}
+              stillLearning={stillLearning}
+              notStudied={notStudied}
+              completed={completed}
+              onAddCard={() => setAddCardOpen(true)}
+              onPasteImport={() => setPasteOpen(true)}
+              onDeleteCard={handleDeleteCard}
+              onEditCard={handleEditCard}
+            />
+          )}
+        </div>
+
+        {/* Aside */}
+        <aside>
+          <DeckDetailsSidebar deckId={id!} deckName={deckName} />
+        </aside>
+      </div>
+
+      {/* Drawers / modals */}
+      {addCardOpen && (
+        <AddCardDrawer
+          deckName={deckName}
+          existingFi={existingFi}
+          onClose={() => setAddCardOpen(false)}
+          onAdd={handleAddCard}
+        />
+      )}
+      {pasteOpen && (
+        <PasteImportDrawer
+          deckName={deckName}
+          existingFi={existingFi}
+          onClose={() => setPasteOpen(false)}
+          onImport={handleImport}
+        />
+      )}
+      {editOpen && deck && (
+        <EditDetailsModal
+          deckName={deckName}
+          description={deck.description || ""}
+          deckTags={deckTags}
+          onClose={() => setEditOpen(false)}
+          onSave={handleSaveDeck}
+        />
+      )}
+
+      {/* Toast */}
+      {toastMsg && (
+        <div className="tx-toast" style={{ left: "50%", right: "auto", transform: "translateX(-50%)" }}>
+          <div style={{ flex: 1, minWidth: 0, fontSize: 13 }}>{toastMsg}</div>
+        </div>
+      )}
+    </div>
+  );
+};
