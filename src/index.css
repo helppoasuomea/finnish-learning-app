@@ -2,61 +2,365 @@
 @tailwind components;
 @tailwind utilities;
 
-  
+/* ──────────────────────────────────────────────────────────────
+   Tokō — a quiet design system for a language-learning app
+   Inspired by Muji, washi paper, Japanese stationery
+   ────────────────────────────────────────────────────────────── */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    /* ── shadcn/ui HSL variables — remapped to Tokō palette ── */
+    --background:         38 53% 97%;     /* #FAF7F2 washi paper */
+    --foreground:         46 10% 10%;     /* #1C1B17 warm near-black */
+    --card:               44 100% 98%;   /* #FEFCF7 card lift */
+    --card-foreground:    46 10% 10%;
+    --popover:            44 100% 98%;
+    --popover-foreground: 46 10% 10%;
+    --primary:            46 10% 10%;     /* warm black — primary buttons */
+    --primary-foreground: 38 53% 97%;     /* paper on black */
+    --secondary:          40 37% 93%;     /* #F3EEE4 paper-deep */
+    --secondary-foreground: 46 10% 10%;
+    --muted:              40 37% 93%;
+    --muted-foreground:   38 5% 47%;      /* #78756A ink-3 */
+    --accent:             150 18% 31%;    /* #3F5D4C matcha green */
+    --accent-foreground:  38 53% 97%;
+    --destructive:        14 55% 50%;     /* #C85C3C persimmon */
+    --destructive-foreground: 38 53% 97%;
+    --border:             42 26% 84%;     /* #E4DDCC rule */
+    --input:              42 26% 84%;
+    --ring:               150 18% 31%;    /* matcha green focus ring */
+    --radius:             0.5rem;
+
+    /* ── Tokō raw tokens (hex — used in custom components & CSS) ── */
+    --tk-paper:          #FAF7F2;
+    --tk-paper-deep:     #F3EEE4;
+    --tk-paper-edge:     #EAE3D4;
+    --tk-card:           #FEFCF7;
+    --tk-card-hover:     #FFFEFA;
+
+    --tk-ink:            #1C1B17;
+    --tk-ink-2:          #403E36;
+    --tk-ink-3:          #78756A;
+    --tk-ink-4:          #A8A396;
+    --tk-ink-5:          #D2CCBB;
+
+    --tk-rule:           #E4DDCC;
+    --tk-rule-soft:      #EDE7D7;
+
+    --tk-accent:         #3F5D4C;
+    --tk-accent-deep:    #2D4438;
+    --tk-accent-soft:    #D8E1D7;
+    --tk-accent-wash:    #EBEFE6;
+
+    --tk-persimmon:      #C85C3C;
+    --tk-persimmon-soft: #F5E0D5;
+
+    --tk-correct:        #3F5D4C;
+    --tk-incorrect:      #B04E3A;
+
+    /* ── Tag tones ── */
+    --tk-tag-moss:       #8BA084;
+    --tk-tag-sky:        #8AA0B0;
+    --tk-tag-clay:       #C89B7C;
+    --tk-tag-plum:       #A07D8E;
+    --tk-tag-wheat:      #C4B090;
+
+    /* ── Shadows (warm, sparse) ── */
+    --tk-sh-1:   0 1px 0 rgba(28,27,23,0.04), 0 1px 2px rgba(28,27,23,0.04);
+    --tk-sh-2:   0 1px 0 rgba(28,27,23,0.04), 0 4px 12px rgba(28,27,23,0.06);
+    --tk-sh-3:   0 2px 0 rgba(28,27,23,0.04), 0 12px 28px rgba(28,27,23,0.08);
+    --tk-sh-hero:0 1px 0 rgba(28,27,23,0.05), 0 30px 60px -20px rgba(28,27,23,0.18);
+
+    /* ── Easing ── */
+    --tk-ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+    --tk-ease-spring: cubic-bezier(0.5, 1.5, 0.5, 1);
+    --tk-dur-1: 160ms;
+    --tk-dur-2: 260ms;
+    --tk-dur-3: 420ms;
   }
 
+  /* ── Dark mode: "evening study" ── */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background:         46 10% 8%;      /* #161513 */
+    --foreground:         40 37% 93%;     /* #F3EEE4 */
+    --card:               46 10% 10%;     /* #1F1E1A */
+    --card-foreground:    40 37% 93%;
+    --popover:            46 10% 10%;
+    --popover-foreground: 40 37% 93%;
+    --primary:            40 37% 93%;
+    --primary-foreground: 46 10% 10%;
+    --secondary:          46 7% 12%;      /* #1C1B17 */
+    --secondary-foreground: 40 37% 93%;
+    --muted:              46 7% 12%;
+    --muted-foreground:   38 5% 56%;      /* #8F8B7E */
+    --accent:             150 18% 56%;    /* #8FB09C — lighter for dark bg */
+    --accent-foreground:  46 10% 8%;
+    --destructive:        18 63% 62%;     /* #E0835E */
+    --destructive-foreground: 46 10% 8%;
+    --border:             46 5% 16%;      /* #2A2925 */
+    --input:              46 5% 16%;
+    --ring:               150 18% 56%;
+
+    --tk-paper:          #161513;
+    --tk-paper-deep:     #1C1B17;
+    --tk-paper-edge:     #242320;
+    --tk-card:           #1F1E1A;
+    --tk-card-hover:     #252420;
+    --tk-ink:            #F3EEE4;
+    --tk-ink-2:          #D2CCBB;
+    --tk-ink-3:          #8F8B7E;
+    --tk-ink-4:          #5F5C53;
+    --tk-ink-5:          #3D3B35;
+    --tk-rule:           #2A2925;
+    --tk-rule-soft:      #232220;
+    --tk-accent:         #8FB09C;
+    --tk-accent-deep:    #B0C9B8;
+    --tk-accent-soft:    #2A3830;
+    --tk-accent-wash:    #1F2A25;
+    --tk-persimmon:      #E0835E;
+    --tk-persimmon-soft: #3A2820;
   }
 }
-
 
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
+  html, body, #root {
+    margin: 0;
+    background-color: var(--tk-paper);
+    color: var(--tk-ink);
+    font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  /* Subtle washi paper grain */
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--tk-paper);
+    color: var(--tk-ink);
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(0,0,0,0.015) 1px, transparent 1px),
+      radial-gradient(circle at 70% 60%, rgba(0,0,0,0.01) 1px, transparent 1px);
+    background-size: 4px 4px, 7px 7px;
   }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.02) 1px, transparent 1px),
+      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.015) 1px, transparent 1px);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--tk-ink);
+    margin: 0;
+  }
+
+  button, input, select, textarea {
+    font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  ::selection {
+    background: var(--tk-accent-soft);
+    color: var(--tk-ink);
+  }
+
+  /* Calm scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--tk-rule);
+    border-radius: 5px;
+    border: 2px solid var(--tk-paper);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--tk-ink-5); }
 }
+
+/* ── Typography scale ── */
+.tk-display-xl { font-family: "Instrument Serif", Georgia, serif; font-size: 56px; line-height: 1.05; letter-spacing: -0.02em; font-weight: 400; }
+.tk-display-lg { font-family: "Instrument Serif", Georgia, serif; font-size: 40px; line-height: 1.1;  letter-spacing: -0.015em; font-weight: 400; }
+.tk-display-md { font-family: "Instrument Serif", Georgia, serif; font-size: 28px; line-height: 1.15; letter-spacing: -0.01em;  font-weight: 400; }
+.tk-display-sm { font-family: "Instrument Serif", Georgia, serif; font-size: 22px; line-height: 1.25; font-weight: 400; }
+
+.tk-eyebrow {
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tk-ink-3);
+}
+
+.tk-mono { font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace; font-feature-settings: "tnum"; }
+
+/* ── Reusable card atom ── */
+.tk-card {
+  background: var(--tk-card);
+  border: 1px solid var(--tk-rule);
+  border-radius: 20px;
+  box-shadow: var(--tk-sh-1);
+}
+
+/* ── Buttons ── */
+.tk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.005em;
+  transition: all var(--tk-dur-1) var(--tk-ease-out);
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  font-family: "Geist", -apple-system, sans-serif;
+}
+.tk-btn-primary {
+  background: var(--tk-ink);
+  color: var(--tk-paper);
+}
+.tk-btn-primary:hover { background: var(--tk-ink-2); transform: translateY(-1px); }
+.tk-btn-accent {
+  background: var(--tk-accent);
+  color: var(--tk-paper);
+}
+.tk-btn-accent:hover { background: var(--tk-accent-deep); transform: translateY(-1px); }
+.tk-btn-ghost {
+  background: transparent;
+  color: var(--tk-ink-2);
+  border: 1px solid var(--tk-rule);
+}
+.tk-btn-ghost:hover { background: var(--tk-paper-deep); color: var(--tk-ink); }
+.tk-btn-sm { height: 32px; padding: 0 12px; font-size: 13px; border-radius: 6px; }
+.tk-btn-lg { height: 48px; padding: 0 24px; font-size: 15px; }
+
+/* ── Input ── */
+.tk-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  background: var(--tk-card);
+  border: 1px solid var(--tk-rule);
+  border-radius: 8px;
+  color: var(--tk-ink);
+  transition: border-color var(--tk-dur-1), background var(--tk-dur-1);
+  font-size: 14px;
+}
+.tk-input:focus {
+  outline: none;
+  border-color: var(--tk-ink-3);
+  background: var(--tk-card-hover);
+}
+.tk-input::placeholder { color: var(--tk-ink-4); }
+
+/* ── Chip ── */
+.tk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  background: var(--tk-paper-deep);
+  border: 1px solid var(--tk-rule);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--tk-ink-2);
+  font-weight: 500;
+}
+
+/* ── Hairline ── */
+.tk-hairline { height: 1px; background: var(--tk-rule); border: 0; margin: 0; }
+
+/* ── Seal (circular hanko motif) ── */
+.tk-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.25px solid var(--tk-accent);
+  border-radius: 50%;
+  color: var(--tk-accent);
+  font-family: "Instrument Serif", Georgia, serif;
+  letter-spacing: 0;
+  background: var(--tk-card);
+  flex-shrink: 0;
+}
+.tk-seal-filled {
+  background: var(--tk-accent);
+  color: var(--tk-paper);
+  border-color: var(--tk-accent);
+}
+
+/* ── Animations ── */
+@keyframes tk-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes tk-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes tk-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes tk-shake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+@keyframes mg-shake {
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-4px);}
+  75%{transform:translateX(4px);}
+}
+
+.tk-fade-up { animation: tk-fade-up var(--tk-dur-3) var(--tk-ease-out) both; }
+.tk-fade    { animation: tk-fade var(--tk-dur-2) var(--tk-ease-out) both; }
+
+/* ── Focus ring ── */
+.tk-focus:focus-visible {
+  outline: 2px solid var(--tk-accent);
+  outline-offset: 2px;
+}
+
+/* ── Page container ── */
+.tk-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 48px 60px;
+}
+@media (max-width: 860px) {
+  .tk-page { padding: 20px 20px 40px; }
+}
+
+/* ── Page header ── */
+.tk-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 20px;
+}
+.tk-page-title {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+@media (max-width: 640px) { .tk-page-title { font-size: 28px; } }

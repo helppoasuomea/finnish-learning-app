@@ -122,7 +122,7 @@ export const ReviewPage = () => {
     const wrongAnswers = answers.filter(a => !a.correct);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-tk-paper">
             <div className="max-w-4xl mx-auto p-4">
                 <Card className="w-full min-h-[80vh] flex flex-col shadow-lg">
                     <CardContent className="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8">

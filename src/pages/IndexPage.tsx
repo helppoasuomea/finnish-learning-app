@@ -290,7 +290,7 @@ const IndexPageContent = () => {
     }, [hoveredFlashcardFi]);
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-tk-paper">
                 <div className="max-w-5xl mx-auto px-6 md:px-8 py-8 md:py-12">
                     {/* Title Section */}
                     <div className="mb-8">
