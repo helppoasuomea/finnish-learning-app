@@ -3,10 +3,19 @@ import { UserContext } from "@/contexts/UserContext"
 import axios from "axios";
 import { useContext, useEffect, useState } from "react"
 
+interface GamificationStats {
+    currentStreak: number;
+    maxStreak: number;
+    totalReviews: number;
+    xp: number;
+    level: number;
+}
+
 export const useSettingsData = () => {
     const { user } = useContext(UserContext)
     const [loginHistory, setLoginHistory] = useState<LoginHistoryResponse | null>(null)
     const [xpHistory, setXpHistory] = useState<XpHistoryResponse | null>(null)
+    const [gamificationStats, setGamificationStats] = useState<GamificationStats | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -14,12 +23,14 @@ export const useSettingsData = () => {
             if (!user?._id) return;
             setLoading(true)
             try {
-                const [loginRes, xpRes] = await Promise.all([
+                const [loginRes, xpRes, statsRes] = await Promise.all([
                     axios.get('/login-history'),
-                    axios.get('/xp-history')
+                    axios.get('/xp-history'),
+                    axios.get('/gamification/stats'),
                 ])
                 setLoginHistory(loginRes.data)
                 setXpHistory(xpRes.data)
+                setGamificationStats(statsRes.data)
             } catch (err) {
                 return;
             } finally {
@@ -27,7 +38,7 @@ export const useSettingsData = () => {
             }
         }
         fetchData()
-    }, [user?._id]) // Only depend on user ID, not the entire user object
+    }, [user?._id])
 
-    return { loginHistory, xpHistory, loading }
+    return { loginHistory, xpHistory, gamificationStats, loading }
 }
