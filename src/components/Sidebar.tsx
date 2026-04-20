@@ -166,7 +166,7 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
                                     lineHeight: 1,
                                 }}
                             >
-                                Tokō
+                                LLAnguage
                             </span>
                             <span className="tk-eyebrow" style={{ marginTop: 4 }}>
                                 reading room
