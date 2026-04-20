@@ -11,9 +11,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { Header } from './components/Header'
 import { EditPage } from './components/edit-deck/edit-deck'
 import { QuizReport } from './components/LearningReport'
-import { FlashcardPage } from './components/DeckDetailsComponents/FlashCardPage'
-import { MatchGame } from './components/DeckDetailsComponents/MatchGame'
-import { TestPage } from './components/DeckDetailsComponents/TestPageComponents/TestPage'
 import { VocabularyPage } from './components/vocabulary-page'
 import { useEffect } from 'react'
 import { LearningPage } from './components/LearningPage/LearningPage'
@@ -75,9 +72,6 @@ const AppContent = ({ location, handleStartTour }: { location: any, handleStartT
           <Route path="/learn-decks/:id" element={<LearningPage />} />
           <Route path="/edit-deck/:id" element={<EditPage />} />
           <Route path='/view-decks/:id/learning-report/:reportId' element={<QuizReport />} />
-          <Route path='/flashcards/:id' element={<FlashcardPage />} />
-          <Route path='/matchgame/:id' element={<MatchGame />} />
-          <Route path='/testpage/:id' element={<TestPage />} />
           <Route path='/vocabulary' element={<VocabularyPage />} />
           <Route path='/review-page/:id' element={<ReviewPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />

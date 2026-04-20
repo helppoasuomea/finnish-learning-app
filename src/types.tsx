@@ -31,7 +31,8 @@ export interface Deck {
     deckName: string;
     deckPercentage?: string;
     deckTags: string[];
-    cards: Card[]
+    cards: Card[];
+    description?: string;
 }
 
 export interface Card {
