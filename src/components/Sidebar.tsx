@@ -3,19 +3,17 @@ import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { Avatar, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
-import { 
-    Languages, 
-    Library, 
-    Settings, 
-    LogOut, 
-    Info,
-    ChevronRight,
+import {
+    Languages,
+    Library,
+    Settings,
+    LogOut,
     Compass,
     LogIn,
+    Bookmark,
+    Flame,
+    ChevronRight,
     ChevronLeft,
-    Bookmark
 } from "lucide-react";
 import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -26,6 +24,56 @@ interface SidebarProps {
     onStartTour?: () => void;
 }
 
+/* Small circular seal — signature Tokō motif */
+const Seal = ({
+    letter,
+    size = 32,
+    filled = false,
+}: {
+    letter: string;
+    size?: number;
+    filled?: boolean;
+}) => (
+    <span
+        style={{
+            width: size,
+            height: size,
+            borderRadius: "50%",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: '"Instrument Serif", Georgia, serif',
+            fontSize: size * 0.44,
+            lineHeight: 1,
+            flexShrink: 0,
+            color: filled ? "var(--tk-paper)" : "var(--tk-accent)",
+            background: filled ? "var(--tk-accent)" : "var(--tk-card)",
+            border: `1.25px solid var(--tk-accent)`,
+            letterSpacing: 0,
+        }}
+    >
+        {letter}
+    </span>
+);
+
+/* Tiny dot-indicator for recent decks */
+const DeckDot = ({ pct }: { pct: number }) => (
+    <span
+        style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            flexShrink: 0,
+            background:
+                pct > 70
+                    ? "var(--tk-accent)"
+                    : pct > 30
+                    ? "var(--tk-tag-moss)"
+                    : "var(--tk-ink-5)",
+        }}
+    />
+);
+
 export const Sidebar = ({ onStartTour }: SidebarProps) => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -35,132 +83,171 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
     const [recentDecks, setRecentDecks] = useState<any[]>([]);
 
     useEffect(() => {
-        // Get recent decks (limit to 3-5 most recent)
         if (decks && decks.length > 0) {
-            // Sort by most recent (you might want to add a createdAt field)
-            const sorted = [...decks];
-            setRecentDecks(sorted.slice(0, 5));
+            setRecentDecks([...decks].slice(0, 5));
         }
     }, [decks]);
 
     const handleLogout = async () => {
         try {
-            await axios.post('/logout');
+            await axios.post("/logout");
             setUser(null);
             localStorage.clear();
             window.location.reload();
         } catch (error) {
-            console.error('Error logging out: ', error);
+            console.error("Error logging out: ", error);
         }
     };
 
     const handleStartTour = () => {
         const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('tour', 'true');
+        currentUrl.searchParams.set("tour", "true");
         navigate(currentUrl.pathname + currentUrl.search);
-        
-        if (onStartTour) {
-            onStartTour();
-        }
+        if (onStartTour) onStartTour();
     };
 
     const isActive = (path: string) => {
-        if (path === '/') {
-            return location.pathname === '/';
-        }
+        if (path === "/") return location.pathname === "/";
         return location.pathname.startsWith(path);
     };
 
     const navItems = [
-        { path: '/', label: 'Translate', icon: Languages },
-        ...(user ? [
-            { path: '/view-all-decks', label: 'All Decks', icon: Library },
-            { path: '/vocabulary', label: 'All saved terms', icon: Compass },
-            { path: '/saved-sentences', label: 'Saved sentences', icon: Bookmark },
-        ] : []),
+        { path: "/", label: "Translate", icon: Languages },
+        ...(user
+            ? [
+                  { path: "/view-all-decks", label: "Decks", icon: Library },
+                  { path: "/vocabulary", label: "Vocabulary", icon: Compass },
+                  { path: "/saved-sentences", label: "Saved sentences", icon: Bookmark },
+              ]
+            : []),
     ];
 
+    const sidebarW = isCollapsed ? 64 : 248;
+
     return (
-        <div className={`hidden md:flex h-screen bg-blue-50 flex-col fixed left-0 top-0 z-40 transition-all duration-300 ${
-            isCollapsed ? 'w-16' : 'w-60'
-        }`}>
-            {/* Toggle Button */}
-            <div className="flex justify-end p-2 border-b border-blue-100">
-                <TooltipProvider>
+        <TooltipProvider delayDuration={300}>
+            <aside
+                className="hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 transition-all duration-300"
+                style={{
+                    width: sidebarW,
+                    background: "var(--tk-paper)",
+                    borderRight: "1px solid var(--tk-rule)",
+                }}
+            >
+                {/* ── Wordmark ── */}
+                <div
+                    style={{
+                        padding: isCollapsed ? "20px 12px 14px" : "24px 20px 16px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: isCollapsed ? "center" : "space-between",
+                    }}
+                >
+                    {!isCollapsed && (
+                        <button
+                            onClick={() => navigate("/")}
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                gap: 2,
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 0,
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontFamily: '"Instrument Serif", Georgia, serif',
+                                    fontSize: 26,
+                                    color: "var(--tk-ink)",
+                                    letterSpacing: "-0.01em",
+                                    lineHeight: 1,
+                                }}
+                            >
+                                Tokō
+                            </span>
+                            <span className="tk-eyebrow" style={{ marginTop: 4 }}>
+                                reading room
+                            </span>
+                        </button>
+                    )}
+
+                    {/* Collapse toggle */}
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
+                            <button
                                 onClick={toggleSidebar}
-                                className="h-8 w-8 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                                style={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: 6,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "var(--tk-ink-3)",
+                                    background: "transparent",
+                                    border: "1px solid var(--tk-rule)",
+                                    cursor: "pointer",
+                                    flexShrink: 0,
+                                    transition: "background 160ms, color 160ms",
+                                }}
+                                className="hover:bg-[var(--tk-paper-deep)] hover:text-[var(--tk-ink)]"
                             >
-                                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                            </Button>
+                                {isCollapsed ? (
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                ) : (
+                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                )}
+                            </button>
                         </TooltipTrigger>
                         <TooltipContent side="right">
-                            {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                            {isCollapsed ? "Expand" : "Collapse"}
                         </TooltipContent>
                     </Tooltip>
-                </TooltipProvider>
-            </div>
+                </div>
 
-            {/* User Profile Section */}
-            <div className={`border-b border-blue-100 transition-all duration-300 ${isCollapsed ? 'p-2' : 'p-8 pb-6'}`}>
-                {user ? (
-                    <div className={`flex flex-col items-center gap-4 ${isCollapsed ? 'gap-2' : ''}`}>
-                        <Avatar className={`border-2 border-blue-200 ${isCollapsed ? 'w-12 h-12' : 'w-16 h-16'}`}>
-                            <AvatarImage 
-                                src={user.avatarUrl || "https://github.com/shadcn.png"} 
-                                alt={user.name || user.username} 
-                            />
-                        </Avatar>
-                        {!isCollapsed && (
-                            <div className="text-center w-full">
-                                <p className="font-semibold text-gray-800">{user.name || user.username}</p>
-                                <p className="text-sm text-gray-600">@{user.username || 'user'}</p>
-                                {user.isPremium && (
-                                    <p className="text-xs font-semibold text-blue-600 mt-2 uppercase tracking-wider">Premium Member</p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className={`flex flex-col items-center gap-4 ${isCollapsed ? 'gap-2' : ''}`}>
-                        <Avatar className={`border-2 border-blue-200 ${isCollapsed ? 'w-12 h-12' : 'w-16 h-16'}`}>
-                            <AvatarImage src="https://github.com/shadcn.png" alt="Guest" />
-                        </Avatar>
-                        {!isCollapsed && (
-                            <div className="text-center">
-                                <p className="font-semibold text-gray-800">Guest</p>
-                                <p className="text-sm text-gray-600">Not logged in</p>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+                {/* ── Main nav ── */}
+                <nav
+                    style={{
+                        flex: 1,
+                        padding: isCollapsed ? "8px 10px" : "8px 12px",
+                        overflowY: "auto",
+                    }}
+                >
+                    {!isCollapsed && (
+                        <div className="tk-eyebrow" style={{ padding: "12px 10px 8px" }}>
+                            Library
+                        </div>
+                    )}
 
-            {/* Main Navigation */}
-            <nav className={`flex-1 py-6 space-y-3 overflow-y-auto transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
-                <TooltipProvider>
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
-                        const linkContent = (
+
+                        const navBtn = (
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={`flex items-center rounded-lg transition-colors ${
-                                    isCollapsed 
-                                        ? 'justify-center px-2 py-3' 
-                                        : 'gap-3 px-4 py-3'
-                                } ${
-                                    active
-                                        ? 'bg-blue-100 text-blue-700 font-medium'
-                                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                                }`}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    padding: isCollapsed ? "9px 10px" : "8px 10px",
+                                    borderRadius: 8,
+                                    fontSize: 13.5,
+                                    color: active ? "var(--tk-accent-deep)" : "var(--tk-ink-2)",
+                                    background: active ? "var(--tk-accent-wash)" : "transparent",
+                                    fontWeight: active ? 500 : 450,
+                                    marginBottom: 2,
+                                    transition: "background 160ms, color 160ms",
+                                    textDecoration: "none",
+                                    justifyContent: isCollapsed ? "center" : "flex-start",
+                                }}
+                                className={!active ? "hover:bg-[var(--tk-paper-deep)] hover:text-[var(--tk-ink)]" : ""}
                             >
-                                <Icon className="w-5 h-5 flex-shrink-0" />
+                                <Icon size={17} strokeWidth={1.6} style={{ flexShrink: 0 }} />
                                 {!isCollapsed && <span>{item.label}</span>}
                             </Link>
                         );
@@ -168,186 +255,279 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
                         if (isCollapsed) {
                             return (
                                 <Tooltip key={item.path}>
-                                    <TooltipTrigger asChild>
-                                        {linkContent}
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right">
-                                        {item.label}
-                                    </TooltipContent>
+                                    <TooltipTrigger asChild>{navBtn}</TooltipTrigger>
+                                    <TooltipContent side="right">{item.label}</TooltipContent>
                                 </Tooltip>
                             );
                         }
-
-                        return linkContent;
+                        return navBtn;
                     })}
-                </TooltipProvider>
 
-                {/* My Decks Section */}
-                {user && recentDecks.length > 0 && !isCollapsed && (
-                    <div className="mt-10 pt-6 border-t border-blue-100">
-                        <div className="flex items-center justify-between px-4 mb-4">
-                            <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider">My Decks</h3>
-                            <Link 
-                                to="/view-all-decks" 
-                                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                            >
-                                See all
-                            </Link>
-                        </div>
-                        <div className="space-y-2">
-                            {recentDecks.map((deck) => (
-                                <Link
-                                    key={deck._id}
-                                    to={`/view-decks/${deck._id}`}
-                                    className="flex items-center justify-between px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors group"
-                                >
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-800 truncate">
+                    {/* ── Recent decks ── */}
+                    {user && recentDecks.length > 0 && !isCollapsed && (
+                        <div style={{ marginTop: 24 }}>
+                            <div className="tk-eyebrow" style={{ padding: "12px 10px 8px" }}>
+                                Recent decks
+                            </div>
+                            {recentDecks.map((deck) => {
+                                const active = location.pathname === `/view-decks/${deck._id}`;
+                                return (
+                                    <Link
+                                        key={deck._id}
+                                        to={`/view-decks/${deck._id}`}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 10,
+                                            padding: "6px 10px",
+                                            borderRadius: 8,
+                                            fontSize: 12.5,
+                                            color: active ? "var(--tk-accent-deep)" : "var(--tk-ink-3)",
+                                            background: active ? "var(--tk-accent-wash)" : "transparent",
+                                            marginBottom: 2,
+                                            transition: "background 160ms, color 160ms",
+                                            textDecoration: "none",
+                                        }}
+                                        className={!active ? "hover:bg-[var(--tk-paper-deep)] hover:text-[var(--tk-ink)]" : ""}
+                                    >
+                                        <DeckDot pct={deck.deckPercentage || 0} />
+                                        <span
+                                            style={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
                                             {deck.deckName}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            {deck.cards?.length || 0} cards
-                                        </p>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 flex-shrink-0" />
-                                </Link>
-                            ))}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
                         </div>
-                    </div>
-                )}
-            </nav>
-
-            {/* Bottom Navigation */}
-            <div className={`border-t border-blue-100 space-y-2 transition-all duration-300 ${isCollapsed ? 'p-2' : 'p-4 pt-6'}`}>
-                <TooltipProvider>
-                    {isCollapsed ? (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    onClick={handleStartTour}
-                                    className="w-full justify-center text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                                >
-                                    <Info className="w-5 h-5" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">Take tour</TooltipContent>
-                        </Tooltip>
-                    ) : (
-                        <Button
-                            variant="ghost"
-                            onClick={handleStartTour}
-                            className="w-full justify-start text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                        >
-                            <Info className="w-5 h-5 mr-3" />
-                            Take tour
-                        </Button>
                     )}
-                    
+
+                    {/* ── Settings (in nav) ── */}
                     {user && (
+                        <div style={{ marginTop: isCollapsed ? 8 : 24 }}>
+                            {!isCollapsed && (
+                                <div
+                                    style={{
+                                        height: 1,
+                                        background: "var(--tk-rule)",
+                                        marginBottom: 12,
+                                    }}
+                                />
+                            )}
+                            {(() => {
+                                const active = isActive("/settings");
+                                const btn = (
+                                    <Link
+                                        to="/settings"
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 10,
+                                            padding: isCollapsed ? "9px 10px" : "8px 10px",
+                                            borderRadius: 8,
+                                            fontSize: 13.5,
+                                            color: active ? "var(--tk-accent-deep)" : "var(--tk-ink-2)",
+                                            background: active ? "var(--tk-accent-wash)" : "transparent",
+                                            fontWeight: active ? 500 : 450,
+                                            marginBottom: 2,
+                                            transition: "background 160ms, color 160ms",
+                                            textDecoration: "none",
+                                            justifyContent: isCollapsed ? "center" : "flex-start",
+                                        }}
+                                        className={!active ? "hover:bg-[var(--tk-paper-deep)] hover:text-[var(--tk-ink)]" : ""}
+                                    >
+                                        <Settings size={17} strokeWidth={1.6} style={{ flexShrink: 0 }} />
+                                        {!isCollapsed && <span>Settings</span>}
+                                    </Link>
+                                );
+                                if (isCollapsed) {
+                                    return (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                                            <TooltipContent side="right">Settings</TooltipContent>
+                                        </Tooltip>
+                                    );
+                                }
+                                return btn;
+                            })()}
+                        </div>
+                    )}
+                </nav>
+
+                {/* ── Footer: user chip + logout / login ── */}
+                <div
+                    style={{
+                        borderTop: "1px solid var(--tk-rule)",
+                        padding: isCollapsed ? 10 : 12,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                    }}
+                >
+                    {user ? (
                         <>
-                            {isCollapsed ? (
+                            {/* User chip */}
+                            <button
+                                onClick={() => navigate("/settings")}
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    padding: 6,
+                                    borderRadius: 8,
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    textAlign: "left",
+                                    minWidth: 0,
+                                    transition: "background 160ms",
+                                }}
+                                className="hover:bg-[var(--tk-paper-deep)]"
+                            >
+                                <Seal
+                                    letter={(user.name || user.username || "U")[0].toUpperCase()}
+                                    size={isCollapsed ? 28 : 30}
+                                    filled
+                                />
+                                {!isCollapsed && (
+                                    <div style={{ overflow: "hidden", flex: 1 }}>
+                                        <div
+                                            style={{
+                                                fontWeight: 500,
+                                                fontSize: 13,
+                                                color: "var(--tk-ink)",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {user.name || user.username}
+                                        </div>
+                                        <div
+                                            style={{
+                                                fontSize: 11,
+                                                color: "var(--tk-ink-3)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 4,
+                                            }}
+                                        >
+                                            <Flame
+                                                size={11}
+                                                style={{ color: "var(--tk-persimmon)" }}
+                                                strokeWidth={1.8}
+                                            />
+                                            <span className="tk-mono">{user.streak || 0}</span>
+                                            <span>day streak</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </button>
+
+                            {/* Logout */}
+                            {!isCollapsed ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Link
-                                            to="/settings"
-                                            className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${
-                                                isActive('/settings')
-                                                    ? 'bg-blue-100 text-blue-700 font-medium'
-                                                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                                            }`}
+                                        <button
+                                            onClick={handleLogout}
+                                            style={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: 8,
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                color: "var(--tk-ink-3)",
+                                                border: "1px solid var(--tk-rule)",
+                                                background: "transparent",
+                                                cursor: "pointer",
+                                                flexShrink: 0,
+                                                transition: "background 160ms, color 160ms",
+                                            }}
+                                            className="hover:bg-[var(--tk-paper-deep)] hover:!text-[var(--tk-persimmon)] hover:!border-[var(--tk-persimmon)]"
                                         >
-                                            <Settings className="w-5 h-5" />
-                                        </Link>
+                                            <LogOut size={14} strokeWidth={1.6} />
+                                        </button>
                                     </TooltipTrigger>
-                                    <TooltipContent side="right">Settings</TooltipContent>
+                                    <TooltipContent side="right">Logout</TooltipContent>
                                 </Tooltip>
                             ) : (
-                                <Link
-                                    to="/settings"
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                                        isActive('/settings')
-                                            ? 'bg-blue-100 text-blue-700 font-medium'
-                                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                                    }`}
-                                >
-                                    <Settings className="w-5 h-5" />
-                                    <span>Settings</span>
-                                </Link>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            onClick={handleLogout}
+                                            style={{
+                                                width: 28,
+                                                height: 28,
+                                                borderRadius: 6,
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                color: "var(--tk-ink-3)",
+                                                border: "none",
+                                                background: "transparent",
+                                                cursor: "pointer",
+                                                transition: "color 160ms",
+                                            }}
+                                            className="hover:!text-[var(--tk-persimmon)]"
+                                        >
+                                            <LogOut size={14} strokeWidth={1.6} />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">Logout</TooltipContent>
+                                </Tooltip>
                             )}
                         </>
-                    )}
-                    
-                    {user ? (
-                        isCollapsed ? (
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        onClick={handleLogout}
-                                        className="w-full justify-center text-gray-700 hover:bg-blue-50 hover:text-red-600"
-                                    >
-                                        <LogOut className="w-5 h-5" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="right">Logout</TooltipContent>
-                            </Tooltip>
-                        ) : (
-                            <Button
-                                variant="ghost"
-                                onClick={handleLogout}
-                                className="w-full justify-start text-gray-700 hover:bg-blue-50 hover:text-red-600"
-                            >
-                                <LogOut className="w-5 h-5 mr-3" />
-                                Logout
-                            </Button>
-                        )
                     ) : (
-                        isCollapsed ? (
+                        /* Not logged in — show Login dialog */
+                        <Dialog>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className="w-full justify-center text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                                            >
-                                                <LogIn className="w-5 h-5" />
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-[555px] max-h-[570px] overflow-y-auto">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-4xl flex items-center justify-center mt-8">Log In</DialogTitle>
-                                            </DialogHeader>
-                                            <LoginPage />
-                                        </DialogContent>
-                                    </Dialog>
+                                    <DialogTrigger asChild>
+                                        <button
+                                            style={{
+                                                flex: 1,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 10,
+                                                padding: isCollapsed ? 8 : "8px 10px",
+                                                borderRadius: 8,
+                                                fontSize: 13.5,
+                                                color: "var(--tk-ink-2)",
+                                                background: "transparent",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                justifyContent: isCollapsed ? "center" : "flex-start",
+                                                transition: "background 160ms, color 160ms",
+                                            }}
+                                            className="hover:bg-[var(--tk-paper-deep)] hover:text-[var(--tk-ink)]"
+                                        >
+                                            <LogIn size={17} strokeWidth={1.6} style={{ flexShrink: 0 }} />
+                                            {!isCollapsed && <span>Sign in</span>}
+                                        </button>
+                                    </DialogTrigger>
                                 </TooltipTrigger>
-                                <TooltipContent side="right">Log In</TooltipContent>
+                                {isCollapsed && (
+                                    <TooltipContent side="right">Sign in</TooltipContent>
+                                )}
                             </Tooltip>
-                        ) : (
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        className="w-full justify-start text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                                    >
-                                        <LogIn className="w-5 h-5 mr-3" />
+                            <DialogContent className="max-w-[555px] max-h-[570px] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle className="text-4xl flex items-center justify-center mt-8">
                                         Log In
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-[555px] max-h-[570px] overflow-y-auto">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-4xl flex items-center justify-center mt-8">Log In</DialogTitle>
-                                    </DialogHeader>
-                                    <LoginPage />
-                                </DialogContent>
-                            </Dialog>
-                        )
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <LoginPage />
+                            </DialogContent>
+                        </Dialog>
                     )}
-                </TooltipProvider>
-            </div>
-        </div>
+                </div>
+            </aside>
+        </TooltipProvider>
     );
 };
-

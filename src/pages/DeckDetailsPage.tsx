@@ -211,7 +211,7 @@ export const DeckDetailsPage: React.FC = () => {
     }, [debouncedSearchTerm, cards])
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-tk-paper">
         {/* Main container with proper max width and centering */}
         <div className="max-w-7xl mx-auto pt-6 px-4 md:px-6 lg:px-8 pb-12">
           <div className="flex flex-col xl:flex-row gap-8 xl:gap-12">
@@ -219,7 +219,7 @@ export const DeckDetailsPage: React.FC = () => {
             <div className="flex-1 xl:max-w-[65%]">
               {/* Header Section */}
               <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{deckName}</h1>
+                <h1 className="tk-page-title mb-4">{deckName}</h1>
                 
                 {/* Deck Navigation Links */}
                 <div className={`transition-all duration-300 ${
@@ -232,9 +232,18 @@ export const DeckDetailsPage: React.FC = () => {
               {cards.length > 0 ? (
                 <>
                   {/* FlashCard section - Cleaner spacing */}
-                  <div className={`bg-gray-50 rounded-xl shadow-sm p-6 mb-8 transition-all duration-300 ${
-                    highlightedElement === 'flashcard-area' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg' : ''
-                  }`} data-tour-id="flashcard-area">
+                  <div
+                    className={`rounded-xl p-6 mb-8 transition-all duration-300 ${
+                      highlightedElement === 'flashcard-area' ? 'ring-4 ring-opacity-75 shadow-lg' : ''
+                    }`}
+                    style={{
+                      background: "var(--tk-card)",
+                      border: "1px solid var(--tk-rule)",
+                      boxShadow: "var(--tk-sh-1)",
+                      ...(highlightedElement === 'flashcard-area' ? { outlineColor: "var(--tk-accent)" } : {}),
+                    }}
+                    data-tour-id="flashcard-area"
+                  >
                     <div className="flex flex-col items-center">
                       <AnimatePresence>
                         <FlashCard 

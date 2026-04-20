@@ -55,10 +55,10 @@ const AppContent = ({ location, handleStartTour }: { location: any, handleStartT
   const { sidebarWidth } = useSidebar();
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-tk-paper">
       <Sidebar onStartTour={handleStartTour} />
-      <div 
-        className="flex-1 transition-all duration-300"
+      <div
+        className="flex-1 transition-all duration-300 bg-tk-paper"
         style={{ marginLeft: `${sidebarWidth}px` }}
       >
         {/* Show Header on mobile */}
