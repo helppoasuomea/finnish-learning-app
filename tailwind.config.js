@@ -20,7 +20,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        display: ['"Instrument Serif"', '"Cormorant Garamond"', 'Georgia', 'serif'],
+        display: ['"Geist"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
         body:    ['"Geist"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
         mono:    ['"IBM Plex Mono"', '"SF Mono"', 'Menlo', 'monospace'],
       },

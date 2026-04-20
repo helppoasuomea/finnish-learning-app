@@ -1,13 +1,10 @@
 import { DockCardLarge } from "../components/AllDeckPagesComponents/DockCardLarge"
-import { useContext, useState} from "react";
-import { UserContext } from "../contexts/UserContext";
+import { useContext, useState } from "react";
 import { DeckContext } from "../contexts/DeckContext";
 import { sortAndFilterDecks } from "../utils/sortAndFilterDecks";
-import { SortableSelect } from "@/components/AllDeckPagesComponents/SortableSelect";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -22,18 +19,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
+
+const SORT_OPTS = [
+    { key: "recent", label: "Recent" },
+    { key: "cards",  label: "Size" },
+    { key: "progress", label: "Progress" },
+];
 
 export const AllDecks = () => {
-    const { user } = useContext(UserContext);
     const { decks, refreshDecks } = useContext(DeckContext)
 
-    const [sortBy, setSortBy] = useState('Most cards')
-    const { allLanguages, displayedDecks } = sortAndFilterDecks(decks, sortBy, false)
+    const [sortBy, setSortBy] = useState('recent')
+    const { displayedDecks } = sortAndFilterDecks(decks, sortBy, false)
 
-    // Dialog state
     const [open, setOpen] = useState(false);
-    // Form state
     const [name, setName] = useState('');
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
@@ -42,7 +42,6 @@ export const AllDecks = () => {
     const [visibility, setVisibility] = useState<'public' | 'private'>('public');
     const { toast } = useToast();
 
-    // Tag input logic
     const handleTagInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setTagInput(event.target.value);
     };
@@ -61,6 +60,11 @@ export const AllDecks = () => {
         setTags(tags.filter(t => t !== tag));
     };
 
+    const resetForm = () => {
+        setName(''); setTags([]); setTagInput('');
+        setLanguage(''); setDescription(''); setVisibility('public');
+    };
+
     const handleAddDeck = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
@@ -72,22 +76,13 @@ export const AllDecks = () => {
             });
             refreshDecks();
             setOpen(false);
-            toast({
-                title: `${name} just added to your account!`,
-                description: `Now you can add flashcards into it.`
-            });
-            setName('');
-            setTags([]);
-            setTagInput('');
-            setLanguage('');
-            setDescription('');
-            setVisibility('public');
-        } catch (error) {
-            toast({ title: 'Error', description: "We couldn't create your deck. If this keeps happening, let us know", variant: 'destructive' });
+            toast({ title: `${name} added!`, description: `Now you can add flashcards into it.` });
+            resetForm();
+        } catch {
+            toast({ title: 'Error', description: "Couldn't create your deck.", variant: 'destructive' });
         }
     };
 
-    // Live preview deck object
     const previewDeck = {
         _id: 'preview',
         deckName: name || 'Deck Name',
@@ -97,212 +92,123 @@ export const AllDecks = () => {
         description,
     };
 
+    const totalCards = decks.reduce((s: number, d: any) => s + (d.cards?.length || 0), 0);
+
+    const newDeckDialog = (
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
+            <DialogContent className="w-full max-w-lg sm:max-w-2xl p-3 sm:p-6 overflow-y-auto max-h-[95vh]">
+                <DialogHeader>
+                    <DialogTitle className="text-lg sm:text-2xl">Create a New Deck</DialogTitle>
+                    <DialogDescription className="text-xs sm:text-base">Fill in the details below to create a new deck.</DialogDescription>
+                </DialogHeader>
+                <form className="grid gap-3 sm:gap-4 py-2 sm:py-4" onSubmit={handleAddDeck}>
+                    <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="deck-name">Name *</Label>
+                        <Input id="deck-name" value={name} onChange={e => setName(e.target.value)} required placeholder="Name of the new deck" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="deck-language">Language (optional)</Label>
+                        <Select value={language} onValueChange={setLanguage}>
+                            <SelectTrigger id="deck-language"><SelectValue placeholder="Select language" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Finnish">🇫🇮 Finnish</SelectItem>
+                                <SelectItem value="Vietnamese">🇻🇳 Vietnamese</SelectItem>
+                                <SelectItem value="Korean">🇰🇷 Korean</SelectItem>
+                                <SelectItem value="Chinese">🇨🇳 Chinese</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="deck-tags">Tags</Label>
+                        <Input
+                            id="deck-tags" value={tagInput}
+                            onChange={handleTagInputChange} onKeyDown={handleTagInputKeyDown}
+                            placeholder="Type a tag and press Enter" autoComplete="off"
+                        />
+                        <div className="flex flex-wrap gap-1 mt-1">
+                            {tags.map(tag => (
+                                <Badge key={tag} className="flex items-center gap-1 px-2 py-1 text-xs">
+                                    {tag}
+                                    <button type="button" className="ml-1" onClick={() => handleRemoveTag(tag)}>
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </Badge>
+                            ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">Press Enter, comma, or space to add a tag.</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="deck-description">Description (optional)</Label>
+                        <Textarea id="deck-description" value={description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} placeholder="Describe this deck..." />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="deck-visibility">Visibility</Label>
+                        <Select value={visibility} onValueChange={v => setVisibility(v as 'public' | 'private')}>
+                            <SelectTrigger id="deck-visibility"><SelectValue placeholder="Select visibility" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="public">Public</SelectItem>
+                                <SelectItem value="private">Private</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 mt-2">
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit">Create Deck</Button>
+                    </DialogFooter>
+                </form>
+                <div className="mt-4 border-t pt-4">
+                    <div className="text-xs text-muted-foreground mb-2">Preview</div>
+                    <DockCardLarge deck={previewDeck} />
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+
     return (
-        <div className="min-h-screen bg-tk-paper">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header Section */}
-                <div className="mb-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-                        <div>
-                            <div className="tk-eyebrow mb-2">Library</div>
-                            <h1 className="tk-page-title mb-2">Your shelves</h1>
-                            <p style={{ color: "var(--tk-ink-3)", fontSize: 15 }}>
-                                {decks.length} decks · {decks.reduce((s: number, d: any) => s + (d.cards?.length || 0), 0)} cards in rotation
-                            </p>
+        <div className="min-h-screen" style={{ background: "var(--tk-paper)" }}>
+            <div className="tk-page">
+                {/* Header */}
+                <div className="tk-page-header">
+                    <div>
+                        <div className="tk-eyebrow mb-2">Library</div>
+                        <h1 className="tk-page-title">Your shelves</h1>
+                        <p style={{ color: "var(--tk-ink-3)", fontSize: 14, marginTop: 6 }}>
+                            {decks.length} {decks.length === 1 ? "deck" : "decks"} · {totalCards} cards in rotation
+                        </p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div className="dk-sort-bar">
+                            {SORT_OPTS.map(opt => (
+                                <button
+                                    key={opt.key}
+                                    className={`dk-sort-btn${sortBy === opt.key ? " is-active" : ""}`}
+                                    onClick={() => setSortBy(opt.key)}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
                         </div>
-                        <div className="flex items-center gap-3 mt-4 sm:mt-0">
-                            <SortableSelect sortBy={sortBy} setSortBy={setSortBy} allLanguages={allLanguages} />
-                            <Dialog open={open} onOpenChange={setOpen}>
-                                <DialogTrigger asChild>
-                                    <Button
-                                        variant="default"
-                                        style={{ background: "var(--tk-ink)", color: "var(--tk-paper)" }}
-                                        className="hover:opacity-90"
-                                    >
-                                        + New Deck
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="w-full max-w-lg sm:max-w-2xl md:max-w-2xl lg:max-w-2xl xl:max-w-2xl p-3 sm:p-6 overflow-y-auto max-h-[95vh]">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-lg sm:text-2xl">Create a New Deck</DialogTitle>
-                                        <DialogDescription className="text-xs sm:text-base">Fill in the details below to create a new deck.</DialogDescription>
-                                    </DialogHeader>
-                                    <form className="grid gap-3 sm:gap-4 py-2 sm:py-4" onSubmit={handleAddDeck}>
-                                        <div className="flex flex-col gap-1.5">
-                                            <Label htmlFor="deck-name">Name *</Label>
-                                            <Input id="deck-name" value={name} onChange={e => setName(e.target.value)} required placeholder="Name of the new deck" className="text-sm sm:text-base" />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <Label htmlFor="deck-language">Language (optional)</Label>
-                                            <Select value={language} onValueChange={setLanguage}>
-                                                <SelectTrigger id="deck-language" className="text-sm sm:text-base">
-                                                    <SelectValue placeholder="Select language" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Finnish">🇫🇮 Finnish</SelectItem>
-                                                    <SelectItem value="Vietnamese">🇻🇳 Vietnamese</SelectItem>
-                                                    <SelectItem value="Korean">🇰🇷 Korean</SelectItem>
-                                                    <SelectItem value="Chinese">🇨🇳 Chinese</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <Label htmlFor="deck-tags">Tags</Label>
-                                            <Input
-                                                id="deck-tags"
-                                                value={tagInput}
-                                                onChange={handleTagInputChange}
-                                                onKeyDown={handleTagInputKeyDown}
-                                                placeholder="Type a tag and press Enter"
-                                                autoComplete="off"
-                                                className="text-sm sm:text-base"
-                                            />
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                {tags.map((tag, _idx) => (
-                                                    <Badge key={tag} className="flex items-center gap-1 px-2 py-1 text-xs">
-                                                        {tag}
-                                                        <button type="button" className="ml-1" onClick={() => handleRemoveTag(tag)}>
-                                                            <X className="w-3 h-3" />
-                                                        </button>
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                            <span className="text-xs text-muted-foreground">Press Enter, comma, or space to add a tag.</span>
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <Label htmlFor="deck-description">Description (optional)</Label>
-                                            <Textarea id="deck-description" value={description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} placeholder="Describe this deck..." className="text-sm sm:text-base" />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <Label htmlFor="deck-visibility">Visibility</Label>
-                                            <Select value={visibility} onValueChange={v => setVisibility(v as 'public' | 'private')}>
-                                                <SelectTrigger id="deck-visibility" className="text-sm sm:text-base">
-                                                    <SelectValue placeholder="Select visibility" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="public">Public</SelectItem>
-                                                    <SelectItem value="private">Private</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 mt-2">
-                                            <DialogClose asChild>
-                                                <Button type="button" variant="outline" className="w-full sm:w-auto">Cancel</Button>
-                                            </DialogClose>
-                                            <Button type="submit" className="w-full sm:w-auto">Create Deck</Button>
-                                        </DialogFooter>
-                                    </form>
-                                    {/* Live Preview */}
-                                    <div className="mt-4 sm:mt-6 border-t pt-3 sm:pt-6">
-                                        <div className="text-xs sm:text-sm text-muted-foreground mb-2">Live Preview</div>
-                                        <div className="max-w-full overflow-x-auto">
-                                            <DockCardLarge deck={previewDeck} />
-                                        </div>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
+                        <button className="tk-btn tk-btn-primary" style={{ whiteSpace: "nowrap" }} onClick={() => setOpen(true)}>
+                            + New Deck
+                        </button>
                     </div>
                 </div>
-                
-                {/* Decks Grid */}
-                {displayedDecks.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {displayedDecks.map((deck: any) => (
-                            <DockCardLarge key={deck._id} deck={deck} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-12">
-                        <p className="text-gray-500 mb-4">No decks yet. Create your first deck to get started!</p>
-                        <Dialog open={open} onOpenChange={setOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="default" className="bg-blue-600 hover:bg-blue-700">
-                                    + New Deck
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="w-full max-w-lg sm:max-w-2xl md:max-w-2xl lg:max-w-2xl xl:max-w-2xl p-3 sm:p-6 overflow-y-auto max-h-[95vh]">
-                                <DialogHeader>
-                                    <DialogTitle className="text-lg sm:text-2xl">Create a New Deck</DialogTitle>
-                                    <DialogDescription className="text-xs sm:text-base">Fill in the details below to create a new deck.</DialogDescription>
-                                </DialogHeader>
-                                <form className="grid gap-3 sm:gap-4 py-2 sm:py-4" onSubmit={handleAddDeck}>
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label htmlFor="deck-name">Name *</Label>
-                                        <Input id="deck-name" value={name} onChange={e => setName(e.target.value)} required placeholder="Name of the new deck" className="text-sm sm:text-base" />
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label htmlFor="deck-language">Language (optional)</Label>
-                                        <Select value={language} onValueChange={setLanguage}>
-                                            <SelectTrigger id="deck-language" className="text-sm sm:text-base">
-                                                <SelectValue placeholder="Select language" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Finnish">🇫🇮 Finnish</SelectItem>
-                                                <SelectItem value="Vietnamese">🇻🇳 Vietnamese</SelectItem>
-                                                <SelectItem value="Korean">🇰🇷 Korean</SelectItem>
-                                                <SelectItem value="Chinese">🇨🇳 Chinese</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label htmlFor="deck-tags">Tags</Label>
-                                        <Input
-                                            id="deck-tags"
-                                            value={tagInput}
-                                            onChange={handleTagInputChange}
-                                            onKeyDown={handleTagInputKeyDown}
-                                            placeholder="Type a tag and press Enter"
-                                            autoComplete="off"
-                                            className="text-sm sm:text-base"
-                                        />
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {tags.map((tag, _idx) => (
-                                                <Badge key={tag} className="flex items-center gap-1 px-2 py-1 text-xs">
-                                                    {tag}
-                                                    <button type="button" className="ml-1" onClick={() => handleRemoveTag(tag)}>
-                                                        <X className="w-3 h-3" />
-                                                    </button>
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                        <span className="text-xs text-muted-foreground">Press Enter, comma, or space to add a tag.</span>
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label htmlFor="deck-description">Description (optional)</Label>
-                                        <Textarea id="deck-description" value={description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} placeholder="Describe this deck..." className="text-sm sm:text-base" />
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label htmlFor="deck-visibility">Visibility</Label>
-                                        <Select value={visibility} onValueChange={v => setVisibility(v as 'public' | 'private')}>
-                                            <SelectTrigger id="deck-visibility" className="text-sm sm:text-base">
-                                                <SelectValue placeholder="Select visibility" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="public">Public</SelectItem>
-                                                <SelectItem value="private">Private</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 mt-2">
-                                        <DialogClose asChild>
-                                            <Button type="button" variant="outline" className="w-full sm:w-auto">Cancel</Button>
-                                        </DialogClose>
-                                        <Button type="submit" className="w-full sm:w-auto">Create Deck</Button>
-                                    </DialogFooter>
-                                </form>
-                                {/* Live Preview */}
-                                <div className="mt-4 sm:mt-6 border-t pt-3 sm:pt-6">
-                                    <div className="text-xs sm:text-sm text-muted-foreground mb-2">Live Preview</div>
-                                    <div className="max-w-full overflow-x-auto">
-                                        <DockCardLarge deck={previewDeck} />
-                                    </div>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                )}
+
+                {/* Grid */}
+                <div className="dk-grid">
+                    {displayedDecks.map((deck: any) => (
+                        <DockCardLarge key={deck._id} deck={deck} />
+                    ))}
+                    <button className="dk-new-card" onClick={() => setOpen(true)}>
+                        <Plus size={20} />
+                        <span style={{ fontSize: 13, fontWeight: 500 }}>Start a new deck</span>
+                    </button>
+                </div>
             </div>
+
+            {newDeckDialog}
         </div>
     )
 }
