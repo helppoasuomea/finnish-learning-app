@@ -26,11 +26,19 @@ const PHASE_ROWS = [
   { key: "tree",    label: "Tree",    color: "var(--ph-tree)",    desc: "Known for good" },
 ];
 
-function phaseOf(score: number) {
-  if (score === 0) return "seed";
-  if (score <= 2)  return "sprout";
-  if (score <= 4)  return "sapling";
+function phaseOf(card: Card): string {
+  const reps = (card as any).reps ?? card.cardScore;
+  const stability = (card as any).stability ?? card.reviewInterval ?? 1;
+  if (reps === 0) return "seed";
+  if (stability < 7)  return "sprout";
+  if (stability < 90) return "sapling";
   return "tree";
+}
+
+function isDue(card: Card): boolean {
+  const dueAt = (card as any).dueAt ?? card.nextReviewDate;
+  if (dueAt) return new Date(dueAt) <= new Date();
+  return (card as any).reps === 0 || card.cardScore < 5;
 }
 
 export const DeckOverview: React.FC<Props> = ({ deckId, deckName, cards, stillLearning, notStudied, completed, onEditDeck }) => {
@@ -38,12 +46,13 @@ export const DeckOverview: React.FC<Props> = ({ deckId, deckName, cards, stillLe
   const navigate = useNavigate();
 
   const phases = { seed: 0, sprout: 0, sapling: 0, tree: 0 } as Record<string, number>;
-  cards.forEach(c => { phases[phaseOf(c.cardScore)]++; });
+  cards.forEach(c => { phases[phaseOf(c)]++; });
   const total = cards.length || 1;
 
   const recentlyLearning = stillLearning.slice(0, 5);
   const readyToPlant     = notStudied.slice(0, 5);
-  const nextSessionCount = Math.min(20, phases.seed + phases.sprout);
+  const dueCount = cards.filter(isDue).length;
+  const nextSessionCount = Math.min(20, dueCount || phases.seed + phases.sprout);
 
   return (
     <div className="dd-overview-grid">
@@ -127,12 +136,12 @@ export const DeckOverview: React.FC<Props> = ({ deckId, deckName, cards, stillLe
           <button
             className="tk-btn tk-btn-accent"
             style={{ width: "100%", marginTop: 16, justifyContent: "center" }}
-            onClick={() => navigate(`/learn/${deckId}`)}
+            onClick={() => navigate(`/review`)}
           >
-            <Play size={13} /> Practice this deck
+            <Play size={13} /> Start review
           </button>
           <div style={{ fontSize: 11, color: "var(--tk-ink-3)", textAlign: "center", marginTop: 10, fontStyle: "italic" }}>
-            Fresh seeds first, then anything still fragile.
+            Due cards first, then anything fragile. Counts toward your streak.
           </div>
         </div>
 

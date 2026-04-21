@@ -6,6 +6,8 @@ import { getTimeStamp } from "@/utils/getTimestamp"
 import { useContext, useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { PersonalInfoCard } from "./PersonalInfoCard"
+import { HowTokoRemembers } from "./HowTokoRemembers"
+import { LibraryDataCard, ThisSessionCard, LeaveQuietlyCard } from "./SettingsFooterSections"
 import { GoogleConsentCard } from "./GoogleConsentCard"
 import { DailyNudgeCard } from "./DailyNudgeCard"
 import { Switch } from "../ui/switch"
@@ -135,6 +137,13 @@ export const SettingsPage = () => {
                     </Dialog>
                 </div>
 
+                {/* Account (name / email / password / PIN / providers) */}
+                <PersonalInfoCard
+                    user={user}
+                    onSaved={refreshUserStats}
+                    isGoogleUser={user?.authProvider === 'google'}
+                />
+
                 {/* Stats card */}
                 <div className="st-section">
                     <div className="st-section-title">Stats</div>
@@ -198,18 +207,11 @@ export const SettingsPage = () => {
                     }}
                 />
 
-                {/* Personal info */}
-                <PersonalInfoCard
-                    formData={profileEditProps.formData}
-                    editMode={profileEditProps.editMode}
-                    showPassword={profileEditProps.showPassword}
-                    isEditing={profileEditProps.isEditing}
-                    isGoogleUser={user?.authProvider === 'google'}
-                    onInputChange={profileEditProps.handleInputChange}
-                    onToggleEdit={profileEditProps.toggleEdit}
-                    onTogglePasswordVisibility={() => profileEditProps.setShowPassword(!profileEditProps.showPassword)}
-                    onSaveChanges={profileEditProps.saveChanges}
-                />
+                <HowTokoRemembers />
+
+                <LibraryDataCard />
+                <ThisSessionCard />
+                <LeaveQuietlyCard />
 
                 {user?.authProvider === 'google' && <GoogleConsentCard />}
             </div>

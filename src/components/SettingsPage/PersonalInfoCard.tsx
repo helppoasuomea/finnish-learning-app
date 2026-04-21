@@ -1,123 +1,161 @@
-// src/components/SettingsPage/PersonalInfoCard.tsx
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Edit2, EyeOff, Eye, Save } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
+import { useState } from "react";
+import { Check, Plus } from "lucide-react";
+import { useToast } from "../ui/use-toast";
+import axios from "axios";
+import { AcctEditSheet, AcctEditField } from "./AcctEditSheet";
 
 interface PersonalInfoCardProps {
-  formData: any;
-  editMode: any;
-  showPassword: boolean;
-  isEditing: boolean;
+  user: any;
+  onSaved?: () => void;
   isGoogleUser?: boolean;
-  onInputChange: (field: 'name' | 'username' | 'password', value: string) => void;
-  onToggleEdit: (field: 'name' | 'username' | 'password') => void;
-  onTogglePasswordVisibility: () => void;
-  onSaveChanges: () => void;
 }
 
-export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
-  formData,
-  editMode,
-  showPassword,
-  isEditing,
-  isGoogleUser = false,
-  onInputChange,
-  onToggleEdit,
-  onTogglePasswordVisibility,
-  onSaveChanges
-}) => {
+const PROVIDER_LABELS: Record<string, string> = {
+  google: "Google",
+  apple:  "Apple",
+  github: "GitHub",
+};
+
+export const PersonalInfoCard = ({ user, onSaved, isGoogleUser = false }: PersonalInfoCardProps) => {
+  const { toast } = useToast();
+  const [sheet, setSheet] = useState<{ field: AcctEditField } | null>(null);
+
+  const connectedProviders: string[] = (() => {
+    const ap = user?.authProvider ?? "";
+    if (ap === "both") return ["google"];
+    if (ap === "google") return ["google"];
+    return [];
+  })();
+
+  const handleSave = async ({ field, value }: { field: AcctEditField; value: any }) => {
+    try {
+      const payload: Record<string, any> = {
+        name: user?.name,
+        username: user?.username,
+        avatarUrl: user?.avatarUrl,
+      };
+      if (field === "name")     payload.name = value;
+      if (field === "username") payload.username = value;
+      if (field === "email")    payload.email = value;
+      if (field === "password") payload.password = value.next;
+      await axios.put("/update", payload);
+      onSaved?.();
+    } catch (err: any) {
+      toast({
+        title: "Update failed",
+        description: err?.response?.data?.error ?? "Could not save — try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <Card className="transition-all duration-300">
-      <CardHeader>
-        <CardTitle>Personal Information</CardTitle>
-        <p className="text-sm text-slate-600">Manage your account details</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Display Name</Label>
-          <div className="flex gap-2">
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => onInputChange('name', e.target.value)}
-              readOnly={!editMode.name}
-              className={!editMode.name ? 'bg-slate-50' : ''}
-            />
-            <Button variant="outline" size="sm" onClick={() => onToggleEdit('name')}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
+    <>
+      <div className="st-section">
+        <div className="st-section-title">Account</div>
+        <div className="st-section-sub">How you sign in and how we reach you.</div>
+
+        <div className="acct-section">
+          {/* Name */}
+          <div className="acct-row">
+            <div className="acct-row-label">Name</div>
+            <div className="acct-row-value">
+              {user?.name ?? "—"}
+              <span className="acct-row-sub">Shown on your profile and seal.</span>
+            </div>
+            <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setSheet({ field: "name" })}>
+              Edit
+            </button>
+          </div>
+
+          {/* Username — hidden for pure Google users */}
+          {!isGoogleUser && (
+            <div className="acct-row">
+              <div className="acct-row-label">Username</div>
+              <div className="acct-row-value mono">
+                {user?.username ? `@${user.username}` : "—"}
+                <span className="acct-row-sub">Used for sign-in. 3–20 characters, letters and numbers.</span>
+              </div>
+              <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setSheet({ field: "username" })}>
+                Change
+              </button>
+            </div>
+          )}
+
+          {/* Email */}
+          <div className="acct-row">
+            <div className="acct-row-label">Email</div>
+            <div className="acct-row-value">
+              {user?.email ?? "—"}
+              <span className="acct-row-sub">
+                {isGoogleUser
+                  ? "Managed by Google."
+                  : "For account recovery and (if you choose) daily reading nudges."}
+              </span>
+            </div>
+            {!isGoogleUser && (
+              <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setSheet({ field: "email" })}>
+                Change
+              </button>
+            )}
+            {isGoogleUser && <div style={{ width: 80 }} />}
+          </div>
+
+          {/* Password — hidden for pure Google users */}
+          {!isGoogleUser && (
+            <div className="acct-row">
+              <div className="acct-row-label">Password</div>
+              <div className="acct-row-value">
+                <span className="acct-pw-dots">· · · · · · · · · ·</span>
+                <span className="acct-row-sub">Change anytime. Minimum 8 characters.</span>
+              </div>
+              <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setSheet({ field: "password" })}>
+                Change password
+              </button>
+            </div>
+          )}
+
+          {/* Quick-access PIN */}
+          <div className="acct-row">
+            <div className="acct-row-label">Quick-access PIN</div>
+            <div className="acct-row-value">
+              <span className="acct-pw-dots">· · · ·</span>
+              <span className="acct-row-sub">Skip the full password when opening Tokō on this device.</span>
+            </div>
+            <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setSheet({ field: "pin" })}>
+              Set PIN
+            </button>
+          </div>
+
+          {/* Connected accounts */}
+          <div className="acct-row acct-row--providers">
+            <div className="acct-row-label">Connected accounts</div>
+            <div className="acct-providers">
+              {["google", "apple", "github"].map(p => {
+                const connected = connectedProviders.includes(p);
+                return (
+                  <button
+                    key={p}
+                    className={`acct-provider-chip${connected ? " is-connected" : ""}`}
+                    disabled={connected}
+                  >
+                    {connected ? <Check size={11} /> : <Plus size={11} />}
+                    {PROVIDER_LABELS[p]}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ width: 80 }} />
           </div>
         </div>
+      </div>
 
-        {!isGoogleUser && (
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <div className="flex gap-2">
-              <Input 
-                id="username"
-                value={formData.username}
-                onChange={(e) => onInputChange('username', e.target.value)}
-                readOnly={!editMode.username}
-                className={!editMode.username ? 'bg-slate-50' : ''}
-              />
-              <Button variant="outline" size="sm" onClick={() => onToggleEdit('username')}>
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {isGoogleUser ? (
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <div className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              <FcGoogle className="h-4 w-4 shrink-0" />
-              Managed by Google — no password needed
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={editMode.password ? formData.password : '••••••••'}
-                  onChange={(e) => onInputChange('password', e.target.value)}
-                  readOnly={!editMode.password}
-                  className={!editMode.password ? 'bg-slate-50' : ''}
-                />
-                {editMode.password && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                    onClick={onTogglePasswordVisibility}
-                    type="button"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                )}
-              </div>
-              <Button variant="outline" size="sm" onClick={() => onToggleEdit('password')}>
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {isEditing && (
-          <Button onClick={onSaveChanges} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+      <AcctEditSheet
+        open={sheet}
+        onClose={() => setSheet(null)}
+        onSave={handleSave}
+        user={{ name: user?.name, username: user?.username, email: user?.email }}
+      />
+    </>
   );
 };
