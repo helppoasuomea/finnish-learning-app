@@ -37,6 +37,12 @@ export interface User {
         calendar: boolean
     }
     hasCalendarToken?: boolean
+    nudgeEnabled?: boolean
+    nudgeTime?: string
+    nudgeChannel?: 'calendar' | 'email' | 'push' | 'none'
+    nudgeQuietDays?: 'never' | 'weekends'
+    nudgeStreakGrace?: boolean
+    email?: string
 }
 
 interface UserContextType {
