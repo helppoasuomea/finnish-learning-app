@@ -21,9 +21,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { LoginPage } from "./UsersComponents/LoginPage";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
-interface SidebarProps {
-    onStartTour?: () => void;
-}
 
 /* Small circular seal — signature Tokō motif */
 const Seal = ({
@@ -75,7 +72,7 @@ const DeckDot = ({ pct }: { pct: number }) => (
     />
 );
 
-export const Sidebar = ({ onStartTour }: SidebarProps) => {
+export const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, setUser } = useContext(UserContext);
@@ -98,13 +95,6 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
         } catch (error) {
             console.error("Error logging out: ", error);
         }
-    };
-
-    const handleStartTour = () => {
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set("tour", "true");
-        navigate(currentUrl.pathname + currentUrl.search);
-        if (onStartTour) onStartTour();
     };
 
     const isActive = (path: string) => {

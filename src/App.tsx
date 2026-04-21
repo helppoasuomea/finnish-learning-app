@@ -32,16 +32,12 @@ function App() {
       if (!userId) navigate('/')
   }, [navigate])
 
-  const handleStartTour = () => {
-  };
-
   return (
     <UserContextProvider>
       <DeckContextProvider>
         <SidebarProvider>
-          <AppContent 
-            location={location} 
-            handleStartTour={handleStartTour} 
+          <AppContent
+            location={location}
           />
         </SidebarProvider>
       </DeckContextProvider>
@@ -49,12 +45,12 @@ function App() {
   )
 }
 
-const AppContent = ({ location, handleStartTour }: { location: any, handleStartTour: () => void }) => {
+const AppContent = ({ location }: { location: any }) => {
   const { sidebarWidth } = useSidebar();
 
   return (
     <div className="flex min-h-screen bg-tk-paper">
-      <Sidebar onStartTour={handleStartTour} />
+      <Sidebar />
       <div
         className="flex-1 transition-all duration-300 bg-tk-paper"
         style={{ marginLeft: `${sidebarWidth}px` }}
@@ -62,7 +58,7 @@ const AppContent = ({ location, handleStartTour }: { location: any, handleStartT
         {/* Show Header on mobile */}
         {location.pathname !== '/' && (
           <div className="md:hidden">
-            <Header onStartTour={handleStartTour} />
+            <Header />
           </div>
         )}
         <Routes>
