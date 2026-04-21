@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from "./ui/breadcrumb";
-import { Home, LogOut, Settings, Library, BookOpen, Edit3, Info } from "lucide-react";
+import { Home, LogOut, Settings, Library, BookOpen, Edit3 } from "lucide-react";
 import { useContext } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
@@ -12,7 +12,7 @@ import { LoginPage } from "./UsersComponents/LoginPage";
 import { motion, AnimatePresence } from "framer-motion";
 import { LLAnguageLogo } from "./Logo";
 
-export const MainNav = ({ onStartTour, highlightUser }: { onStartTour?: () => void; highlightUser?: boolean }) => {
+export const MainNav = ({ highlightUser }: { highlightUser?: boolean }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, setUser } = useContext(UserContext)
@@ -33,16 +33,6 @@ export const MainNav = ({ onStartTour, highlightUser }: { onStartTour?: () => vo
             console.error('Error logging out: ', error);
         }
     }
-
-    const handleStartTour = () => {
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('tour', 'true');
-        navigate(currentUrl.pathname + currentUrl.search);
-        
-        if (onStartTour) {
-            onStartTour();
-        }
-    };
 
     // Animation for underline
     const Underline = () => (
@@ -225,15 +215,6 @@ export const MainNav = ({ onStartTour, highlightUser }: { onStartTour?: () => vo
                 </div>
             </div>
             <div className="flex items-center gap-3">
-                <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={handleStartTour}
-                    className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                    <Info className="w-4 h-4" />
-                    <span className="text-sm">Take Tour</span>
-                </Button>
                 {user ? (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

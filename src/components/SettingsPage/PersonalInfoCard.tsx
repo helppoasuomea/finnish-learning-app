@@ -8,7 +8,6 @@ import { Edit2, EyeOff, Eye, Save } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
 interface PersonalInfoCardProps {
-  highlightedElement: string | null;
   formData: any;
   editMode: any;
   showPassword: boolean;
@@ -21,7 +20,6 @@ interface PersonalInfoCardProps {
 }
 
 export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
-  highlightedElement,
   formData,
   editMode,
   showPassword,
@@ -33,9 +31,7 @@ export const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
   onSaveChanges
 }) => {
   return (
-    <Card className={`transition-all duration-300 ${
-      highlightedElement === 'personal-info' ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-lg' : ''
-    }`}>
+    <Card className="transition-all duration-300">
       <CardHeader>
         <CardTitle>Personal Information</CardTitle>
         <p className="text-sm text-slate-600">Manage your account details</p>

@@ -200,7 +200,6 @@ export const SettingsPage = () => {
 
                 {/* Personal info */}
                 <PersonalInfoCard
-                    highlightedElement={null}
                     formData={profileEditProps.formData}
                     editMode={profileEditProps.editMode}
                     showPassword={profileEditProps.showPassword}

@@ -1,6 +1,4 @@
 import { InputBar } from "../components/IndexPage/InputBar";
-import CoachMark from "../components/IndexPage/CoachMark";
-import WelcomeTourModal from "../components/IndexPage/WelcomeTourModal";
 import useTranslation from "../state/hooks/useTranslation";
 import { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { useTranslationHover } from "@/contexts/TranslationHoverContext";
@@ -77,27 +75,6 @@ const IndexPageContent = () => {
     const lastAutoSavedSentenceRef = useRef<string | null>(null);
     const wordDetailsRef = useRef<HTMLDivElement>(null);
 
-    const isTourActive = new URLSearchParams(location.search).get('tour') === 'true';
-    const [currentStep, setCurrentStep] = useState(0);
-    const [highlightedElement, setHighlightedElement] = useState<string | null>(null);
-    const totalSteps = 8;
-
-    const mockTranslation = "Minä rakastan oppia kieliä ja se on todella hauskaa!";
-    const mockWords = [
-        { id: 'm1', fi: "rakastan", en: "love", original_word: "rakastan", type: "verb", pronunciation: "/rɑ.kɑs.tɑn/", comment: "First person singular present tense of 'rakastaa' (to love)" },
-        { id: 'm2', fi: "oppia", en: "to learn", original_word: "oppia", type: "verb", pronunciation: "/op.pi.ɑ/", comment: "Infinitive form meaning 'to learn' or 'to study'" },
-        { id: 'm3', fi: "kieliä", en: "languages", original_word: "kieliä", type: "noun", pronunciation: "/ki.e.li.æ/", comment: "Partitive plural of 'kieli' (language)" },
-        { id: 'm4', fi: "hauskaa", en: "fun", original_word: "hauskaa", type: "adjective", pronunciation: "/hɑus.kɑ.ɑ/", comment: "Partitive singular of 'hauska' (fun, amusing, nice)" },
-    ];
-
-    useEffect(() => {
-        if (isTourActive) {
-            const stepHighlights = [null, 'translation-bar', 'input-bar', 'translation', 'word-details', 'user-header', 'deck-info', null];
-            setHighlightedElement(stepHighlights[currentStep]);
-        } else {
-            setHighlightedElement(null);
-        }
-    }, [currentStep, isTourActive]);
 
     useEffect(() => {
         const state = location.state as any;
@@ -116,17 +93,6 @@ const IndexPageContent = () => {
             setInputText(original);
         }
     }, [response, inputText, setInputText]);
-
-    const handleNext = () => { if (currentStep < totalSteps - 1) setCurrentStep(currentStep + 1); };
-    const handlePrev = () => { if (currentStep > 0) setCurrentStep(currentStep - 1); };
-    const handleSkip = () => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('tour');
-        navigate(url.pathname);
-        setCurrentStep(0);
-        setHighlightedElement(null);
-    };
-    const handleFinish = handleSkip;
 
     const handleSave = async () => {
         if (!selectedDeckId) return;
@@ -234,8 +200,8 @@ const IndexPageContent = () => {
         }
     }, [hoveredFlashcardFi]);
 
-    const activeWords = isTourActive && !response?.words ? mockWords : (response?.words || []);
-    const activeSentence = isTourActive && !response?.sentence ? mockTranslation : response?.sentence;
+    const activeWords = response?.words || [];
+    const activeSentence = response?.sentence;
     const showOutput = !!(activeSentence);
     const greeting = timeOfDay();
     const userName = user?.name || user?.username || '';
@@ -284,7 +250,7 @@ const IndexPageContent = () => {
                             setInputText={setInputText}
                             handleTranslation={handleTranslationStream}
                             ready={ready}
-                            highlighted={highlightedElement === 'input-bar'}
+                            highlighted={false}
                             isStreaming={isStreaming}
                             currentWords={response?.words}
                             currentWordIndex={-1}
@@ -680,22 +646,6 @@ const IndexPageContent = () => {
                 </DialogContent>
             </Dialog>
 
-            <WelcomeTourModal onStartTour={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('tour', 'true');
-                navigate(url.pathname + url.search);
-            }} />
-
-            {isTourActive && (
-                <CoachMark
-                    step={currentStep}
-                    totalSteps={totalSteps}
-                    onNext={handleNext}
-                    onPrev={handlePrev}
-                    onSkip={handleSkip}
-                    onFinish={handleFinish}
-                />
-            )}
 
         </div>
     );
