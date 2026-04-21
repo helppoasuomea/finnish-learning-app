@@ -18,6 +18,7 @@ import { ReviewPage } from './components/ReviewPage/ReviewPage'
 import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
+import { ReviewDashboardPage } from './pages/ReviewDashboardPage'
 
 axios.defaults.baseURL = 'http://localhost:2323/api/'
 axios.defaults.withCredentials = true
@@ -75,6 +76,7 @@ const AppContent = ({ location, handleStartTour }: { location: any, handleStartT
           <Route path='/vocabulary' element={<VocabularyPage />} />
           <Route path='/review-page/:id' element={<ReviewPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />
+          <Route path='/review' element={<ReviewDashboardPage />} />
           
           {/* Routes that DON'T need deck context */}
           <Route path="/settings" element={<SettingsPage />} />
