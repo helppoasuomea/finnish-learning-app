@@ -1,26 +1,29 @@
-import { useEffect, useRef, useState, useContext } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, RotateCcw, Volume2, Clock, ArrowRight } from "lucide-react";
-import axios from "axios";
 import { Card } from "@/types";
-import { UserContext } from "@/contexts/UserContext";
+import { enqueue, dequeue, getPendingCount, type PrevSnapshot } from "@/utils/reviewAnswerQueue";
 
 type Rating = "again" | "hard" | "good" | "easy";
 type DeckCard = Card & { deckId: string; deckName: string };
 
-function phaseOf(score: number): string {
-  if (score === 0) return "seed";
-  if (score <= 2) return "sprout";
-  if (score <= 4) return "sapling";
+function phaseOf(card: DeckCard): string {
+  const reps = card.reps ?? card.cardScore;
+  const stability = card.stability ?? card.reviewInterval ?? 1;
+  if (reps === 0) return "seed";
+  if (stability < 7) return "sprout";
+  if (stability < 90) return "sapling";
   return "tree";
 }
 
 function projectIntervals(card: DeckCard): { again: string; hard: string; good: string; easy: string } {
-  const phase = phaseOf(card.cardScore);
-  const stability = Math.max(1, card.reviewInterval ?? 1);
-  const ease = card.easeFactor ?? 2.5;
-  const reps = card.cardScore;
+  const reps = card.reps ?? card.cardScore;
+  const stability = Math.max(1, card.stability ?? card.reviewInterval ?? 1);
+  const ease = card.ease ?? card.easeFactor ?? 2.5;
+
   const fmt = (d: number) =>
-    d < 1
+    d < 1 / 24
+      ? `${Math.round(d * 24 * 60)} min`
+      : d < 1
       ? `${Math.round(d * 24)} h`
       : d < 30
       ? `${Math.round(d)} d`
@@ -28,8 +31,8 @@ function projectIntervals(card: DeckCard): { again: string; hard: string; good: 
       ? `${(d / 30).toFixed(1)} mo`
       : `${(d / 365).toFixed(1)} y`;
 
-  if (phase === "seed" || reps <= 1) {
-    return { again: "1 min", hard: "5 min", good: reps === 0 ? "10 min" : "1 d", easy: "4 d" };
+  if (reps === 0) {
+    return { again: "10 min", hard: "5 min", good: "1 d", easy: "4 d" };
   }
   return {
     again: "10 min",
@@ -41,10 +44,11 @@ function projectIntervals(card: DeckCard): { again: string; hard: string; good: 
 
 function gradePhaseTransition(card: DeckCard, grade: Rating): string | null {
   if (grade === "again" || grade === "hard") return null;
-  const phase = phaseOf(card.cardScore);
-  const stability = Math.max(1, card.reviewInterval ?? 1);
-  const passMult = grade === "easy" ? 2.5 : 1.7;
-  const nextStab = stability * passMult;
+  const phase = phaseOf(card);
+  const stability = Math.max(1, card.stability ?? card.reviewInterval ?? 1);
+  const ease = card.ease ?? card.easeFactor ?? 2.5;
+  const mult = grade === "easy" ? ease * 1.3 : ease;
+  const nextStab = stability * mult;
   if (phase === "seed") return "sprout";
   if (phase === "sprout" && nextStab >= 7) return "sapling";
   if (phase === "sapling" && nextStab >= 90) return "tree";
@@ -64,10 +68,10 @@ export const ReviewSession: React.FC<{
   onClose: () => void;
   onDone: (summary: { reviewed: number; history: { card: DeckCard; grade: Rating }[] }) => void;
 }> = ({ queue, onClose, onDone }) => {
-  const { user } = useContext(UserContext);
   const [idx, setIdx] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [history, setHistory] = useState<{ card: DeckCard; grade: Rating }[]>([]);
+  const [history, setHistory] = useState<{ card: DeckCard; grade: Rating; prevSnapshot: PrevSnapshot }[]>([]);
+  const [pendingCount, setPendingCount] = useState(() => getPendingCount());
   const [graduation, setGraduation] = useState<{
     card: DeckCard;
     from: string;
@@ -82,21 +86,19 @@ export const ReviewSession: React.FC<{
   const intervals = current ? projectIntervals(current) : { again: "", hard: "", good: "", easy: "" };
   const lastSeen = current ? relativeTime(current.lastReviewDate) : null;
 
-  const submitRating = (card: DeckCard, rating: Rating) => {
-    if (!user?._id) return;
-    const correct = rating === "good" || rating === "easy";
-    axios.post("/learning-history/save-quiz-result", {
-      userId: user._id,
-      cardId: card._id,
-      correct,
-      deckId: card.deckId,
-    }).catch(() => {});
-  };
-
-  const commitGrade = (g: Rating, historySnapshot: { card: DeckCard; grade: Rating }[], currentIdx: number) => {
+  const commitGrade = (g: Rating, historySnapshot: { card: DeckCard; grade: Rating; prevSnapshot: PrevSnapshot }[], currentIdx: number) => {
     const card = queue[currentIdx];
-    const newHistory = [...historySnapshot, { card, grade: g }];
-    submitRating(card, g);
+    const prevSnapshot: PrevSnapshot = {
+      stability: card.stability ?? null,
+      ease: card.ease ?? null,
+      lapses: card.lapses ?? null,
+      reps: card.reps ?? null,
+      lastSeenAt: card.lastSeenAt ?? null,
+      dueAt: card.dueAt ?? null,
+    };
+    enqueue({ cardId: card._id, deckId: card.deckId, grade: g, clientTimeIso: new Date().toISOString() });
+    setPendingCount(getPendingCount());
+    const newHistory = [...historySnapshot, { card, grade: g, prevSnapshot }];
     if (currentIdx >= total - 1) {
       onDone({ reviewed: total, history: newHistory });
     } else {
@@ -110,7 +112,7 @@ export const ReviewSession: React.FC<{
     if (!current) return;
     const transition = gradePhaseTransition(current, g);
     if (transition) {
-      setGraduation({ card: current, from: phaseOf(current.cardScore), to: transition, pendingGrade: g });
+      setGraduation({ card: current, from: phaseOf(current), to: transition, pendingGrade: g });
     } else {
       commitGrade(g, history, idx);
     }
@@ -131,8 +133,19 @@ export const ReviewSession: React.FC<{
 
   const undo = () => {
     if (history.length === 0) return;
-    const newHistory = history.slice(0, -1);
-    setHistory(newHistory);
+    const last = history[history.length - 1];
+    const wasDequeued = dequeue(last.card._id);
+    if (!wasDequeued) {
+      // Already sent to server — ask it to restore the exact pre-grade state
+      fetch(`/api/review/answer/${last.card._id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deckId: last.card.deckId, prevSnapshot: last.prevSnapshot }),
+        credentials: 'include',
+      }).catch(() => {});
+    }
+    setPendingCount(getPendingCount());
+    setHistory(history.slice(0, -1));
     setIdx(idx - 1);
     setRevealed(true);
   };
@@ -176,6 +189,11 @@ export const ReviewSession: React.FC<{
           <div className="rvs-progress-text">{idx + 1} / {total}</div>
         </div>
         <div className="rvs-top-right">
+          {pendingCount > 0 && (
+            <span className="rvs-sync-badge" title={`${pendingCount} answer${pendingCount > 1 ? 's' : ''} pending sync`}>
+              ● {pendingCount}
+            </span>
+          )}
           <button className="rvs-undo" onClick={undo} disabled={history.length === 0}>
             <RotateCcw size={12} /> Undo
           </button>
@@ -185,7 +203,7 @@ export const ReviewSession: React.FC<{
       <div className="rvs-body">
         <div className="rvs-card" key={current._id}>
           <div className="rvs-card-top">
-            <span className="rvs-card-phase" data-phase={phaseOf(current.cardScore)}>{phaseOf(current.cardScore)}</span>
+            <span className="rvs-card-phase" data-phase={phaseOf(current)}>{phaseOf(current)}</span>
             <span className="rvs-card-deck">{current.deckName}</span>
           </div>
           <div className="rvs-card-fi">{current.userLangCard}</div>

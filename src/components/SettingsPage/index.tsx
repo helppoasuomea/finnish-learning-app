@@ -7,6 +7,7 @@ import { useContext, useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { PersonalInfoCard } from "./PersonalInfoCard"
 import { GoogleConsentCard } from "./GoogleConsentCard"
+import { DailyNudgeCard } from "./DailyNudgeCard"
 import { Switch } from "../ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 import ProfilePicture from "./ProfilePicture"
@@ -52,7 +53,6 @@ export const SettingsPage = () => {
     // Preferences state — seeded from user object
     const [baseForm, setBaseForm] = useState(user?.flashcardWordForm === 'base')
     const [audioFlip, setAudioFlip] = useState(user?.audioOnCardFlip ?? false)
-    const [reminder, setReminder] = useState(user?.dailyReviewReminder ?? true)
 
     useEffect(() => {
         const calendar = searchParams.get('calendar')
@@ -70,7 +70,6 @@ export const SettingsPage = () => {
     const handlePref = async (field: string, value: boolean) => {
         if (field === 'baseForm') setBaseForm(value)
         if (field === 'audioFlip') setAudioFlip(value)
-        if (field === 'reminder') setReminder(value)
         try {
             await axios.put('/update', {
                 name: user?.name,
@@ -78,7 +77,6 @@ export const SettingsPage = () => {
                 avatarUrl: user?.avatarUrl,
                 flashcardWordForm: field === 'baseForm' ? (value ? 'base' : 'original') : user?.flashcardWordForm,
                 audioOnCardFlip: field === 'audioFlip' ? value : audioFlip,
-                dailyReviewReminder: field === 'reminder' ? value : reminder,
             })
             refreshUserStats()
         } catch {
@@ -176,13 +174,29 @@ export const SettingsPage = () => {
                         checked={audioFlip}
                         onChange={v => handlePref('audioFlip', v)}
                     />
-                    <PrefRow
-                        label="Daily review reminder"
-                        desc="A gentle nudge at 20:00."
-                        checked={reminder}
-                        onChange={v => handlePref('reminder', v)}
-                    />
                 </div>
+
+                {/* Daily nudge */}
+                <DailyNudgeCard
+                    enabled={user?.nudgeEnabled ?? true}
+                    time={user?.nudgeTime ?? "08:00"}
+                    channel={user?.nudgeChannel ?? "none"}
+                    quietDays={user?.nudgeQuietDays ?? "never"}
+                    streakGrace={user?.nudgeStreakGrace ?? true}
+                    hasCalendar={user?.hasCalendarToken ?? false}
+                    isGoogleUser={user?.authProvider === 'google' || user?.authProvider === 'both'}
+                    userEmail={user?.email}
+                    streak={currentStreak}
+                    onSave={async (patch) => {
+                        await axios.put('/update', {
+                            name: user?.name,
+                            username: user?.username,
+                            avatarUrl: user?.avatarUrl,
+                            ...patch,
+                        })
+                        refreshUserStats()
+                    }}
+                />
 
                 {/* Personal info */}
                 <PersonalInfoCard

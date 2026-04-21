@@ -1253,6 +1253,94 @@
   color: var(--tk-ink-3);
 }
 
+/* ── Daily nudge card — nd-* namespace ───────────────────── */
+.nd-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  margin-bottom: 16px;
+}
+.nd-status {
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--tk-ink-2);
+  background: var(--tk-accent-wash); border-radius: var(--r-md);
+  padding: 10px 14px; margin-bottom: 18px;
+}
+.nd-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--tk-accent); flex-shrink: 0;
+}
+.nd-row-pair {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 4px;
+}
+.nd-field { display: flex; flex-direction: column; gap: 6px; }
+.nd-field-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tk-ink-3);
+}
+.nd-time-input-wrap { position: relative; }
+.nd-time-input {
+  width: 100%; padding: 9px 12px; border-radius: var(--r-md);
+  border: 1.5px solid var(--tk-rule); background: var(--tk-paper);
+  font-size: 14px; color: var(--tk-ink); font-family: var(--font-mono);
+  outline: none;
+}
+.nd-time-input:focus { border-color: var(--tk-accent); }
+.nd-seg { display: flex; border: 1.5px solid var(--tk-rule); border-radius: var(--r-md); overflow: hidden; }
+.nd-seg-btn {
+  flex: 1; padding: 9px 8px; font-size: 13px; color: var(--tk-ink-3);
+  background: none; border: none; cursor: pointer; transition: background 0.12s;
+}
+.nd-seg-btn--active { background: var(--tk-ink); color: var(--tk-paper); font-weight: 600; }
+.nd-channels { display: flex; flex-direction: column; gap: 8px; }
+.nd-channel {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+  border-radius: var(--r-md); border: 1.5px solid var(--tk-rule);
+  background: var(--tk-card); cursor: pointer; text-align: left;
+  transition: border-color 0.15s; width: 100%;
+}
+.nd-channel:hover:not(:disabled) { border-color: var(--tk-accent); }
+.nd-channel--selected { border-color: var(--tk-accent); background: var(--tk-accent-wash); }
+.nd-channel--blocked { opacity: 0.55; cursor: default; }
+.nd-channel-radio { flex-shrink: 0; margin-top: 2px; }
+.nd-channel-dot {
+  width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--tk-rule);
+  display: flex; align-items: center; justify-content: center;
+}
+.nd-channel-dot--on {
+  border-color: var(--tk-accent);
+  background: radial-gradient(circle, var(--tk-accent) 5px, transparent 5px);
+}
+.nd-channel-icon { color: var(--tk-ink-3); flex-shrink: 0; margin-top: 2px; }
+.nd-channel-body { flex: 1; }
+.nd-channel-label {
+  font-size: 14px; font-weight: 500; color: var(--tk-ink);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
+}
+.nd-channel-sub { font-size: 12.5px; color: var(--tk-ink-3); }
+.nd-rec-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  padding: 2px 7px; border-radius: 100px; background: var(--tk-accent); color: var(--tk-paper);
+}
+.nd-cal-link { color: var(--tk-accent); text-decoration: underline; text-underline-offset: 2px; }
+.nd-grace {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 16px; border-radius: var(--r-md); background: var(--tk-card);
+  border: 1.5px solid var(--tk-rule); margin-top: 8px;
+}
+.nd-grace-label { font-size: 14px; font-weight: 500; color: var(--tk-ink); margin-bottom: 2px; }
+.nd-grace-sub   { font-size: 12.5px; color: var(--tk-ink-3); }
+.nd-preview-toggle {
+  display: flex; align-items: center; gap: 6px; margin-top: 14px;
+  font-size: 13px; color: var(--tk-ink-3); background: none; border: none;
+  cursor: pointer; padding: 0;
+}
+.nd-preview-toggle:hover { color: var(--tk-ink); }
+.nd-preview {
+  margin-top: 10px; padding: 16px; border-radius: var(--r-md);
+  border-left: 3px solid var(--tk-accent); background: var(--tk-card);
+}
+.nd-preview-time  { font-size: 11px; font-family: var(--font-mono); color: var(--tk-ink-3); margin-bottom: 4px; }
+.nd-preview-title { font-size: 15px; font-weight: 600; color: var(--tk-ink); margin-bottom: 2px; }
+.nd-preview-sub   { font-size: 13px; color: var(--tk-ink-2); margin-bottom: 10px; }
+.nd-preview-note  { font-size: 12px; color: var(--tk-ink-3); font-style: italic; }
+
 /* ═══════════════════════════════════════════════════════════
    Review Dashboard — rv-* namespace
 ═══════════════════════════════════════════════════════════ */
@@ -1449,6 +1537,129 @@
   .rv-section-desc { text-align: left; max-width: none; }
 }
 
+/* ── Away banner ─────────────────────────────────────────── */
+.rv-away-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--tk-persimmon-soft); border-radius: var(--r-lg);
+  padding: 16px 20px; margin-bottom: 16px;
+}
+.rv-away-banner-body { display: flex; align-items: flex-start; gap: 12px; flex: 1; }
+.rv-away-leaf { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.rv-away-title { font-size: 14px; font-weight: 600; color: var(--tk-ink); margin-bottom: 3px; }
+.rv-away-sub   { font-size: 13px; color: var(--tk-ink-3); }
+.rv-away-btn {
+  flex-shrink: 0; padding: 9px 18px; border-radius: 100px; border: none; cursor: pointer;
+  background: var(--tk-persimmon); color: #fff; font-size: 13px; font-weight: 600;
+  white-space: nowrap;
+}
+.rv-away-btn:hover { opacity: 0.88; }
+
+/* ── Hero state variants ─────────────────────────────────── */
+.rv-hero-greeting {
+  font-size: 14px; color: var(--tk-ink-3); margin-bottom: 6px;
+}
+.rv-hero-serif {
+  font-size: clamp(28px, 4vw, 38px); font-style: italic; font-weight: 400;
+  color: var(--tk-ink); line-height: 1.15; margin-bottom: 14px;
+}
+.rv-hero-count-inline {
+  display: flex; align-items: baseline; gap: 0; margin-bottom: 16px;
+}
+.rv-hero-hint {
+  font-size: 13px; color: var(--tk-ink-3); line-height: 1.55;
+  border-top: 1px solid var(--tk-rule-soft); padding-top: 14px; margin-top: 4px;
+}
+.rv-hero-hint-badge {
+  display: inline-block; padding: 1px 7px; border-radius: 100px; font-size: 11px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  background: #C79B6E22; color: #8B6240;
+}
+
+/* Zero-clear check icon */
+.rv-zero-clear-icon {
+  width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--tk-accent);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--tk-accent); margin-bottom: 16px;
+}
+
+/* Zero-fresh plant */
+.rv-zero-fresh-plant { margin: 12px 0 18px; }
+
+/* Overdue chip variant */
+.rv-chip--overdue {
+  border-color: var(--tk-persimmon) !important;
+  color: var(--tk-persimmon) !important;
+}
+
+/* ── Flood plan cards ────────────────────────────────────── */
+.rv-flood-plans { display: flex; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+.rv-flood-plan {
+  flex: 1; min-width: 120px; padding: 14px 16px; border-radius: var(--r-md);
+  border: 1.5px solid var(--tk-rule); background: var(--tk-card); cursor: pointer;
+  text-align: left; display: flex; flex-direction: column; gap: 4px;
+  transition: border-color 0.15s;
+}
+.rv-flood-plan:hover { border-color: var(--tk-accent); }
+.rv-flood-plan--rec  { border-color: var(--tk-accent); background: var(--tk-accent-wash); }
+.rv-flood-rec-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--tk-accent); margin-bottom: 2px;
+}
+.rv-flood-plan-label { font-size: 14px; font-weight: 600; color: var(--tk-ink); }
+.rv-flood-plan-desc  { font-size: 12px; color: var(--tk-ink-3); }
+
+/* ── Side-panel divider ──────────────────────────────────── */
+.rv-hero-side-divider {
+  height: 1px; background: var(--tk-rule-soft); margin: 16px 0;
+}
+
+/* ── Nudge indicator ─────────────────────────────────────── */
+.rv-nudge { padding-top: 4px; }
+.rv-nudge-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tk-ink-3); margin-bottom: 10px;
+}
+.rv-nudge-row    { display: flex; align-items: center; gap: 12px; }
+.rv-nudge-cal-icon {
+  width: 36px; height: 36px; border-radius: var(--r-sm); border: 1.5px solid var(--tk-persimmon);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex-shrink: 0; gap: 0; overflow: hidden;
+  color: var(--tk-persimmon);
+}
+.rv-nudge-cal-day {
+  font-size: 13px; font-weight: 700; line-height: 1; color: var(--tk-ink);
+}
+.rv-nudge-time { font-size: 14px; font-weight: 600; color: var(--tk-ink); }
+.rv-nudge-via  { font-size: 11px; font-family: var(--font-mono); color: var(--tk-ink-3); margin-top: 1px; }
+.rv-nudge-connect {
+  font-size: 13px; color: var(--tk-accent); cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── What happens next (zero-fresh side panel) ───────────── */
+.rv-whn { display: flex; flex-direction: column; gap: 0; }
+.rv-whn-title {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tk-ink-3); margin-bottom: 14px;
+}
+.rv-whn-row  { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.rv-whn-rule { height: 1px; background: var(--tk-rule-soft); }
+.rv-whn-badge {
+  flex-shrink: 0; padding: 3px 10px; border-radius: 100px; font-size: 11px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; min-width: 64px;
+  text-align: center;
+}
+.rv-whn-badge--seed    { background: var(--tk-ink-4); color: var(--tk-paper); opacity: 0.7; }
+.rv-whn-badge--sprout  { background: #C79B6E33; color: #7A5530; }
+.rv-whn-badge--sapling { background: var(--tk-accent-wash); color: var(--tk-accent-deep); }
+.rv-whn-badge--tree    { background: var(--tk-accent); color: var(--tk-paper); }
+.rv-whn-desc   { font-size: 13px; color: var(--tk-ink-2); line-height: 1.4; }
+.rv-whn-footer {
+  margin-top: 14px; padding: 12px 14px; border-radius: var(--r-md);
+  background: var(--tk-accent-wash); font-size: 13px; font-style: italic;
+  color: var(--tk-ink-3); line-height: 1.5;
+}
+
 /* ═══════════════════════════════════════════════════════════
    Review Session Overlay — rvs-* namespace
 ═══════════════════════════════════════════════════════════ */
@@ -1484,6 +1695,11 @@
 }
 .rvs-undo:disabled { color: var(--tk-ink-5); cursor: default; }
 .rvs-undo:not(:disabled):hover { background: var(--tk-paper-deep); }
+
+.rvs-sync-badge {
+  font-size: 11px; color: var(--tk-clay, #c07a5a); opacity: 0.75;
+  display: flex; align-items: center; gap: 3px; user-select: none;
+}
 
 .rvs-body {
   flex: 1; display: flex; flex-direction: column;

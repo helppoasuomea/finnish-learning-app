@@ -42,10 +42,19 @@ export interface Card {
     cardScore: number;
     favorite?: boolean;
     learning?: boolean;
+    // Legacy SRS fields
     nextReviewDate?: string | null;
     lastReviewDate?: string | null;
     reviewInterval?: number;
     easeFactor?: number;
+    // FSRS fields
+    stability?: number;
+    ease?: number;
+    lapses?: number;
+    reps?: number;
+    lastSeenAt?: string | null;
+    dueAt?: string | null;
+    suspended?: boolean;
 }
 
 export type QuestionType =
