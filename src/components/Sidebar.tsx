@@ -14,6 +14,7 @@ import {
     Flame,
     ChevronRight,
     ChevronLeft,
+    RotateCcw,
 } from "lucide-react";
 import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -116,6 +117,7 @@ export const Sidebar = ({ onStartTour }: SidebarProps) => {
         ...(user
             ? [
                   { path: "/view-all-decks", label: "Decks", icon: Library },
+                  { path: "/review", label: "Review", icon: RotateCcw },
                   { path: "/vocabulary", label: "Vocabulary", icon: Compass },
                   { path: "/saved-sentences", label: "Saved sentences", icon: Bookmark },
               ]
