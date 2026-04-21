@@ -12,13 +12,14 @@ export const organizeCardsByScore = (cards: Card[]): OrganizedCard => {
     const completed: Card[] = []
 
     cards.forEach((card) => {
-        const { cardScore } = card
-        if (cardScore >= 1 && cardScore <= 3) {
-            stillLearning.push(card);
-        } else if (cardScore === 0) {
+        const reps = (card as any).reps ?? card.cardScore;
+        const stability = (card as any).stability ?? card.reviewInterval ?? 1;
+        if (reps === 0) {
             notStudied.push(card);
-        } else if (cardScore >= 4 && cardScore <= 5) {
+        } else if (stability >= 90) {
             completed.push(card);
+        } else {
+            stillLearning.push(card);
         }
     })
     const sortWithFavoritesAtTop = (a: Card, b: Card) => {

@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { ChevronRight, Pencil, Play, Clipboard } from "lucide-react";
+import { ChevronRight, Pencil } from "lucide-react";
 import { organizeCardsByScore } from "../composables/SortCard";
 import useFetchDeck from "../state/hooks/useFetchDeck";
 import { ProgressRing } from "@/components/ui/ProgressRing";
@@ -18,7 +18,6 @@ type Tab = "overview" | "terms";
 
 export const DeckDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { deck, cards, deckName, deckTags, setDeck, setCards } = useFetchDeck(id);
 
   const [tab, setTab] = useState<Tab>("overview");
@@ -108,11 +107,23 @@ export const DeckDetailsPage: React.FC = () => {
 
   const lastStudied = (() => {
     try {
-      const sorted = [...cards].sort((a, b) => {
-        if (!a.nextReviewDate || !b.nextReviewDate) return 0;
-        return new Date(b.nextReviewDate).getTime() - new Date(a.nextReviewDate).getTime();
-      });
-      return sorted.length ? "recently" : "—";
+      const timestamps = cards
+        .map(c => (c as any).lastSeenAt ?? c.lastReviewDate)
+        .filter(Boolean)
+        .map(d => new Date(d).getTime())
+        .filter(t => !isNaN(t));
+      if (!timestamps.length) return "—";
+      const latest = Math.max(...timestamps);
+      const diffMs = Date.now() - latest;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1)  return "just now";
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffH = Math.floor(diffMin / 60);
+      if (diffH < 24)   return `${diffH}h ago`;
+      const diffD = Math.floor(diffH / 24);
+      if (diffD === 1)  return "yesterday";
+      if (diffD < 30)   return `${diffD}d ago`;
+      return new Date(latest).toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } catch { return "—"; }
   })();
 
@@ -175,14 +186,6 @@ export const DeckDetailsPage: React.FC = () => {
                 {t === "overview" ? "Overview" : "Terms"}
               </button>
             ))}
-            <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 1 }}>
-              <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setPasteOpen(true)}>
-                <Clipboard size={13} />Paste import
-              </button>
-              <button className="tk-btn tk-btn-accent tk-btn-sm" onClick={() => navigate(`/learn/${id}`)}>
-                <Play size={13} />Practice this deck
-              </button>
-            </div>
           </div>
 
           {/* Tab content */}
