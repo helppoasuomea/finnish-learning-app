@@ -11,9 +11,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { Header } from './components/Header'
 import { EditPage } from './components/edit-deck/edit-deck'
 import { QuizReport } from './components/LearningReport'
-import { FlashcardPage } from './components/DeckDetailsComponents/FlashCardPage'
-import { MatchGame } from './components/DeckDetailsComponents/MatchGame'
-import { TestPage } from './components/DeckDetailsComponents/TestPageComponents/TestPage'
 import { VocabularyPage } from './components/vocabulary-page'
 import { useEffect } from 'react'
 import { LearningPage } from './components/LearningPage/LearningPage'
@@ -21,9 +18,13 @@ import { ReviewPage } from './components/ReviewPage/ReviewPage'
 import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
+import { ReviewDashboardPage } from './pages/ReviewDashboardPage'
+import { AuthPage } from './pages/AuthPage'
 
 axios.defaults.baseURL = 'http://localhost:2323/api/'
 axios.defaults.withCredentials = true
+
+const AUTH_ROUTES = ["/login", "/register"];
 
 function App() {
   const location = useLocation();
@@ -31,19 +32,16 @@ function App() {
   
   useEffect(() => {
       const userId = localStorage.getItem('userId')
-      if (!userId) navigate('/')
-  }, [navigate])
-
-  const handleStartTour = () => {
-  };
+      const isAuthRoute = AUTH_ROUTES.includes(location.pathname)
+      if (!userId && !isAuthRoute) navigate('/')
+  }, [navigate, location.pathname])
 
   return (
     <UserContextProvider>
       <DeckContextProvider>
         <SidebarProvider>
-          <AppContent 
-            location={location} 
-            handleStartTour={handleStartTour} 
+          <AppContent
+            location={location}
           />
         </SidebarProvider>
       </DeckContextProvider>
@@ -51,20 +49,33 @@ function App() {
   )
 }
 
-const AppContent = ({ location, handleStartTour }: { location: any, handleStartTour: () => void }) => {
+const AppContent = ({ location }: { location: any }) => {
   const { sidebarWidth } = useSidebar();
+  const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
+
+  if (isAuthRoute) {
+    return (
+      <>
+        <Routes>
+          <Route path="/login" element={<AuthPage initialMode="signin" />} />
+          <Route path="/register" element={<AuthPage initialMode="register" />} />
+        </Routes>
+        <Toaster />
+      </>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar onStartTour={handleStartTour} />
-      <div 
-        className="flex-1 transition-all duration-300"
+    <div className="flex min-h-screen bg-tk-paper">
+      <Sidebar />
+      <div
+        className="flex-1 transition-all duration-300 bg-tk-paper"
         style={{ marginLeft: `${sidebarWidth}px` }}
       >
         {/* Show Header on mobile */}
         {location.pathname !== '/' && (
           <div className="md:hidden">
-            <Header onStartTour={handleStartTour} />
+            <Header />
           </div>
         )}
         <Routes>
@@ -75,13 +86,11 @@ const AppContent = ({ location, handleStartTour }: { location: any, handleStartT
           <Route path="/learn-decks/:id" element={<LearningPage />} />
           <Route path="/edit-deck/:id" element={<EditPage />} />
           <Route path='/view-decks/:id/learning-report/:reportId' element={<QuizReport />} />
-          <Route path='/flashcards/:id' element={<FlashcardPage />} />
-          <Route path='/matchgame/:id' element={<MatchGame />} />
-          <Route path='/testpage/:id' element={<TestPage />} />
           <Route path='/vocabulary' element={<VocabularyPage />} />
           <Route path='/review-page/:id' element={<ReviewPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />
-          
+          <Route path='/review' element={<ReviewDashboardPage />} />
+
           {/* Routes that DON'T need deck context */}
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>

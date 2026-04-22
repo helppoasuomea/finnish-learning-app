@@ -1,99 +1,106 @@
 import { DeckContext } from "@/contexts/DeckContext"
-import { useContext, useEffect, useState } from "react"
-import { ScrollArea } from "../ui/scroll-area"
-import { Card, CardContent, CardHeader } from "../ui/card"
+import { useContext, useEffect, useMemo, useState } from "react"
 import { Deck, ChangeEvent } from "@/types"
 import { useDebounce } from "@uidotdev/usehooks"
-import { Input } from "../ui/input"
+import { Search } from "lucide-react"
+
+function ScoreDots({ score }: { score: number }) {
+    return (
+        <div className="vc-dots">
+            {Array.from({ length: 5 }, (_, i) => (
+                <span key={i} className={`vc-dot${i < score ? " is-filled" : ""}`} />
+            ))}
+        </div>
+    )
+}
+
+function highlight(text: string, term: string) {
+    if (!term) return <>{text}</>
+    const parts = text.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
+    return (
+        <>
+            {parts.map((part, i) =>
+                part.toLowerCase() === term.toLowerCase()
+                    ? <mark key={i} className="vc-highlight">{part}</mark>
+                    : part
+            )}
+        </>
+    )
+}
 
 export const VocabularyPage = () => {
     const { decks } = useContext(DeckContext)
     const [searchTerm, setSearchTerm] = useState('')
-    const [filteredDecks, setFilteredDecks] = useState<Deck[]>([])
-    const [isSearching, setIsSearching] = useState(false)
-    const debouncedSearchTerm = useDebounce(searchTerm, 500)
+    const debouncedSearch = useDebounce(searchTerm, 300)
 
-    useEffect(() => {
-        if (debouncedSearchTerm) {
-            setIsSearching(true)
-            const newFilterDecks = decks.map(deck => ({
-                ...deck,
-                cards: deck.cards.filter(card => 
-                    card.engCard.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || 
-                    card.userLangCard.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-                )
-            })).filter(deck => deck.cards.length > 0)
-            setFilteredDecks(newFilterDecks)
-            setIsSearching(false)
-        } else {
-            setFilteredDecks(decks)
+    const totalCards = useMemo(
+        () => decks.reduce((s: number, d: Deck) => s + d.cards.length, 0),
+        [decks]
+    )
+
+    const allWords = useMemo(() => {
+        const words: { word: string; translation: string; deckName: string; score: number }[] = []
+        for (const deck of decks) {
+            for (const card of deck.cards) {
+                words.push({
+                    word: card.userLangCard,
+                    translation: card.engCard,
+                    deckName: deck.deckName,
+                    score: card.cardScore ?? 0,
+                })
+            }
         }
-    }, [debouncedSearchTerm, decks])
+        return words.sort((a, b) => a.word.localeCompare(b.word))
+    }, [decks])
 
-    const handleSearchChange = (e: ChangeEvent) => {
-        setSearchTerm(e.target.value)
-    }
-
-    const highlightText = (text: string) => {
-        if (!searchTerm) return text;
-        const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'))
-        return (
-            <span>
-                {parts.map((part, index) => 
-                    part.toLowerCase() === searchTerm.toLowerCase()
-                    ? <span key={index} className="bg-yellow-200">{part}</span>
-                    : part
-                )}
-            </span>
+    const filtered = useMemo(() => {
+        if (!debouncedSearch) return allWords
+        const q = debouncedSearch.toLowerCase()
+        return allWords.filter(
+            w => w.word.toLowerCase().includes(q) || w.translation.toLowerCase().includes(q)
         )
-    }
+    }, [allWords, debouncedSearch])
 
     return (
-        <div className="container mx-auto p-4">
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-3xl font-bold p-4">All saved terms & definitions in decks 📚</h1>
-                <form className="relative flex-grow max-w-md">
-                    <Input type="text"
-                            placeholder="Find any term/definition..."
-                            className="w-full pl-3 pr-10 py-2 rounded-full
-                            border border-transparent focus:outline-none focus:border-gray-300
-                            focus:ring-2 focus:ring-gray-500 transition-all duration-200 ease-in-out"
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                    />
-                    <button disabled={isSearching} className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        {isSearching ? (
-                            "..."
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5 text-gray-400">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg> 
-                        )}
-                    </button>
-                </form>
+        <div className="tk-page">
+            {/* Header */}
+            <div style={{ marginBottom: 28 }}>
+                <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Vocabulary</div>
+                <h1 className="tk-page-title">Every word, everywhere.</h1>
+                <p style={{ color: "var(--tk-ink-3)", fontSize: 14, marginTop: 6 }}>
+                    {totalCards} cards across {decks.length} {decks.length === 1 ? "shelf" : "shelves"}.
+                </p>
             </div>
-            <ScrollArea className="h-[calc(100vh-8rem)]">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredDecks.map((deck) => (
-                        <Card key={deck._id} className="flex flex-col">
-                            <CardHeader className="bg-blue-400 rounded py-3">
-                                <h2 className="text-xl font-semibold mb-2 text-white text-center items-center flex">
-                                    {deck.deckName} - {deck.cards.filter((card) => card.cardScore == 5).length} / {deck.cards.length} cards completed
-                                </h2>
-                            </CardHeader>
-                            <CardContent className="flex-grow p-4">
-                                {deck.cards.map((card) => (
-                                    <div key={card._id}
-                                        className={`p-2 m-2 rounded ${card.cardScore === 5 ? 'bg-green-100' : 'bg-gray-100'}`}
-                                    >
-                                        <p><span className="font-medium">{highlightText(card.userLangCard)}</span> - {highlightText(card.engCard)}</p>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </ScrollArea>
+
+            {/* Search */}
+            <div className="vc-search-wrap">
+                <Search size={15} className="vc-search-icon" />
+                <input
+                    className="vc-search"
+                    type="text"
+                    placeholder="Search across all words..."
+                    value={searchTerm}
+                    onChange={(e: ChangeEvent) => setSearchTerm(e.target.value)}
+                />
+            </div>
+
+            {/* Word list */}
+            <div className="vc-list">
+                {filtered.length === 0 ? (
+                    <div className="vc-empty">
+                        {debouncedSearch ? `No words matching "${debouncedSearch}"` : "No words yet — add cards to a deck to see them here."}
+                    </div>
+                ) : (
+                    filtered.map((w, i) => (
+                        <div key={i} className="vc-row">
+                            <span className="vc-word">{highlight(w.word, debouncedSearch)}</span>
+                            <span className="vc-translation">{highlight(w.translation, debouncedSearch)}</span>
+                            <span className="vc-deck-tag">{w.deckName}</span>
+                            <ScoreDots score={w.score} />
+                        </div>
+                    ))
+                )}
+            </div>
         </div>
     )
 }

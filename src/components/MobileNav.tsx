@@ -171,7 +171,7 @@ export function MobileNav() {
                   </DialogContent>
                 </Dialog>
               )}
-              {(isPage('/view-decks') || isPage('/learn-decks') || isPage('/matchgame') || isPage('/flashcards') || isPage('/edit-deck')) && (
+              {(isPage('/view-decks') || isPage('/learn-decks') || isPage('/edit-deck')) && (
                 <MobileLink 
                   to={`/view-decks/${deckId}`} 
                   onOpenChange={setOpen} 
@@ -217,30 +217,6 @@ export function MobileNav() {
                 >
                   <Library className="w-4 h-4" aria-hidden="true" />
                   Learning Report
-                </MobileLink>
-              )}
-              {isPage('/flashcards') && (
-                <MobileLink 
-                  to={location.pathname} 
-                  onOpenChange={setOpen} 
-                  className="flex items-center gap-2"
-                  aria-label="Flashcards review"
-                  data-testid="mobile-nav-flashcards"
-                >
-                  <Library className="w-4 h-4" aria-hidden="true" />
-                  Flashcards Review
-                </MobileLink>
-              )}
-              {isPage('/matchgame') && (
-                <MobileLink 
-                  to={location.pathname} 
-                  onOpenChange={setOpen} 
-                  className="flex items-center gap-2"
-                  aria-label="Match game"
-                  data-testid="mobile-nav-match-game"
-                >
-                  <Library className="w-4 h-4" aria-hidden="true" />
-                  Match Game
                 </MobileLink>
               )}
             </div>

@@ -12,17 +12,20 @@ export const sortAndFilterDecks = (decks: Deck[], sortBy: string, doSlice: boole
 
     const sortedDecks = [...decks].sort((a, b) => {
         switch (sortBy.toLowerCase()) {
-            case "most recent": 
+            case "recent":
+            case "most recent":
                 return getTimeStamp(b._id).getTime() - getTimeStamp(a._id).getTime();
+            case "progress":
             case "top progress":
                 return calculateCompletePercentage(b.cards) - calculateCompletePercentage(a.cards);
             case "least progress":
                 return calculateCompletePercentage(a.cards) - calculateCompletePercentage(b.cards);
+            case "cards":
             case "most cards":
                 return b.cards.length - a.cards.length;
             case "most old":
             default:
-                return getTimeStamp(a._id).getTime() - getTimeStamp(b._id).getTime(); // Default to sorting by oldest
+                return getTimeStamp(a._id).getTime() - getTimeStamp(b._id).getTime();
         }
     });
 
