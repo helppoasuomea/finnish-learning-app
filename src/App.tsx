@@ -19,9 +19,12 @@ import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
 import { ReviewDashboardPage } from './pages/ReviewDashboardPage'
+import { AuthPage } from './pages/AuthPage'
 
 axios.defaults.baseURL = 'http://localhost:2323/api/'
 axios.defaults.withCredentials = true
+
+const AUTH_ROUTES = ["/login", "/register"];
 
 function App() {
   const location = useLocation();
@@ -29,8 +32,9 @@ function App() {
   
   useEffect(() => {
       const userId = localStorage.getItem('userId')
-      if (!userId) navigate('/')
-  }, [navigate])
+      const isAuthRoute = AUTH_ROUTES.includes(location.pathname)
+      if (!userId && !isAuthRoute) navigate('/')
+  }, [navigate, location.pathname])
 
   return (
     <UserContextProvider>
@@ -47,6 +51,19 @@ function App() {
 
 const AppContent = ({ location }: { location: any }) => {
   const { sidebarWidth } = useSidebar();
+  const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
+
+  if (isAuthRoute) {
+    return (
+      <>
+        <Routes>
+          <Route path="/login" element={<AuthPage initialMode="signin" />} />
+          <Route path="/register" element={<AuthPage initialMode="register" />} />
+        </Routes>
+        <Toaster />
+      </>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-tk-paper">
@@ -73,7 +90,7 @@ const AppContent = ({ location }: { location: any }) => {
           <Route path='/review-page/:id' element={<ReviewPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />
           <Route path='/review' element={<ReviewDashboardPage />} />
-          
+
           {/* Routes that DON'T need deck context */}
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>

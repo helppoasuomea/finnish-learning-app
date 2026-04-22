@@ -56,7 +56,7 @@ export const WelcomeScreen = ({ onDismiss }: WelcomeScreenProps) => {
 
   return (
     <div className="wc-scrim" onClick={onDismiss}>
-      <div className="wc-card" onClick={e => e.stopPropagation()} role="dialog" aria-label="How Tokō studies with you">
+      <div className="wc-card" onClick={e => e.stopPropagation()} role="dialog" aria-label="How Lukeā studies with you">
 
         <div className="wc-seal">
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -64,7 +64,7 @@ export const WelcomeScreen = ({ onDismiss }: WelcomeScreenProps) => {
           </svg>
         </div>
 
-        <h1 className="wc-title">How Tokō studies with you</h1>
+        <h1 className="wc-title">How Lukeā studies with you</h1>
 
         <p className="wc-lead">
           <strong>One path advances memory. Everything else is practice.</strong>

@@ -28,7 +28,7 @@ const FIELD_FRAMES: Record<AcctEditField, { eyebrow: string; title: string; help
   username: { eyebrow: "Username",         title: "Pick a new handle.",              help: "3–20 characters. Letters, numbers, and underscores." },
   email:    { eyebrow: "Email address",    title: "Where should recovery mail go?",  help: "Changing email sends a verification link to your new address." },
   password: { eyebrow: "Password",         title: "Change your password.",           help: "Minimum 8 characters. Mix letters, numbers, and symbols." },
-  pin:      { eyebrow: "Quick-access PIN", title: "Set a 4-digit PIN.",              help: "Lets you open Tokō on this device without your full password." },
+  pin:      { eyebrow: "Quick-access PIN", title: "Set a 4-digit PIN.",              help: "Lets you open Lukeā on this device without your full password." },
 };
 
 const SAVE_LABELS: Record<AcctEditField, [string, string]> = {
@@ -58,7 +58,7 @@ const UsernameBody = ({ current, onChange }: { current?: string; onChange: (d: {
   const clean = v.trim().toLowerCase();
   const ok = /^[a-z0-9_]{3,20}$/.test(clean);
   const changed = clean !== (current ?? "").toLowerCase();
-  const taken = ["admin", "support", "toko"].includes(clean);
+  const taken = ["admin", "support", "lukea"].includes(clean);
   const status = !v ? null : !ok ? "invalid" : !changed ? "same" : taken ? "taken" : "available";
   useEffect(() => { onChange({ value: clean, valid: status === "available" }); }, [v]);
   return (

@@ -1,4 +1,4 @@
-const QUEUE_KEY = 'toko:review-queue';
+const QUEUE_KEY = 'lukea:review-queue';
 
 export interface QueuedAnswer {
   id: string;

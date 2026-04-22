@@ -8,21 +8,21 @@ import {
     Library,
     Settings,
     LogOut,
-    Compass,
-    LogIn,
     Bookmark,
     Flame,
     ChevronRight,
     ChevronLeft,
     RotateCcw,
+    Compass,
+    ArrowRight,
+    User,
+    Play,
 } from "lucide-react";
 import axios from "axios";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { LoginPage } from "./UsersComponents/LoginPage";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { WelcomeScreen } from "./WelcomeScreen";
 
-
-/* Small circular seal — signature Tokō motif */
+/* Small circular seal — signature Lukeā motif */
 const Seal = ({
     letter,
     size = 32,
@@ -79,6 +79,7 @@ export const Sidebar = () => {
     const { decks } = useContext(DeckContext);
     const { isCollapsed, toggleSidebar } = useSidebar();
     const [recentDecks, setRecentDecks] = useState<any[]>([]);
+    const [showWelcome, setShowWelcome] = useState(false);
 
     useEffect(() => {
         if (decks && decks.length > 0) {
@@ -158,7 +159,7 @@ export const Sidebar = () => {
                                     lineHeight: 1,
                                 }}
                             >
-                                LLAnguage
+                                Lukeā
                             </span>
                             <span className="tk-eyebrow" style={{ marginTop: 4 }}>
                                 reading room
@@ -302,13 +303,7 @@ export const Sidebar = () => {
                     {user && (
                         <div style={{ marginTop: isCollapsed ? 8 : 24 }}>
                             {!isCollapsed && (
-                                <div
-                                    style={{
-                                        height: 1,
-                                        background: "var(--tk-rule)",
-                                        marginBottom: 12,
-                                    }}
-                                />
+                                <div style={{ height: 1, background: "var(--tk-rule)", marginBottom: 12 }} />
                             )}
                             {(() => {
                                 const active = isActive("/settings");
@@ -350,18 +345,71 @@ export const Sidebar = () => {
                     )}
                 </nav>
 
-                {/* ── Footer: user chip + logout / login ── */}
+                {/* ── Footer ── */}
                 <div
                     style={{
                         borderTop: "1px solid var(--tk-rule)",
                         padding: isCollapsed ? 10 : 12,
                         display: "flex",
-                        alignItems: "center",
-                        gap: 8,
+                        flexDirection: "column",
+                        gap: 6,
                     }}
                 >
+                    {/* "How Lukeā studies" button */}
+                    {!isCollapsed && (
+                        <button
+                            onClick={() => setShowWelcome(true)}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                padding: "6px 10px",
+                                fontSize: 10.5,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                fontFamily: "var(--tk-mono)",
+                                color: "var(--tk-ink-3)",
+                                background: "transparent",
+                                border: "1px solid var(--tk-rule-soft, var(--tk-rule))",
+                                borderRadius: 6,
+                                width: "100%",
+                                justifyContent: "flex-start",
+                                cursor: "pointer",
+                                transition: "all 120ms",
+                            }}
+                            className="hover:bg-[var(--tk-paper-deep)] hover:!text-[var(--tk-ink)]"
+                        >
+                            <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--tk-accent)", flexShrink: 0 }} />
+                            How Lukeā studies
+                        </button>
+                    )}
+                    {isCollapsed && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={() => setShowWelcome(true)}
+                                    style={{
+                                        width: 28, height: 28,
+                                        borderRadius: 6,
+                                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                        color: "var(--tk-ink-3)",
+                                        background: "transparent",
+                                        border: "1px solid var(--tk-rule)",
+                                        cursor: "pointer",
+                                        margin: "0 auto",
+                                        transition: "background 160ms, color 160ms",
+                                    }}
+                                    className="hover:bg-[var(--tk-paper-deep)] hover:text-[var(--tk-ink)]"
+                                >
+                                    <Play size={12} strokeWidth={1.6} />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">How Lukeā studies</TooltipContent>
+                        </Tooltip>
+                    )}
+
                     {user ? (
-                        <>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             {/* User chip */}
                             <button
                                 onClick={() => navigate("/settings")}
@@ -409,12 +457,8 @@ export const Sidebar = () => {
                                                 gap: 4,
                                             }}
                                         >
-                                            <Flame
-                                                size={11}
-                                                style={{ color: "var(--tk-persimmon)" }}
-                                                strokeWidth={1.8}
-                                            />
-                                            <span className="tk-mono">{user.streak || 0}</span>
+                                            <Flame size={11} style={{ color: "var(--tk-persimmon)" }} strokeWidth={1.8} />
+                                            <span className="tk-mono">{user.currentStreak || 0}</span>
                                             <span>day streak</span>
                                         </div>
                                     </div>
@@ -422,104 +466,72 @@ export const Sidebar = () => {
                             </button>
 
                             {/* Logout */}
-                            {!isCollapsed ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <button
-                                            onClick={handleLogout}
-                                            style={{
-                                                width: 32,
-                                                height: 32,
-                                                borderRadius: 8,
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                color: "var(--tk-ink-3)",
-                                                border: "1px solid var(--tk-rule)",
-                                                background: "transparent",
-                                                cursor: "pointer",
-                                                flexShrink: 0,
-                                                transition: "background 160ms, color 160ms",
-                                            }}
-                                            className="hover:bg-[var(--tk-paper-deep)] hover:!text-[var(--tk-persimmon)] hover:!border-[var(--tk-persimmon)]"
-                                        >
-                                            <LogOut size={14} strokeWidth={1.6} />
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right">Logout</TooltipContent>
-                                </Tooltip>
-                            ) : (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <button
-                                            onClick={handleLogout}
-                                            style={{
-                                                width: 28,
-                                                height: 28,
-                                                borderRadius: 6,
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                color: "var(--tk-ink-3)",
-                                                border: "none",
-                                                background: "transparent",
-                                                cursor: "pointer",
-                                                transition: "color 160ms",
-                                            }}
-                                            className="hover:!text-[var(--tk-persimmon)]"
-                                        >
-                                            <LogOut size={14} strokeWidth={1.6} />
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right">Logout</TooltipContent>
-                                </Tooltip>
-                            )}
-                        </>
-                    ) : (
-                        /* Not logged in — show Login dialog */
-                        <Dialog>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <DialogTrigger asChild>
-                                        <button
-                                            style={{
-                                                flex: 1,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 10,
-                                                padding: isCollapsed ? 8 : "8px 10px",
-                                                borderRadius: 8,
-                                                fontSize: 13.5,
-                                                color: "var(--tk-ink-2)",
-                                                background: "transparent",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                justifyContent: isCollapsed ? "center" : "flex-start",
-                                                transition: "background 160ms, color 160ms",
-                                            }}
-                                            className="hover:bg-[var(--tk-paper-deep)] hover:text-[var(--tk-ink)]"
-                                        >
-                                            <LogIn size={17} strokeWidth={1.6} style={{ flexShrink: 0 }} />
-                                            {!isCollapsed && <span>Sign in</span>}
-                                        </button>
-                                    </DialogTrigger>
+                                    <button
+                                        onClick={handleLogout}
+                                        style={{
+                                            width: isCollapsed ? 28 : 32,
+                                            height: isCollapsed ? 28 : 32,
+                                            borderRadius: 8,
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            color: "var(--tk-ink-3)",
+                                            border: isCollapsed ? "none" : "1px solid var(--tk-rule)",
+                                            background: "transparent",
+                                            cursor: "pointer",
+                                            flexShrink: 0,
+                                            transition: "background 160ms, color 160ms",
+                                        }}
+                                        className="hover:bg-[var(--tk-paper-deep)] hover:!text-[var(--tk-persimmon)] hover:!border-[var(--tk-persimmon)]"
+                                    >
+                                        <LogOut size={14} strokeWidth={1.6} />
+                                    </button>
                                 </TooltipTrigger>
-                                {isCollapsed && (
-                                    <TooltipContent side="right">Sign in</TooltipContent>
-                                )}
+                                <TooltipContent side="right">Sign out</TooltipContent>
                             </Tooltip>
-                            <DialogContent className="max-w-[555px] max-h-[570px] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle className="text-4xl flex items-center justify-center mt-8">
-                                        Log In
-                                    </DialogTitle>
-                                </DialogHeader>
-                                <LoginPage />
-                            </DialogContent>
-                        </Dialog>
+                        </div>
+                    ) : (
+                        /* Guest chip → navigates to /login */
+                        isCollapsed ? (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        onClick={() => navigate("/login")}
+                                        style={{
+                                            width: 28, height: 28,
+                                            borderRadius: 8,
+                                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                            color: "var(--tk-accent)",
+                                            background: "transparent",
+                                            border: "1.5px dashed var(--tk-accent)",
+                                            cursor: "pointer",
+                                            margin: "0 auto",
+                                        }}
+                                    >
+                                        <User size={14} strokeWidth={1.6} />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Sign in</TooltipContent>
+                            </Tooltip>
+                        ) : (
+                            <button className="tk-guest-chip" onClick={() => navigate("/login")}>
+                                <span className="tk-guest-seal">
+                                    <User size={15} strokeWidth={1.6} />
+                                </span>
+                                <span className="tk-guest-body">
+                                    <span className="tk-guest-title">Sign in</span>
+                                    <span className="tk-guest-sub">to save words</span>
+                                </span>
+                                <ArrowRight size={14} style={{ color: "var(--tk-ink-3)", flexShrink: 0 }} />
+                            </button>
+                        )
                     )}
                 </div>
             </aside>
+
+            {showWelcome && <WelcomeScreen onDismiss={() => setShowWelcome(false)} />}
         </TooltipProvider>
     );
 };
