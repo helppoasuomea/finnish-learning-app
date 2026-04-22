@@ -37,7 +37,7 @@ export const LibraryDataCard = () => {
       const url = URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement("a");
       a.href = url;
-      a.download = `toko-export-${new Date().toISOString().slice(0, 10)}.zip`;
+      a.download = `lukea-export-${new Date().toISOString().slice(0, 10)}.zip`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

@@ -15,7 +15,7 @@ export const HowTokoRemembers = () => {
   return (
     <>
       <div className="st-section">
-        <div className="st-section-title">How Tokō remembers</div>
+        <div className="st-section-title">How Lukeā remembers</div>
         <div className="st-section-sub">
           Words don't appear randomly. Each one has a stage, and each stage has its own rhythm.
         </div>

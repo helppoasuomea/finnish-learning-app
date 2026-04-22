@@ -88,7 +88,7 @@ export const DailyNudgeCard: React.FC<Props> = ({
             id: "push",
             icon: <Bell size={16} />,
             label: "Browser push",
-            sub: "Tokō will ask permission the first time",
+            sub: "Lukeā will ask permission the first time",
             available: true,
         },
     ];
@@ -194,7 +194,7 @@ export const DailyNudgeCard: React.FC<Props> = ({
                     {preview && (
                         <div className="nd-preview">
                             <div className="nd-preview-time">{t} – {formatEndTime(t)}</div>
-                            <div className="nd-preview-title">🌿 Tokō · daily review</div>
+                            <div className="nd-preview-title">🌿 Lukeā · daily review</div>
                             <div className="nd-preview-sub">5-minute review{streak > 0 ? ` · Streak day ${streak}` : ""}</div>
                             <div className="nd-preview-note">
                                 Appears in your Google Calendar with a 10-minute popup reminder.

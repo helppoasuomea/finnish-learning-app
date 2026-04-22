@@ -22,7 +22,7 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
         setIsCollapsed(prev => !prev);
     };
 
-    const sidebarWidth = isCollapsed ? 64 : 248; // 64px when collapsed, 248px when expanded (Tokō spec)
+    const sidebarWidth = isCollapsed ? 64 : 248; // 64px when collapsed, 248px when expanded (Lukeā spec)
 
     return (
         <SidebarContext.Provider value={{ isCollapsed, toggleSidebar, sidebarWidth }}>

@@ -120,7 +120,7 @@ export const PersonalInfoCard = ({ user, onSaved, isGoogleUser = false }: Person
             <div className="acct-row-label">Quick-access PIN</div>
             <div className="acct-row-value">
               <span className="acct-pw-dots">· · · ·</span>
-              <span className="acct-row-sub">Skip the full password when opening Tokō on this device.</span>
+              <span className="acct-row-sub">Skip the full password when opening Lukeā on this device.</span>
             </div>
             <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setSheet({ field: "pin" })}>
               Set PIN

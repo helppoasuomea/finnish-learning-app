@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 /* ──────────────────────────────────────────────────────────────
-   Tokō — a quiet design system for a language-learning app
+   Lukeā — a quiet design system for a language-learning app
    Inspired by Muji, washi paper, Japanese stationery
    ────────────────────────────────────────────────────────────── */
 
 @layer base {
   :root {
-    /* ── shadcn/ui HSL variables — remapped to Tokō palette ── */
+    /* ── shadcn/ui HSL variables — remapped to Lukeā palette ── */
     --background:         38 53% 97%;     /* #FAF7F2 washi paper */
     --foreground:         46 10% 10%;     /* #1C1B17 warm near-black */
     --card:               44 100% 98%;   /* #FEFCF7 card lift */
@@ -31,7 +31,7 @@
     --ring:               150 18% 31%;    /* matcha green focus ring */
     --radius:             0.5rem;
 
-    /* ── Tokō raw tokens (hex — used in custom components & CSS) ── */
+    /* ── Lukeā raw tokens (hex — used in custom components & CSS) ── */
     --tk-paper:          #FAF7F2;
     --tk-paper-deep:     #F3EEE4;
     --tk-paper-edge:     #EAE3D4;
@@ -2368,7 +2368,7 @@ textarea.tk-textfield { resize: vertical; line-height: 1.55; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   How Tokō remembers — phase explainer card (Settings)
+   How Lukeā remembers — phase explainer card (Settings)
    ═══════════════════════════════════════════════════════════════ */
 .htm-phases {
   display: grid;
@@ -3095,4 +3095,349 @@ textarea.tk-textfield { resize: vertical; line-height: 1.55; }
   color: var(--tk-ink-3);
   margin-bottom: 24px;
   max-width: 380px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Auth page — two-column sign-in / register
+   ───────────────────────────────────────────────────────── */
+.au-root {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 860px) { .au-root { grid-template-columns: 1fr; } }
+
+.au-art {
+  background: var(--tk-accent);
+  color: var(--tk-paper);
+  padding: 48px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+@media (max-width: 860px) { .au-art { display: none; } }
+
+.au-art-wordmark {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+  color: var(--tk-paper);
+}
+
+.au-art-quote { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 400px; }
+.au-art-kicker {
+  font-family: "Geist", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--tk-paper) 65%, transparent);
+  margin-bottom: 16px;
+}
+.au-art-headline {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: clamp(30px, 3.4vw, 42px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--tk-paper);
+  margin-bottom: 18px;
+}
+.au-art-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: color-mix(in oklab, var(--tk-paper) 72%, transparent);
+  font-family: "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  max-width: 34ch;
+}
+
+.au-art-seeds { display: flex; flex-direction: column; gap: 6px; }
+.au-art-lang-row {
+  display: flex; gap: 8px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklab, var(--tk-paper) 55%, transparent);
+  text-transform: uppercase;
+  flex-wrap: wrap;
+}
+.au-art-lang-row[data-dim="true"] { opacity: 0.55; }
+
+/* Right form side */
+.au-form-side {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 48px;
+  background: var(--tk-paper);
+}
+@media (max-width: 640px) { .au-form-side { padding: 32px 24px; } }
+
+.au-form-inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex; flex-direction: column;
+  gap: 24px;
+  margin: 0 auto;
+}
+
+.au-back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tk-ink-3);
+  background: transparent; border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--tk-rule);
+  text-underline-offset: 3px;
+  padding: 0;
+  transition: color 140ms;
+}
+.au-back-link:hover { color: var(--tk-ink); text-decoration-color: var(--tk-ink-3); }
+
+/* Brand mark (mobile only) */
+.au-brand-mark { display: none; align-items: baseline; gap: 10px; }
+@media (max-width: 860px) { .au-brand-mark { display: flex; } }
+.au-brand-wordmark {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 28px; letter-spacing: -0.01em;
+  color: var(--tk-ink);
+}
+.au-brand-sub {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tk-ink-4);
+}
+
+/* Tab switcher */
+.au-tabs-wrap { display: flex; flex-direction: column; gap: 20px; }
+.au-tabs {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  background: var(--tk-paper-deep, var(--tk-paper));
+  border: 1px solid var(--tk-rule-soft, var(--tk-rule));
+  border-radius: 100px;
+  width: fit-content;
+  min-width: 240px;
+}
+.au-tab {
+  position: relative; z-index: 1;
+  padding: 8px 18px;
+  background: transparent; border: 0;
+  font-family: "Geist", sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--tk-ink-3);
+  cursor: pointer;
+  border-radius: 100px;
+  transition: color 180ms;
+}
+.au-tab[data-active="true"] { color: var(--tk-paper); }
+.au-tabs-ind {
+  position: absolute;
+  top: 4px; bottom: 4px; left: 4px;
+  width: calc(50% - 4px);
+  background: var(--tk-ink);
+  border-radius: 100px;
+  transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 0;
+}
+.au-tabs-ind[data-mode="register"] { transform: translateX(100%); }
+
+/* Form body */
+.au-form-body { display: flex; flex-direction: column; }
+.au-form { display: flex; flex-direction: column; gap: 14px; }
+.au-field { display: flex; flex-direction: column; gap: 6px; }
+.au-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .au-field-row { grid-template-columns: 1fr; } }
+
+.au-label-row { display: flex; justify-content: space-between; align-items: center; }
+.au-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tk-ink-3);
+}
+
+.au-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--tk-paper);
+  border: 1px solid var(--tk-rule-soft, var(--tk-rule));
+  border-radius: 6px;
+  font-family: "Geist", sans-serif;
+  font-size: 14px;
+  color: var(--tk-ink);
+  transition: border-color 160ms, box-shadow 160ms;
+}
+.au-input::placeholder { color: var(--tk-ink-4); }
+.au-input:hover { border-color: var(--tk-rule); }
+.au-input:focus {
+  outline: 0;
+  border-color: var(--tk-accent);
+  box-shadow: 0 0 0 3px var(--tk-accent-wash);
+}
+
+.au-input-wrap { position: relative; display: flex; align-items: center; }
+.au-input-wrap .au-input { padding-right: 40px; }
+.au-input-prefix .au-input { padding-left: 28px; }
+.au-prefix {
+  position: absolute; left: 12px;
+  color: var(--tk-ink-4); font-size: 14px;
+  pointer-events: none;
+}
+.au-eye {
+  position: absolute; right: 8px;
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  background: transparent; border: 0;
+  border-radius: 4px;
+  color: var(--tk-ink-4);
+  cursor: pointer;
+  transition: color 140ms, background 140ms;
+}
+.au-eye:hover { color: var(--tk-ink-2); background: var(--tk-paper-deep, var(--tk-paper)); }
+
+/* Strength meter */
+.au-strength { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.au-strength-bars { display: flex; gap: 3px; flex: 1; }
+.au-strength-bar { flex: 1; height: 3px; border-radius: 2px; transition: background 220ms; }
+.au-strength-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10.5px; letter-spacing: 0.02em; white-space: nowrap;
+}
+
+/* Language chips */
+.au-lang-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.au-lang-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px 7px 10px;
+  background: var(--tk-paper);
+  border: 1px solid var(--tk-rule-soft, var(--tk-rule));
+  border-radius: 100px;
+  font-family: "Geist", sans-serif;
+  font-size: 12.5px; color: var(--tk-ink-2);
+  cursor: pointer; transition: all 140ms;
+}
+.au-lang-chip:hover { border-color: var(--tk-rule); }
+.au-lang-chip[data-active="true"] { background: var(--tk-ink); border-color: var(--tk-ink); color: var(--tk-paper); }
+
+/* Checkbox */
+.au-check {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-family: "Geist", sans-serif;
+  font-size: 13px; color: var(--tk-ink-2);
+  cursor: pointer; user-select: none; line-height: 1.4;
+}
+.au-check input { position: absolute; opacity: 0; pointer-events: none; }
+.au-check-box {
+  flex-shrink: 0; width: 18px; height: 18px;
+  border: 1.5px solid var(--tk-rule);
+  border-radius: 4px; display: grid; place-items: center;
+  background: var(--tk-paper); color: transparent; margin-top: 1px;
+  transition: all 140ms;
+}
+.au-check input:checked + .au-check-box { background: var(--tk-ink); border-color: var(--tk-ink); color: var(--tk-paper); }
+
+/* Social row */
+.au-social-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.au-social {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px;
+  background: var(--tk-paper);
+  border: 1px solid var(--tk-rule-soft, var(--tk-rule));
+  border-radius: 6px;
+  font-family: "Geist", sans-serif;
+  font-size: 13px; color: var(--tk-ink-2);
+  cursor: pointer; transition: all 140ms;
+}
+.au-social:hover { border-color: var(--tk-rule); background: var(--tk-paper-deep, var(--tk-paper)); }
+
+/* Divider */
+.au-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0; }
+.au-divider-line { flex: 1; height: 1px; background: var(--tk-rule-soft, var(--tk-rule)); }
+.au-divider-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--tk-ink-4);
+}
+
+/* Submit button */
+.au-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 13px 20px;
+  background: var(--tk-accent);
+  color: var(--tk-paper);
+  border: 0; border-radius: 6px;
+  font-family: "Geist", sans-serif;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all 180ms; margin-top: 4px;
+}
+.au-submit:hover:not(:disabled) {
+  background: var(--tk-accent-deep, var(--tk-accent));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -4px color-mix(in oklab, var(--tk-accent) 50%, transparent);
+}
+.au-submit:active:not(:disabled) { transform: translateY(0); }
+.au-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.au-spin {
+  width: 14px; height: 14px;
+  border: 1.5px solid color-mix(in oklab, var(--tk-paper) 40%, transparent);
+  border-top-color: var(--tk-paper);
+  border-radius: 50%;
+  animation: au-spin 700ms linear infinite;
+}
+@keyframes au-spin { to { transform: rotate(360deg); } }
+
+/* Footer */
+.au-form-footer { font-size: 13px; color: var(--tk-ink-3); text-align: center; padding-top: 4px; }
+.au-link {
+  background: 0; border: 0;
+  font-family: inherit; font-size: inherit;
+  color: var(--tk-accent-deep, var(--tk-accent));
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--tk-accent) 40%, transparent);
+  text-underline-offset: 3px;
+  cursor: pointer; padding: 0;
+}
+.au-link:hover { text-decoration-color: var(--tk-accent); }
+
+/* ─── Guest chip in sidebar ─── */
+.tk-guest-chip {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; min-width: 0;
+  padding: 10px 12px;
+  background: color-mix(in oklab, var(--tk-accent) 8%, var(--tk-card, var(--tk-paper)));
+  border: 1px solid color-mix(in oklab, var(--tk-accent) 22%, var(--tk-rule));
+  border-radius: 8px;
+  color: var(--tk-ink); text-align: left;
+  cursor: pointer; transition: all 140ms; overflow: hidden;
+}
+.tk-guest-chip:hover {
+  background: color-mix(in oklab, var(--tk-accent) 14%, var(--tk-card, var(--tk-paper)));
+  border-color: var(--tk-accent);
+  transform: translateY(-1px);
+}
+.tk-guest-seal {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--tk-accent);
+  background: var(--tk-card, var(--tk-paper));
+  color: var(--tk-accent);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.tk-guest-body {
+  min-width: 0; flex: 1;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.tk-guest-title {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 14px; line-height: 1.2;
+  color: var(--tk-ink); letter-spacing: -0.005em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tk-guest-sub {
+  font-size: 10.5px; color: var(--tk-ink-3); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
