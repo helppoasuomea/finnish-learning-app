@@ -1,9 +1,19 @@
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Check, X, Delete } from "lucide-react";
 import axios, { AxiosError } from "axios";
 
-// ─── Password strength ───
+// ─── Device ID ───────────────────────────────────────────────────────────────
+function getDeviceId(): string {
+  let id = localStorage.getItem("lukea:deviceId");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("lukea:deviceId", id);
+  }
+  return id;
+}
+
+// ─── Password strength ───────────────────────────────────────────────────────
 function pwStrength(pw: string): number {
   if (!pw) return 0;
   let s = 0;
@@ -13,13 +23,10 @@ function pwStrength(pw: string): number {
   if (/[^A-Za-z0-9]/.test(pw) && pw.length >= 6) s++;
   return Math.max(1, s);
 }
-
 const STRENGTH_LABELS = ["", "weak", "fair", "good", "strong"];
-const STRENGTH_COLORS = [
-  "var(--tk-ink-5)", "var(--tk-persimmon)", "#d89f4a", "#8aa86b", "var(--tk-accent)"
-];
+const STRENGTH_COLORS = ["var(--tk-ink-5)", "var(--tk-persimmon)", "#d89f4a", "#8aa86b", "var(--tk-accent)"];
 
-// ─── Google mark ───
+// ─── Marks ───────────────────────────────────────────────────────────────────
 const GoogleMark = () => (
   <svg width="16" height="16" viewBox="0 0 18 18">
     <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.17-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
@@ -29,7 +36,7 @@ const GoogleMark = () => (
   </svg>
 );
 
-// ─── Art panel ───
+// ─── Art panel ───────────────────────────────────────────────────────────────
 const AuthArtPanel = ({ mode }: { mode: "signin" | "register" }) => (
   <div className="au-art">
     <div className="au-art-wordmark">Lukeā</div>
@@ -50,25 +57,169 @@ const AuthArtPanel = ({ mode }: { mode: "signin" | "register" }) => (
     </div>
     <div className="au-art-seeds">
       <div className="au-art-lang-row">
-        <span>Finnish</span><span>·</span>
-        <span>Vietnamese</span><span>·</span>
-        <span>Korean</span><span>·</span>
-        <span>Japanese</span><span>·</span>
-        <span>Estonian</span>
+        <span>Finnish</span><span>·</span><span>Vietnamese</span><span>·</span>
+        <span>Korean</span><span>·</span><span>Japanese</span><span>·</span><span>Estonian</span>
       </div>
       <div className="au-art-lang-row" data-dim="true">
-        <span>Spanish</span><span>·</span>
-        <span>Italian</span><span>·</span>
-        <span>Portuguese</span><span>·</span>
-        <span>Dutch</span><span>·</span>
-        <span>Swedish</span>
+        <span>Spanish</span><span>·</span><span>Italian</span><span>·</span>
+        <span>Portuguese</span><span>·</span><span>Dutch</span><span>·</span><span>Swedish</span>
       </div>
     </div>
   </div>
 );
 
-// ─── Sign in form ───
-const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
+// ─── PIN Unlock ───────────────────────────────────────────────────────────────
+const PIN_LENGTH = 4;
+const PIN_LETTERS: Record<string, string> = {
+  "1": "", "2": "a b c", "3": "d e f",
+  "4": "g h i", "5": "j k l", "6": "m n o",
+  "7": "p q r s", "8": "t u v", "9": "w x y z",
+};
+
+const PinUnlock = ({
+  username,
+  onSuccess,
+  onUsePassword,
+}: {
+  username: string;
+  onSuccess: () => void;
+  onUsePassword: () => void;
+}) => {
+  const [pin, setPin] = useState("");
+  const [status, setStatus] = useState<"idle" | "checking" | "error" | "success">("idle");
+  const [attempts, setAttempts] = useState(0);
+  const deviceId = getDeviceId();
+  const initial = username[0]?.toUpperCase() ?? "?";
+
+  const push = (digit: string) => {
+    if (status === "checking" || status === "success") return;
+    if (status === "error") setStatus("idle");
+    setPin(p => p.length >= PIN_LENGTH ? p : p + digit);
+  };
+
+  const backspace = () => {
+    if (status === "checking" || status === "success") return;
+    setPin(p => p.slice(0, -1));
+  };
+
+  const clear = () => setPin("");
+
+  // auto-submit when full
+  useEffect(() => {
+    if (pin.length !== PIN_LENGTH || status !== "idle") return;
+    setStatus("checking");
+    axios.post("/pin/verify", { username, pin, deviceId })
+      .then(() => {
+        setStatus("success");
+        setTimeout(onSuccess, 500);
+      })
+      .catch(() => {
+        setStatus("error");
+        setAttempts(a => a + 1);
+        setTimeout(() => { setPin(""); setStatus("idle"); }, 700);
+      });
+  }, [pin, status]);
+
+  // keyboard input
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (/^[0-9]$/.test(e.key)) { e.preventDefault(); push(e.key); }
+      else if (e.key === "Backspace") { e.preventDefault(); backspace(); }
+      else if (e.key === "Escape") { e.preventDefault(); clear(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [status]);
+
+  const lockedOut = attempts >= 5;
+
+  return (
+    <div className="pin-root">
+      <div className="pin-grain" aria-hidden="true" />
+
+      <div className="pin-top">
+        <div className="pin-brand">
+          <span className="pin-brand-wordmark">Lukeā</span>
+          <span className="pin-brand-sub">reading room</span>
+        </div>
+        <button className="pin-escape" onClick={onUsePassword}>
+          Use password <ArrowRight size={12} />
+        </button>
+      </div>
+
+      <div className="pin-stage">
+        <div className="pin-greet">
+          <span className="pin-seal">{initial}</span>
+          <div className="pin-greet-copy">
+            <div className="pin-greet-hi">
+              Welcome back, <span className="pin-greet-name">{username}</span>.
+            </div>
+            <div className="pin-greet-sub">
+              Enter your 4-digit PIN.
+              <span className="pin-user">@{username}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`pin-dots${status === "error" ? " is-error" : ""}${status === "success" ? " is-success" : ""}`}>
+          {Array.from({ length: PIN_LENGTH }).map((_, i) => (
+            <span
+              key={i}
+              className="pin-dot"
+              data-filled={i < pin.length}
+              data-active={i === pin.length && status === "idle"}
+            />
+          ))}
+        </div>
+
+        <div className="pin-status" data-tone={status}>
+          {status === "error" && (
+            <><X size={13} /> Wrong PIN.{" "}
+              {lockedOut ? "Too many tries — use password." : `${Math.max(0, 5 - attempts)} tries left.`}
+            </>
+          )}
+          {status === "checking" && <><span className="au-spin" style={{ borderTopColor: "var(--tk-ink)" }} /> Unlocking…</>}
+          {status === "success"  && <><Check size={13} /> Welcome in.</>}
+          {status === "idle"     && <span className="pin-status-hint">Type or use the keypad below.</span>}
+        </div>
+
+        <div className="pin-keypad" data-disabled={lockedOut || status === "checking" || status === "success"}>
+          {["1","2","3","4","5","6","7","8","9"].map(d => (
+            <button key={d} className="pin-key" onClick={() => push(d)} disabled={lockedOut}>
+              <span className="pin-key-num">{d}</span>
+              <span className="pin-key-letters">{PIN_LETTERS[d]}</span>
+            </button>
+          ))}
+          <button className="pin-key pin-key-util" onClick={clear} disabled={lockedOut || !pin}>
+            clear
+          </button>
+          <button className="pin-key" onClick={() => push("0")} disabled={lockedOut}>
+            <span className="pin-key-num">0</span>
+            <span className="pin-key-letters">+</span>
+          </button>
+          <button className="pin-key pin-key-util" onClick={backspace} disabled={lockedOut || !pin} aria-label="Backspace">
+            <Delete size={18} />
+          </button>
+        </div>
+
+        <div className="pin-fallback">
+          <button className="au-link" onClick={onUsePassword}>Sign in with password instead</button>
+          <span className="pin-fallback-dot">·</span>
+          <button className="au-link" onClick={onUsePassword}>Forgot PIN?</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Sign-in form ─────────────────────────────────────────────────────────────
+const SignInForm = ({
+  onSuccess,
+  onUsePin,
+}: {
+  onSuccess: () => void;
+  onUsePin: ((username: string) => void) | null;
+}) => {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const [showPw, setShowPw] = useState(false);
@@ -77,10 +228,22 @@ const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [pinAvailable, setPinAvailable] = useState(false);
+
+  // Check PIN availability when username is filled
+  useEffect(() => {
+    if (!username.trim()) { setPinAvailable(false); return; }
+    const deviceId = getDeviceId();
+    const t = setTimeout(() => {
+      axios.get(`/pin/status?username=${encodeURIComponent(username.trim())}&deviceId=${deviceId}`)
+        .then(r => setPinAvailable(r.data.available))
+        .catch(() => setPinAvailable(false));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [username]);
 
   const handleGoogleCredential = useCallback(async (credential: string) => {
-    setIsGoogleLoading(true);
-    setError("");
+    setIsGoogleLoading(true); setError("");
     try {
       await axios.post("/auth/google/token", { idToken: credential });
       window.location.href = '/';
@@ -104,13 +267,12 @@ const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
         client_id: googleClientId,
         callback: (response: { credential?: string }) => {
           if (response?.credential) handleGoogleCredential(response.credential);
-          else setError("Google login failed. No credential was returned.");
+          else setError("Google login failed. No credential returned.");
         },
       });
       googleButtonRef.current.innerHTML = "";
       window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: "outline", size: "large", text: "signin_with",
-        shape: "rectangular", width: 240,
+        theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: 240,
       });
     };
     if (window.google?.accounts?.id) { init(); return; }
@@ -118,8 +280,7 @@ const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
     if (existing) { existing.addEventListener("load", init, { once: true }); return; }
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
-    script.async = true; script.defer = true;
-    script.onload = init;
+    script.async = true; script.defer = true; script.onload = init;
     document.head.appendChild(script);
     return () => { script.onload = null; };
   }, [googleClientId, handleGoogleCredential]);
@@ -129,7 +290,9 @@ const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
     if (!username || !password) { setError("Please enter your username and password."); return; }
     setBusy(true); setError("");
     try {
-      await axios.post("/login", { username, pin: password });
+      await axios.post("/login", { username, password });
+      // Persist username so PIN screen can show next time
+      localStorage.setItem("lukea:lastUsername", username);
       setTimeout(onSuccess, 700);
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -144,7 +307,6 @@ const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   return (
     <form onSubmit={handleSubmit} className="au-form" autoComplete="on">
-      {/* Google */}
       <div className="au-social-row" style={{ gridTemplateColumns: "1fr" }}>
         <div ref={googleButtonRef} style={{ display: "flex", justifyContent: "center" }} />
         {!googleClientId && (
@@ -153,9 +315,7 @@ const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
           </button>
         )}
         {isGoogleLoading && (
-          <div style={{ textAlign: "center", fontSize: 12, color: "var(--tk-ink-3)" }}>
-            Signing in with Google…
-          </div>
+          <div style={{ textAlign: "center", fontSize: 12, color: "var(--tk-ink-3)" }}>Signing in with Google…</div>
         )}
       </div>
       <div className="au-divider">
@@ -166,46 +326,43 @@ const SignInForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       <div className="au-field">
         <label className="au-label" htmlFor="au-user">Username</label>
-        <input
-          id="au-user" className="au-input" type="text"
+        <input id="au-user" className="au-input" type="text"
           value={username} onChange={e => setUsername(e.target.value)}
-          autoComplete="username" required
-        />
+          autoComplete="username" required />
       </div>
 
       <div className="au-field">
         <div className="au-label-row">
-          <label className="au-label" htmlFor="au-pw">Password / PIN</label>
+          <label className="au-label" htmlFor="au-pw">Password</label>
         </div>
         <div className="au-input-wrap">
-          <input
-            id="au-pw" className="au-input"
+          <input id="au-pw" className="au-input"
             type={showPw ? "text" : "password"}
             value={password} onChange={e => setPassword(e.target.value)}
-            autoComplete="current-password" required
-          />
+            autoComplete="current-password" required />
           <button type="button" className="au-eye" onClick={() => setShowPw(v => !v)}>
             {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         </div>
       </div>
 
-      {error && (
-        <div style={{ fontSize: 13, color: "var(--tk-persimmon)", padding: "6px 0" }}>{error}</div>
-      )}
+      {error && <div style={{ fontSize: 13, color: "var(--tk-persimmon)" }}>{error}</div>}
 
       <button type="submit" className="au-submit" disabled={busy} style={{ width: "100%" }}>
-        {busy ? (
-          <><span className="au-spin" /> Signing in…</>
-        ) : (
-          <>Sign in <ArrowRight size={14} /></>
-        )}
+        {busy ? <><span className="au-spin" /> Signing in…</> : <>Sign in <ArrowRight size={14} /></>}
       </button>
+
+      {pinAvailable && onUsePin && (
+        <button type="button" className="au-use-pin" onClick={() => onUsePin(username)}>
+          <span className="au-use-pin-dots"><i /><i /><i /><i /></span>
+          <span>Use quick-access PIN instead</span>
+        </button>
+      )}
     </form>
   );
 };
 
-// ─── Register form ───
+// ─── Register form ────────────────────────────────────────────────────────────
 const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -216,20 +373,19 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [error, setError] = useState("");
 
   const strength = pwStrength(pw);
-  const strengthLabel = STRENGTH_LABELS[strength];
-  const strengthColor = STRENGTH_COLORS[strength];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !username || !pw) { setError("All fields are required."); return; }
     setBusy(true); setError("");
     try {
-      await axios.post("/register", { name, username, pin: pw });
+      await axios.post("/register", { name, username, password: pw });
+      localStorage.setItem("lukea:lastUsername", username);
       setTimeout(onSuccess, 700);
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        const data = (err as AxiosError<string>).response?.data;
-        setError(typeof data === "string" ? data : "Registration failed. Please try again.");
+        const data = (err as AxiosError<{ error?: string } | string>).response?.data;
+        setError(typeof data === "string" ? data : (data as any)?.error || "Registration failed.");
       } else {
         setError("Registration failed. Please try again.");
       }
@@ -243,30 +399,25 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <div className="au-field">
           <label className="au-label" htmlFor="au-name">Name</label>
           <input id="au-name" className="au-input" placeholder="e.g. Pada"
-            value={name} onChange={e => setName(e.target.value)}
-            autoComplete="given-name" required />
+            value={name} onChange={e => setName(e.target.value)} autoComplete="given-name" required />
         </div>
         <div className="au-field">
           <label className="au-label" htmlFor="au-username">Username</label>
           <div className="au-input-wrap au-input-prefix">
             <span className="au-prefix" style={{ fontFamily: "var(--tk-mono)" }}>@</span>
             <input id="au-username" className="au-input" placeholder="padwhen"
-              value={username} onChange={e => setUsername(e.target.value)}
-              autoComplete="username" required />
+              value={username} onChange={e => setUsername(e.target.value)} autoComplete="username" required />
           </div>
         </div>
       </div>
 
       <div className="au-field">
-        <label className="au-label" htmlFor="au-pw-new">Password / PIN</label>
+        <label className="au-label" htmlFor="au-pw-new">Password</label>
         <div className="au-input-wrap">
-          <input
-            id="au-pw-new" className="au-input"
-            type={showPw ? "text" : "password"}
-            placeholder="At least 4 characters"
+          <input id="au-pw-new" className="au-input"
+            type={showPw ? "text" : "password"} placeholder="At least 4 characters"
             value={pw} onChange={e => setPw(e.target.value)}
-            autoComplete="new-password" required
-          />
+            autoComplete="new-password" required />
           <button type="button" className="au-eye" onClick={() => setShowPw(v => !v)}>
             {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
@@ -274,12 +425,14 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
         {pw && (
           <div className="au-strength">
             <div className="au-strength-bars">
-              {[1, 2, 3, 4].map(n => (
+              {[1,2,3,4].map(n => (
                 <span key={n} className="au-strength-bar"
-                  style={{ background: n <= strength ? strengthColor : "var(--tk-rule)" }} />
+                  style={{ background: n <= strength ? STRENGTH_COLORS[strength] : "var(--tk-rule)" }} />
               ))}
             </div>
-            <div className="au-strength-label" style={{ color: strengthColor }}>{strengthLabel}</div>
+            <div className="au-strength-label" style={{ color: STRENGTH_COLORS[strength] }}>
+              {STRENGTH_LABELS[strength]}
+            </div>
           </div>
         )}
       </div>
@@ -296,8 +449,7 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
             { v: "other", flag: "+", label: "Other" },
           ].map(l => (
             <button key={l.v} type="button" className="au-lang-chip"
-              data-active={learning === l.v}
-              onClick={() => setLearning(l.v)}>
+              data-active={learning === l.v} onClick={() => setLearning(l.v)}>
               <span style={{ fontSize: 14 }}>{l.flag}</span>
               <span>{l.label}</span>
             </button>
@@ -313,34 +465,55 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
         </label>
       </div>
 
-      {error && (
-        <div style={{ fontSize: 13, color: "var(--tk-persimmon)", padding: "6px 0" }}>{error}</div>
-      )}
+      {error && <div style={{ fontSize: 13, color: "var(--tk-persimmon)" }}>{error}</div>}
 
       <button type="submit" className="au-submit" disabled={busy || !pw} style={{ width: "100%" }}>
-        {busy ? (
-          <><span className="au-spin" /> Creating account…</>
-        ) : (
-          <>Create account <ArrowRight size={14} /></>
-        )}
+        {busy
+          ? <><span className="au-spin" /> Creating account…</>
+          : <>Create account <ArrowRight size={14} /></>}
       </button>
     </form>
   );
 };
 
-// ─── Page ───
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export const AuthPage = ({ initialMode = "signin" }: { initialMode?: "signin" | "register" }) => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "register">(initialMode);
+  const [mode, setMode] = useState<"signin" | "register" | "pin">(initialMode);
+  const [pinUsername, setPinUsername] = useState<string>(() => localStorage.getItem("lukea:lastUsername") ?? "");
 
-  const handleSuccess = () => {
-    window.location.href = '/';
-  };
+  // Auto-switch to PIN screen on mount if a PIN is set up for this device
+  useEffect(() => {
+    if (initialMode !== "signin") return;
+    const stored = localStorage.getItem("lukea:lastUsername");
+    if (!stored) return;
+    const deviceId = getDeviceId();
+    axios.get(`/pin/status?username=${encodeURIComponent(stored)}&deviceId=${deviceId}`)
+      .then(r => {
+        if (r.data.available) {
+          setPinUsername(stored);
+          setMode("pin");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSuccess = () => { window.location.href = '/'; };
 
   const switchMode = (m: "signin" | "register") => {
     setMode(m);
     navigate(m === "signin" ? "/login" : "/register", { replace: true });
   };
+
+  if (mode === "pin") {
+    return (
+      <PinUnlock
+        username={pinUsername}
+        onSuccess={handleSuccess}
+        onUsePassword={() => setMode("signin")}
+      />
+    );
+  }
 
   return (
     <div className="au-root">
@@ -358,33 +531,35 @@ export const AuthPage = ({ initialMode = "signin" }: { initialMode?: "signin" | 
               <span className="au-brand-sub">reading room</span>
             </div>
             <div className="au-tabs">
-              <button className="au-tab" data-active={mode === "signin"}
-                onClick={() => switchMode("signin")}>Sign in</button>
-              <button className="au-tab" data-active={mode === "register"}
-                onClick={() => switchMode("register")}>Create account</button>
+              <button className="au-tab" data-active={mode === "signin"} onClick={() => switchMode("signin")}>
+                Sign in
+              </button>
+              <button className="au-tab" data-active={mode === "register"} onClick={() => switchMode("register")}>
+                Create account
+              </button>
               <div className="au-tabs-ind" data-mode={mode} />
             </div>
           </div>
 
           <div className="au-form-body">
-            {mode === "signin"
-              ? <SignInForm onSuccess={handleSuccess} />
-              : <RegisterForm onSuccess={handleSuccess} />
-            }
+            {mode === "signin" ? (
+              <SignInForm
+                onSuccess={handleSuccess}
+                onUsePin={(username) => { setPinUsername(username); setMode("pin"); }}
+              />
+            ) : (
+              <RegisterForm onSuccess={handleSuccess} />
+            )}
           </div>
 
           <div className="au-form-footer">
             {mode === "signin" ? (
               <span>New to Lukeā?{" "}
-                <button className="au-link" onClick={() => switchMode("register")}>
-                  Create an account
-                </button>
+                <button className="au-link" onClick={() => switchMode("register")}>Create an account</button>
               </span>
             ) : (
               <span>Already reading with us?{" "}
-                <button className="au-link" onClick={() => switchMode("signin")}>
-                  Sign in
-                </button>
+                <button className="au-link" onClick={() => switchMode("signin")}>Sign in</button>
               </span>
             )}
           </div>

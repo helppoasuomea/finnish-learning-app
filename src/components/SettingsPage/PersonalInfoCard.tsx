@@ -10,6 +10,12 @@ interface PersonalInfoCardProps {
   isGoogleUser?: boolean;
 }
 
+function getDeviceId(): string {
+  let id = localStorage.getItem("lukea:deviceId");
+  if (!id) { id = crypto.randomUUID(); localStorage.setItem("lukea:deviceId", id); }
+  return id;
+}
+
 const PROVIDER_LABELS: Record<string, string> = {
   google: "Google",
   apple:  "Apple",
@@ -29,16 +35,21 @@ export const PersonalInfoCard = ({ user, onSaved, isGoogleUser = false }: Person
 
   const handleSave = async ({ field, value }: { field: AcctEditField; value: any }) => {
     try {
-      const payload: Record<string, any> = {
-        name: user?.name,
-        username: user?.username,
-        avatarUrl: user?.avatarUrl,
-      };
-      if (field === "name")     payload.name = value;
-      if (field === "username") payload.username = value;
-      if (field === "email")    payload.email = value;
-      if (field === "password") payload.password = value.next;
-      await axios.put("/update", payload);
+      if (field === "password") {
+        await axios.put("/change-password", { currentPassword: value.current, newPassword: value.next });
+      } else if (field === "pin") {
+        await axios.post("/pin/setup", { pin: value, deviceId: getDeviceId() });
+      } else {
+        const payload: Record<string, any> = {
+          name: user?.name,
+          username: user?.username,
+          avatarUrl: user?.avatarUrl,
+        };
+        if (field === "name")     payload.name = value;
+        if (field === "username") payload.username = value;
+        if (field === "email")    payload.email = value;
+        await axios.put("/update", payload);
+      }
       onSaved?.();
     } catch (err: any) {
       toast({

@@ -37,6 +37,9 @@ export interface User {
         calendar: boolean
     }
     hasCalendarToken?: boolean
+    hasQuickPin?: boolean
+    quickPinExpiresAt?: string
+    quickPinIsExpired?: boolean
     nudgeEnabled?: boolean
     nudgeTime?: string
     nudgeChannel?: 'calendar' | 'email' | 'push' | 'none'
