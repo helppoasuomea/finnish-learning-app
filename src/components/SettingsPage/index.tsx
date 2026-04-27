@@ -46,7 +46,7 @@ function PrefRow({ label, desc, checked, onChange }: PrefRowProps) {
 export const SettingsPage = () => {
     const { user, refreshUserStats } = useContext(UserContext)
     const { decks } = useContext(DeckContext)
-    const { gamificationStats } = useSettingsData()
+    const { currentStreak, maxStreak, totalReviews } = useSettingsData()
     const profileEditProps = useProfileEdit()
     const { toast } = useToast()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -86,10 +86,6 @@ export const SettingsPage = () => {
         }
     }
 
-    // Stats derived from gamification endpoint + deck data
-    const currentStreak = gamificationStats?.currentStreak ?? user?.currentStreak ?? 0
-    const maxStreak = gamificationStats?.maxStreak ?? user?.maxStreak ?? 0
-    const totalReviews = gamificationStats?.totalReviews ?? 0
     const cardsLearned = decks.reduce((sum: number, d: any) =>
         sum + d.cards.filter((c: any) => (c.cardScore ?? 0) >= 5).length, 0)
 
