@@ -17,6 +17,7 @@ import {
     ArrowRight,
     User,
     Play,
+    BookOpen,
 } from "lucide-react";
 import axios from "axios";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -111,6 +112,7 @@ export const Sidebar = () => {
                   { path: "/review", label: "Review", icon: RotateCcw },
                   { path: "/vocabulary", label: "Vocabulary", icon: Compass },
                   { path: "/saved-sentences", label: "Saved sentences", icon: Bookmark },
+                  { path: "/grammar", label: "Grammar", icon: BookOpen },
               ]
             : []),
     ];

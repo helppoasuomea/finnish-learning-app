@@ -20,6 +20,8 @@ import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
 import { ReviewDashboardPage } from './pages/ReviewDashboardPage'
 import { AuthPage } from './pages/AuthPage'
+import { GrammarIndex } from './components/GrammarPage/GrammarBrowser'
+import { GrammarTopicPage } from './components/GrammarPage/GrammarTopicPage'
 
 axios.defaults.baseURL = 'http://localhost:2323/api/'
 axios.defaults.withCredentials = true
@@ -90,6 +92,8 @@ const AppContent = ({ location }: { location: any }) => {
           <Route path='/review-page/:id' element={<ReviewPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />
           <Route path='/review' element={<ReviewDashboardPage />} />
+          <Route path='/grammar' element={<GrammarIndex />} />
+          <Route path='/grammar/:topicId' element={<GrammarTopicPage />} />
 
           {/* Routes that DON'T need deck context */}
           <Route path="/settings" element={<SettingsPage />} />
