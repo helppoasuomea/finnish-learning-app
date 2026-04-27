@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Shuffle } from 'lucide-react';
 import { GRAMMAR_TOPICS, grammarProgress } from '@/data/grammar/index';
+import { useGrammarSync } from '@/data/grammar/useGrammarSync';
 import type { GrammarTopic } from '@/data/grammar/types';
 
 // ── Library index ─────────────────────────────────────────────────────────────
@@ -177,6 +178,7 @@ function GrammarMap() {
 type ViewMode = 'library' | 'map';
 
 export function GrammarIndex() {
+  useGrammarSync();
   const allProgress = grammarProgress.read();
   const [view, setView] = useState<ViewMode>(() =>
     (localStorage.getItem('toko:grammarView') as ViewMode) ?? 'library'

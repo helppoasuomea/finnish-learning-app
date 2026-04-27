@@ -5,6 +5,7 @@ import { VERB_TOPICS } from './topics-verbs';
 import { SYNTAX_TOPICS } from './topics-syntax';
 import { MORPHOLOGY_TOPICS } from './topics-morphology';
 import { GRAMMAR_CATALOG } from './catalog';
+import axios from 'axios';
 
 const authored: Record<string, GrammarTopic> = Object.fromEntries(
   [TOPIC_TIME, TOPIC_PARTITIVE, ...CASE_TOPICS, ...VERB_TOPICS, ...SYNTAX_TOPICS, ...MORPHOLOGY_TOPICS]
@@ -41,7 +42,7 @@ export function getTopic(id: string): GrammarTopic | null {
   return GRAMMAR_BY_ID[id] || null;
 }
 
-// localStorage-backed progress store
+// localStorage-backed progress store with backend sync
 export const grammarProgress = {
   read(): Record<string, TopicProgress> {
     try { return JSON.parse(localStorage.getItem('toko:grammarProgress') || '{}'); }
@@ -76,7 +77,19 @@ export const grammarProgress = {
              : t.attemptsTotal > 0 ? 'in-progress' : 'available';
     all[topicId] = t;
     this.write(all);
+    // fire-and-forget — don't block the UI
+    axios.put(`/grammar-progress/${topicId}`, t).catch(() => {});
     return t;
+  },
+  async syncFromServer(): Promise<void> {
+    try {
+      const { data } = await axios.get<Record<string, TopicProgress>>('/grammar-progress');
+      // Merge: server wins on any topic it has data for
+      const local = this.read();
+      this.write({ ...local, ...data });
+    } catch {
+      // offline or unauthenticated — keep local data as-is
+    }
   },
 };
 
