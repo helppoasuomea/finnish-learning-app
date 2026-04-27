@@ -203,8 +203,9 @@ function SpotErrorDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: Drill
         {words.map((w, i) => {
           let cls = 'gr-se-word';
           if (picked) {
-            if (picked.i === i && !picked.correct) cls += ' is-wrong-pick';
-            if (w.replace(/[.,!?]/g, '') === errorWord.replace(/[.,!?]/g, '')) cls += ' is-error-word is-revealed';
+            if (picked.i === i && picked.correct) cls += ' is-correct-pick';
+            else if (picked.i === i && !picked.correct) cls += ' is-wrong-pick';
+            if (!picked.correct && w.replace(/[.,!?]/g, '') === errorWord.replace(/[.,!?]/g, '')) cls += ' is-error-word is-revealed';
           }
           if (/^[.,!?]$/.test(w)) return <span key={i} style={{ color: 'var(--ink-3)' }}>{w}</span>;
           return <span key={i} className={cls} onClick={() => pickWord(w, i)}>{w}</span>;

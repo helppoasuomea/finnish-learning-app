@@ -1128,8 +1128,9 @@
   transition: all var(--dur-1);
 }
 .gr-se-word:hover { background: var(--paper-deep); border-color: var(--rule); }
-.gr-se-word.is-wrong-pick { background: var(--persimmon-soft); color: var(--persimmon); border-color: var(--persimmon); }
-.gr-se-word.is-error-word.is-revealed { background: var(--accent-wash); color: var(--accent-deep); border-color: var(--accent); text-decoration: line-through; }
+.gr-se-word.is-correct-pick  { background: var(--accent-wash); color: var(--accent-deep); border-color: var(--accent); }
+.gr-se-word.is-wrong-pick    { background: var(--persimmon-soft); color: var(--persimmon); border-color: var(--persimmon); }
+.gr-se-word.is-error-word.is-revealed { background: var(--persimmon-soft); color: var(--persimmon); border-color: var(--persimmon); text-decoration: line-through; }
 
 /* Table drill */
 .gr-table {
@@ -1182,12 +1183,15 @@
 .gr-feedback.is-wrong   { background: var(--persimmon-soft); border-left: 3px solid var(--persimmon); }
 .gr-feedback-line {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 8px;
 }
+.gr-feedback.is-correct .gr-feedback-line { color: var(--accent-deep); }
+.gr-feedback.is-wrong   .gr-feedback-line { color: var(--persimmon); }
 .gr-feedback-answer {
   font-family: var(--font-display);
   font-size: 24px;
