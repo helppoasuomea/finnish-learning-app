@@ -1019,7 +1019,10 @@
   letter-spacing: -0.015em;
   color: var(--ink);
   outline: none;
+  transition: border-color 120ms, color 120ms;
 }
+.gr-blank-input.is-correct { border-bottom-color: var(--accent); color: var(--accent-deep); }
+.gr-blank-input.is-wrong   { border-bottom-color: var(--persimmon); color: var(--persimmon); }
 
 .gr-base {
   display: inline-flex;

@@ -17,12 +17,15 @@ function DrillKindLabel({ label }: { label: string }) {
 function FillDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: DrillVerdict) => void }) {
   const { sentence, answer, acceptAlso, hint, baseForm } = drill.data;
   const [value, setValue] = useState('');
+  const [verdict, setVerdict] = useState<boolean | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, [drill.id]);
 
   const submit = () => {
-    if (!value.trim()) return;
-    onSubmit({ userAnswer: value, correct: isCorrect(value, answer, acceptAlso), expected: answer });
+    if (!value.trim() || verdict !== null) return;
+    const correct = isCorrect(value, answer, acceptAlso);
+    setVerdict(correct);
+    setTimeout(() => onSubmit({ userAnswer: value, correct, expected: answer }), 500);
   };
   const parts: string[] = (sentence as string).split(/_+/);
   return (
@@ -34,8 +37,9 @@ function FillDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: DrillVerdi
         {parts[0]}
         <input
           ref={inputRef}
-          className="gr-blank-input"
+          className={`gr-blank-input${verdict === true ? ' is-correct' : verdict === false ? ' is-wrong' : ''}`}
           value={value}
+          readOnly={verdict !== null}
           onChange={e => setValue(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') submit(); }}
           placeholder="…"
@@ -44,7 +48,7 @@ function FillDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: DrillVerdi
         {parts[1]}
       </div>
       <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="tk-btn tk-btn-primary" onClick={submit}>
+        <button className="tk-btn tk-btn-primary" onClick={submit} disabled={verdict !== null}>
           Submit <span className="mono" style={{ opacity: 0.5, fontSize: 11 }}>↵</span>
         </button>
       </div>
@@ -103,12 +107,15 @@ function TransformDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: Drill
     base: string; instruction: string; answer: string; acceptAlso?: string[];
   };
   const [value, setValue] = useState('');
+  const [verdict, setVerdict] = useState<boolean | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, [drill.id]);
 
   const submit = () => {
-    if (!value.trim()) return;
-    onSubmit({ userAnswer: value, correct: isCorrect(value, answer, acceptAlso), expected: answer });
+    if (!value.trim() || verdict !== null) return;
+    const correct = isCorrect(value, answer, acceptAlso);
+    setVerdict(correct);
+    setTimeout(() => onSubmit({ userAnswer: value, correct, expected: answer }), 500);
   };
   return (
     <div>
@@ -121,9 +128,10 @@ function TransformDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: Drill
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 18 }}>
         <input
           ref={inputRef}
-          className="gr-blank-input"
+          className={`gr-blank-input${verdict === true ? ' is-correct' : verdict === false ? ' is-wrong' : ''}`}
           style={{ minWidth: 260 }}
           value={value}
+          readOnly={verdict !== null}
           onChange={e => setValue(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') submit(); }}
           placeholder="your answer"
@@ -131,7 +139,7 @@ function TransformDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: Drill
         />
       </div>
       <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="tk-btn tk-btn-primary" onClick={submit}>Submit ↵</button>
+        <button className="tk-btn tk-btn-primary" onClick={submit} disabled={verdict !== null}>Submit ↵</button>
       </div>
     </div>
   );
@@ -221,13 +229,18 @@ function TranslateDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: Drill
     prompt: string; target: string; acceptAlso?: string[]; gradingFocus?: string;
   };
   const [value, setValue] = useState('');
+  const [verdict, setVerdict] = useState<boolean | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, [drill.id]);
 
   const submit = () => {
-    if (!value.trim()) return;
-    onSubmit({ userAnswer: value, correct: isCorrect(value, target, acceptAlso), expected: target });
+    if (!value.trim() || verdict !== null) return;
+    const correct = isCorrect(value, target, acceptAlso);
+    setVerdict(correct);
+    setTimeout(() => onSubmit({ userAnswer: value, correct, expected: target }), 500);
   };
+
+  const borderColor = verdict === true ? 'var(--accent)' : verdict === false ? 'var(--persimmon)' : undefined;
   return (
     <div>
       <DrillKindLabel label="Translate" />
@@ -236,15 +249,16 @@ function TranslateDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: Drill
       <input
         ref={inputRef}
         className="tk-input"
-        style={{ height: 52, fontSize: 18, fontFamily: 'var(--font-mono)' }}
+        style={{ height: 52, fontSize: 18, fontFamily: 'var(--font-mono)', borderColor, transition: 'border-color 120ms' }}
         value={value}
+        readOnly={verdict !== null}
         onChange={e => setValue(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') submit(); }}
         placeholder="Translate to Finnish…"
         autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
       />
       <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="tk-btn tk-btn-primary" onClick={submit}>Submit ↵</button>
+        <button className="tk-btn tk-btn-primary" onClick={submit} disabled={verdict !== null}>Submit ↵</button>
       </div>
     </div>
   );
