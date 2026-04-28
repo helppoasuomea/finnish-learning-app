@@ -938,18 +938,21 @@
   border-bottom: 1px solid var(--rule);
   flex-shrink: 0;
 }
-.gr-drill-bar-progress {
+.gr-drill-bar-segs {
   flex: 1;
-  height: 3px;
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.gr-drill-bar-segs span {
+  flex: 1;
+  height: 4px;
   background: var(--rule);
   border-radius: 2px;
-  overflow: hidden;
+  transition: background var(--dur-2);
 }
-.gr-drill-bar-progress span {
-  display: block;
-  height: 100%;
+.gr-drill-bar-segs span.is-done {
   background: var(--accent);
-  transition: width var(--dur-2) var(--ease-out);
 }
 .gr-drill-bar-count {
   font-family: var(--font-mono);

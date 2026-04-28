@@ -169,7 +169,7 @@ function DrillFeedback({ feedback, section, onNext }: {
         <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setWhyExpanded(w => !w)}>
           {whyExpanded ? 'Hide' : 'Why?'} <span className="mono" style={{ opacity: 0.5, fontSize: 10, marginLeft: 4 }}>?</span>
         </button>
-        {section?.examples?.length > 0 && (
+        {(section?.examples?.length ?? 0) > 0 && (
           <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={showRelated}>Related example</button>
         )}
         <div style={{ flex: 1 }} />
@@ -198,7 +198,6 @@ function GrammarDrillSession({ topic, config, onExit, onComplete }: {
 
   const current = queue[idx];
   const totalTarget = config.length === 'keep' ? Math.max(queue.length, 15) : config.length || queue.length;
-  const progressPct = Math.min(100, (seenCount / totalTarget) * 100);
 
   useEffect(() => {
     if (!current && seenCount > 0) {
@@ -239,7 +238,11 @@ function GrammarDrillSession({ topic, config, onExit, onComplete }: {
     <div className="gr-drill-root">
       <div className="gr-drill-bar">
         <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={onExit}><X size={13} /> Exit</button>
-        <div className="gr-drill-bar-progress"><span style={{ width: `${progressPct}%` }} /></div>
+        <div className="gr-drill-bar-segs">
+          {Array.from({ length: totalTarget }, (_, i) => (
+            <span key={i} className={i < seenCount ? 'is-done' : ''} />
+          ))}
+        </div>
         <div className="gr-drill-bar-count">
           <span style={{ color: 'var(--ink)' }}>{seenCount}</span> / {totalTarget}
           <span style={{ marginLeft: 12, color: 'var(--ink-4)' }}>{history.filter(h => h.correct).length}✓</span>
