@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Drill } from '@/data/grammar/types';
 import { isCorrect } from './GrammarMorphology';
 
@@ -264,7 +264,7 @@ function TranslateDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: Drill
   );
 }
 
-// ── 7. Listen (placeholder) ──
+// ── 7. Listen ──
 function ListenDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: DrillVerdict) => void }) {
   const { transcript, question, options, correctIndex } = drill.data as {
     transcript: string; question: string; options: string[]; correctIndex: number;
@@ -272,6 +272,23 @@ function ListenDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: DrillVer
   const [playing, setPlaying] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
+
+  const speak = useCallback(() => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(transcript);
+    utt.lang = 'fi-FI';
+    utt.rate = 0.85;
+    utt.onstart = () => setPlaying(true);
+    utt.onend = () => setPlaying(false);
+    utt.onerror = () => setPlaying(false);
+    window.speechSynthesis.speak(utt);
+  }, [transcript]);
+
+  useEffect(() => {
+    const t = setTimeout(speak, 400);
+    return () => { clearTimeout(t); window.speechSynthesis?.cancel(); };
+  }, [drill.id]);
 
   const pick = (idx: number) => {
     if (picked !== null) return;
@@ -283,7 +300,7 @@ function ListenDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: DrillVer
     <div>
       <DrillKindLabel label="Listen" />
       <div className="gr-listen-wave">
-        <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setPlaying(p => !p)}
+        <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={speak}
           style={{ width: 40, height: 40, padding: 0, borderRadius: '50%' }}>
           {playing ? '⏸' : '▶'}
         </button>
@@ -344,7 +361,11 @@ function TableDrill({ drill, onSubmit }: { drill: Drill; onSubmit: (v: DrillVerd
       }
     }));
     setChecked(result);
-    setTimeout(() => onSubmit({ userAnswer: JSON.stringify(answers), correct: allCorrect, expected: 'all cells correct' }), 1400);
+    const wrongCells = Object.values(result).filter(r => !r.ok);
+    const expected = wrongCells.length
+      ? wrongCells.map(r => `${r.user || '—'} → ${r.expected}`).join(' · ')
+      : '';
+    setTimeout(() => onSubmit({ userAnswer: '', correct: allCorrect, expected }), 1400);
   };
   return (
     <div>

@@ -33,25 +33,35 @@ let flushing = false;
 
 export async function flushQueue(): Promise<void> {
   if (flushing || !navigator.onLine) return;
-  const pending = load();
-  if (!pending.length) return;
   flushing = true;
-  const remaining: QueuedAnswer[] = [];
-  for (const item of pending) {
-    try {
-      const res = await fetch('/api/review/answer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),
-        credentials: 'include',
-      });
-      if (!res.ok) remaining.push(item);
-    } catch {
-      remaining.push(item);
+  try {
+    // Loop so items enqueued *during* a flush get processed too.
+    while (true) {
+      const pending = load();
+      if (!pending.length) break;
+      const succeeded = new Set<string>();
+      for (const item of pending) {
+        try {
+          const res = await fetch('/api/review/answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),
+            credentials: 'include',
+          });
+          if (res.ok) succeeded.add(item.id);
+        } catch {
+          // network error — leave in queue
+        }
+      }
+      // Reload and remove only the IDs we successfully sent,
+      // preserving anything newly enqueued while awaiting.
+      persist(load().filter(i => !succeeded.has(i.id)));
+      // Nothing got through → stop to avoid hammering a dead server.
+      if (succeeded.size === 0) break;
     }
+  } finally {
+    flushing = false;
   }
-  persist(remaining);
-  flushing = false;
 }
 
 /** Adds a grade to the queue (deduplicating by cardId) and immediately attempts flush. */
