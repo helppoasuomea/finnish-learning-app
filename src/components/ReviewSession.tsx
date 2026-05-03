@@ -124,7 +124,7 @@ export const ReviewSession: React.FC<{
         const { pendingGrade } = graduation;
         setGraduation(null);
         commitGrade(pendingGrade, history, idx);
-      }, 2800);
+      }, 1600);
     }
     return () => {
       if (gradTimerRef.current) clearTimeout(gradTimerRef.current);

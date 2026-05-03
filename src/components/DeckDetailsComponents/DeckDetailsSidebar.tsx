@@ -3,6 +3,8 @@ import { Flame } from "lucide-react";
 import axios from "axios";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useFetchHistory, HistoryItem } from "@/state/hooks/useLearningHistoryHooks";
+import { MemoryGoalPanel } from "./MemoryGoalPanel";
+import type { MemoryGoalTier } from "@/types";
 
 interface Props {
   deckId: string;
@@ -44,6 +46,8 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
   const userId = localStorage.getItem("userId");
   const { decks } = useContext(DeckContext);
   const { history, fetchHistory } = useFetchHistory(userId, deckId);
+  const currentDeck = decks.find((d: any) => d._id === deckId);
+  const memoryTier: MemoryGoalTier = currentDeck?.memoryGoal?.tier ?? 'sapling';
   const [streak, setStreak] = useState<number>(0);
 
   useEffect(() => {
@@ -125,8 +129,11 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
         )}
       </div>
 
+      {/* Memory goal */}
+      <MemoryGoalPanel deckId={deckId} currentTier={memoryTier} />
+
       {/* Streak */}
-      <div className="tx-aside-card" style={{ padding: 20, background: "var(--tk-paper-deep)" }}>
+      <div className="tx-aside-card" style={{ padding: 20, background: "var(--tk-paper-deep)", marginTop: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Flame size={18} style={{ color: "var(--tk-persimmon)" }} />
           <div>

@@ -9,7 +9,8 @@ import { useDeckContext } from "@/contexts/DeckContext";
 import { UserContext } from "@/contexts/UserContext";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowRight, BookOpen, Plus, Check, X } from "lucide-react";
+import { ArrowRight, BookOpen, Plus, Check, X, ExternalLink } from "lucide-react";
+import { GRAMMAR_BY_ID } from "@/data/grammar/index";
 import { Popover, PopoverTrigger, PopoverContent, PopoverClose } from "@/components/ui/popover";
 
 const ConfidenceRing = ({ value }: { value: number }) => {
@@ -344,9 +345,10 @@ const IndexPageContent = () => {
                                                             className="tx-il-word"
                                                             data-common={w.common ? 'true' : 'false'}
                                                             data-saved={saved ? 'true' : 'false'}
+                                                            data-highlight={w.highlight ? 'true' : 'false'}
                                                         >
                                                             {w.fi}
-                                                            {!hide && <span className="tx-il-gloss">{w.en}</span>}
+                                                            {!hide && <span className="tx-il-gloss">{(w.gloss || w.en).replace(/\s*\([^)]*\)/g, '').trim()}</span>}
                                                         </span>
                                                     </PopoverTrigger>
                                                     <PopoverContent
@@ -364,6 +366,25 @@ const IndexPageContent = () => {
                                                                 </div>
                                                             </div>
                                                             {w.comment && <div className="tx-peek-note">{w.comment}</div>}
+                                                            {/* Morphology badge — Tier 2/4 output */}
+                                                            {(w.lemma || (w.features && w.features.length > 0)) && (
+                                                                <div className="tx-morph-badge">
+                                                                    {w.lemma && <span className="tx-morph-lemma">{w.lemma}</span>}
+                                                                    {w.features && w.features.length > 0 && (
+                                                                        <span className="tx-morph-features">{w.features.join(' · ')}</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            {/* Lesson link — Tier 3/4 highlight */}
+                                                            {w.highlight && GRAMMAR_BY_ID[w.highlight] && (
+                                                                <button
+                                                                    className="tx-lesson-link"
+                                                                    onClick={() => navigate(`/grammar/${w.highlight}`)}
+                                                                >
+                                                                    <ExternalLink size={11} />
+                                                                    {GRAMMAR_BY_ID[w.highlight].title}
+                                                                </button>
+                                                            )}
                                                             <div className="tx-peek-meta">
                                                                 <span>{w.type}</span>
                                                                 {w.original_word && w.original_word !== w.fi && (

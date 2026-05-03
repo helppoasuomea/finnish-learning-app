@@ -576,7 +576,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 120px;
-  font-style: normal;
+  font-style: italic;       /* AI layer — humble, per spec */
   pointer-events: none;
   transition: color var(--tk-dur-1);
   margin-top: 3px;
@@ -589,7 +589,55 @@
   box-shadow: inset 0 -2px 0 var(--tk-accent);
 }
 .tx-il-word[data-saved="true"] .tx-il-gloss { color: var(--tk-accent); }
+/* Grammar highlight indicator — accent underline on words with a lesson link */
+.tx-il-word[data-highlight="true"] { box-shadow: inset 0 -2px 0 var(--tk-accent-soft, color-mix(in srgb, var(--tk-accent) 40%, transparent)); }
 .tx-il-punct { color: var(--tk-ink-3); align-self: flex-start; padding-top: 2px; }
+
+/* ── Popover morphology badge (Tier 2/4 deterministic layer) ── */
+.tx-morph-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  margin: 6px 0 4px;
+  background: var(--tk-paper-deep, var(--tk-paper));
+  border: 1px solid var(--tk-rule);
+  border-radius: 6px;
+  font-family: var(--font-mono, monospace);
+}
+.tx-morph-lemma {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tk-ink);
+  letter-spacing: -0.01em;
+}
+.tx-morph-features {
+  font-size: 10.5px;
+  color: var(--tk-ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Popover lesson link (Tier 3/4 accent layer) ── */
+.tx-lesson-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 4px;
+  background: var(--tk-accent-wash);
+  color: var(--tk-accent);
+  border: none;
+  border-radius: 6px;
+  font-family: "Geist", -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: opacity var(--tk-dur-1);
+}
+.tx-lesson-link:hover { opacity: 0.8; }
 
 /* ── Word cards grid ── */
 .tx-word-grid {

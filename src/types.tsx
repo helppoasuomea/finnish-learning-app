@@ -25,6 +25,8 @@ export interface FormData {
     pin: string;
 }
 
+export type MemoryGoalTier = 'seedling' | 'sapling' | 'tree' | 'heartwood';
+
 export interface Deck {
     _id: string;
     owner?: string;
@@ -33,6 +35,7 @@ export interface Deck {
     deckTags: string[];
     cards: Card[];
     description?: string;
+    memoryGoal?: { tier: MemoryGoalTier };
 }
 
 export interface Card {
