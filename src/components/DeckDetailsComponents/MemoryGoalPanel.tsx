@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { DeckContext } from "@/contexts/DeckContext";
 import type { MemoryGoalTier, Card } from "@/types";
@@ -85,6 +85,10 @@ export function MemoryGoalPanel({ deckId, currentTier }: Props) {
   const [selected, setSelected] = useState<MemoryGoalTier>(currentTier);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSelected(currentTier);
+  }, [currentTier]);
   const { decks, setDecks } = useContext(DeckContext) as any;
 
   const deck = decks.find((d: any) => d._id === deckId);
