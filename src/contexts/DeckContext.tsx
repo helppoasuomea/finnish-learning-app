@@ -7,7 +7,16 @@ interface Deck {
     deckName: string;
     deckPercentage: string;
     deckTags: string[];
-    cards: any[]
+    cards: any[];
+    memoryGoal?: { tier: string };
+    isPublic?: boolean;
+    level?: string;
+    category?: string;
+    description?: string;
+    publicDescription?: string;
+    publisherName?: string;
+    saves?: number;
+    updatedAt?: string;
 }
 
 interface DeckContextType {

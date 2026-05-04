@@ -18,6 +18,7 @@ import {
     User,
     Play,
     BookOpen,
+    Globe,
 } from "lucide-react";
 import axios from "axios";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -41,7 +42,7 @@ const Seal = ({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            fontFamily: '"Instrument Serif", Georgia, serif',
+            fontFamily: '"Geist", sans-serif',
             fontSize: size * 0.44,
             lineHeight: 1,
             flexShrink: 0,
@@ -113,6 +114,7 @@ export const Sidebar = () => {
                   { path: "/vocabulary", label: "Vocabulary", icon: Compass },
                   { path: "/saved-sentences", label: "Saved sentences", icon: Bookmark },
                   { path: "/grammar", label: "Grammar", icon: BookOpen },
+                  { path: "/browse", label: "Browse", icon: Globe },
               ]
             : []),
     ];
@@ -154,7 +156,7 @@ export const Sidebar = () => {
                         >
                             <span
                                 style={{
-                                    fontFamily: '"Instrument Serif", Georgia, serif',
+                                    fontFamily: '"Geist", sans-serif',
                                     fontSize: 26,
                                     color: "var(--tk-ink)",
                                     letterSpacing: "-0.01em",

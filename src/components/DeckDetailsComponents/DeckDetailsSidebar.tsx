@@ -4,6 +4,7 @@ import axios from "axios";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useFetchAllHistory, HistoryItem } from "@/state/hooks/useLearningHistoryHooks";
 import { MemoryGoalPanel } from "./MemoryGoalPanel";
+import { PublishPanel } from "./PublishPanel";
 import type { MemoryGoalTier } from "@/types";
 
 interface Props {
@@ -154,6 +155,25 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
       </div>
 
       <MemoryGoalPanel deckId={deckId} currentTier={memoryTier} />
+
+      <PublishPanel
+        deckId={deckId}
+        deckName={deckName}
+        deckTags={(currentDeck as any)?.deckTags ?? []}
+        deckDescription={(currentDeck as any)?.description ?? ""}
+        initialState={{
+          isPublic:              (currentDeck as any)?.isPublic ?? false,
+          level:                 (currentDeck as any)?.level ?? "",
+          category:              (currentDeck as any)?.category ?? "",
+          publicDeckName:        (currentDeck as any)?.publicDeckName ?? "",
+          publicDescription:     (currentDeck as any)?.publicDescription ?? "",
+          showPublicDescription: (currentDeck as any)?.showPublicDescription ?? true,
+          publisherName:         (currentDeck as any)?.publisherName ?? "",
+          showPublisherName:     (currentDeck as any)?.showPublisherName ?? false,
+          publicTags:            (currentDeck as any)?.publicTags ?? [],
+          showPublicTags:        (currentDeck as any)?.showPublicTags ?? true,
+        }}
+      />
 
       <div className="tx-aside-card" style={{ padding: 20, background: "var(--tk-paper-deep)", marginTop: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
