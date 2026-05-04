@@ -23,7 +23,7 @@ export const GameOverlay: React.FC<Props> = ({ title, deckName, onClose, childre
         <button className="go-close" onClick={onClose} title="Exit (Esc)"><X size={16} /></button>
         <div className="go-top-mid">
           <span style={{ fontSize: 15, color: "var(--tk-ink)", fontWeight: 500 }}>{title}</span>
-          <span style={{ fontSize: 11, color: "var(--tk-ink-3)", fontFamily: "'IBM Plex Mono', Menlo, monospace", letterSpacing: "0.04em" }}>{deckName}</span>
+          <span style={{ fontSize: 11, color: "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace", letterSpacing: "0.04em" }}>{deckName}</span>
         </div>
         <div className="go-top-right">
           {progress != null && (

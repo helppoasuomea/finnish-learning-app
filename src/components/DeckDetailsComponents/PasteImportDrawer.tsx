@@ -66,7 +66,7 @@ export const PasteImportDrawer: React.FC<Props> = ({ deckName, existingFi, onClo
       onClose={onClose}
       footer={
         <>
-          <div style={{ fontSize: 12, color: "var(--tk-ink-3)", fontFamily: "'IBM Plex Mono', Menlo, monospace" }}>
+          <div style={{ fontSize: 12, color: "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace" }}>
             {stats.new} new · {stats.dupes} duplicates · {stats.errors} skipped
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -83,9 +83,9 @@ export const PasteImportDrawer: React.FC<Props> = ({ deckName, existingFi, onClo
         <div className="tk-field-label">
           Paste your list
           <small>One per line. Separator:
-            <button onClick={() => setSep("dash")} style={{ marginLeft: 6, color: sep === "dash" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "'IBM Plex Mono', Menlo, monospace" }}>— dash</button>
+            <button onClick={() => setSep("dash")} style={{ marginLeft: 6, color: sep === "dash" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace" }}>— dash</button>
             <span style={{ color: "var(--tk-ink-5)" }}> · </span>
-            <button onClick={() => setSep("tab")} style={{ color: sep === "tab" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "'IBM Plex Mono', Menlo, monospace" }}>↹ tab</button>
+            <button onClick={() => setSep("tab")} style={{ color: sep === "tab" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace" }}>↹ tab</button>
           </small>
         </div>
         <textarea className="tk-textfield" value={text} onChange={e => setText(e.target.value)} rows={8} />

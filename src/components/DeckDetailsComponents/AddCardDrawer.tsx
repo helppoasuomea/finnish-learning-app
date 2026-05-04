@@ -57,7 +57,7 @@ export const AddCardDrawer: React.FC<Props> = ({ deckName, existingFi, onClose, 
       onClose={onClose}
       footer={
         <>
-          <div style={{ fontSize: 12, color: "var(--tk-ink-3)", fontFamily: "'IBM Plex Mono', Menlo, monospace" }}>
+          <div style={{ fontSize: 12, color: "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace" }}>
             {addedCount > 0 ? `${addedCount} added this session` : "Two fields required"}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
