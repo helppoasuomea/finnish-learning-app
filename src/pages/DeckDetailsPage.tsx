@@ -12,6 +12,8 @@ import { AddCardDrawer } from "../components/DeckDetailsComponents/AddCardDrawer
 import { PasteImportDrawer } from "../components/DeckDetailsComponents/PasteImportDrawer";
 import { EditDetailsModal } from "../components/DeckDetailsComponents/EditDetailsModal";
 import { DeckDetailsSidebar } from "../components/DeckDetailsComponents/DeckDetailsSidebar";
+import { MoveCardModal } from "../components/DeckDetailsComponents/MoveCardModal";
+import { CramLauncher } from "../components/CramComponents/CramLauncher";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useFindDuplicates } from "@/state/hooks/useFindDuplicates";
 import { Card } from "@/types";
@@ -28,6 +30,8 @@ export const DeckDetailsPage: React.FC = () => {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [moveCard, setMoveCard] = useState<Card | null>(null);
+  const [cramOpen, setCramOpen] = useState(false);
 
   const { stillLearning, notStudied, completed } = organizeCardsByScore(cards);
   const percentage = calculateCompletePercentage(cards);
@@ -129,6 +133,14 @@ export const DeckDetailsPage: React.FC = () => {
       showToast('Failed to merge');
     }
   }, [id, duplicates, cards, setDeck, setCards, refreshDecks]);
+
+  const handleAcknowledgeDupe = useCallback(async (cardId: string) => {
+    try {
+      await axios.post(`/decks/${id}/acknowledge-duplicate`, { cardId });
+    } catch {
+      // silent — local state already updated
+    }
+  }, [id]);
 
   const handleRemoveDupes = useCallback(async (card: Card) => {
     const dupes = duplicates[card._id];
@@ -250,6 +262,7 @@ export const DeckDetailsPage: React.FC = () => {
               notStudied={notStudied}
               completed={completed}
               onEditDeck={() => setEditOpen(true)}
+              onCram={() => setCramOpen(true)}
             />
           )}
           {tab === "terms" && (
@@ -265,6 +278,9 @@ export const DeckDetailsPage: React.FC = () => {
               crossDeckDupes={duplicates}
               onMergeDupes={handleMergeDupes}
               onRemoveDupes={handleRemoveDupes}
+              onAcknowledgeDupe={handleAcknowledgeDupe}
+              initialAcknowledged={(deck as any).acknowledgedDuplicates ?? []}
+              onMoveCard={setMoveCard}
             />
           )}
         </div>
@@ -274,6 +290,23 @@ export const DeckDetailsPage: React.FC = () => {
           <DeckDetailsSidebar deckId={id!} deckName={deckName} />
         </aside>
       </div>
+
+      {cramOpen && deck && (
+        <CramLauncher deck={deck} onClose={() => setCramOpen(false)} />
+      )}
+
+      <MoveCardModal
+        card={moveCard}
+        sourceDeckId={id!}
+        sourceDeckName={deckName}
+        decks={decks}
+        onClose={() => setMoveCard(null)}
+        onMoved={(destDeckName) => {
+          refreshDecks();
+          axios.get(`/decks/${id}`).then(r => { setDeck(r.data); setCards(r.data.cards); });
+          showToast(`Moved to ${destDeckName} · 1 card`);
+        }}
+      />
 
       {/* Drawers / modals */}
       {addCardOpen && (
