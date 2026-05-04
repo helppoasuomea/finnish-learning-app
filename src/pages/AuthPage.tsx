@@ -380,6 +380,8 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
     setBusy(true); setError("");
     try {
       await axios.post("/register", { name, username, password: pw });
+      // Automatically log in the user after successful registration
+      await axios.post("/login", { username, password: pw });
       localStorage.setItem("lukea:lastUsername", username);
       setTimeout(onSuccess, 700);
     } catch (err) {
