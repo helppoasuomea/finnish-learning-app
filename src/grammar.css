@@ -748,23 +748,24 @@
   margin-bottom: 10px;
 }
 .gr-index-row {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   padding: 8px 0;
   border-top: 1px solid var(--rule-soft);
-  align-items: baseline;
 }
 .gr-index-row:first-child { border-top: 0; }
 .gr-index-pattern {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--accent-deep);
   background: var(--accent-wash);
   padding: 2px 7px;
   border-radius: var(--r-xs);
   width: fit-content;
+  max-width: 100%;
   border: 1px solid var(--accent-soft);
+  word-break: break-word;
 }
 .gr-index-use {
   font-size: 13px;

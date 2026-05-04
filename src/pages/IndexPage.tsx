@@ -9,7 +9,7 @@ import { useDeckContext } from "@/contexts/DeckContext";
 import { UserContext } from "@/contexts/UserContext";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowRight, BookOpen, Plus, Check, X, ExternalLink } from "lucide-react";
+import { ArrowRight, BookOpen, Plus, Check, X, Play } from "lucide-react";
 import { GRAMMAR_BY_ID } from "@/data/grammar/index";
 import { Popover, PopoverTrigger, PopoverContent, PopoverClose } from "@/components/ui/popover";
 
@@ -60,7 +60,7 @@ const timeOfDay = () => {
 };
 
 const IndexPageContent = () => {
-    const { fromLanguage, setFromLanguage, inputText, setInputText, ready, isStreaming, validationError, response, handleTranslationStream, refreshResponseFromStorage } = useTranslation();
+    const { fromLanguage, setFromLanguage, inputText, setInputText, ready, isStreaming, streamPhase, validationError, response, handleTranslationStream, refreshResponseFromStorage } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { decks } = useDeckContext();
@@ -226,7 +226,7 @@ const IndexPageContent = () => {
                         <h1 className="tk-page-title">
                             Good {greeting}{firstName ? `, ${firstName}` : ''}.
                         </h1>
-                        <p style={{ color: 'var(--tk-ink-3)', fontSize: 16, marginTop: 6, fontFamily: 'var(--font-display)', fontStyle: 'italic' }}>
+                        <p style={{ color: 'var(--tk-ink-3)', fontSize: 16, marginTop: 6, fontFamily: '"Geist", -apple-system, sans-serif', fontStyle: 'italic' }}>
                             A sentence in, flashcards out. Study what you're already reading.
                         </p>
                     </div>
@@ -276,11 +276,21 @@ const IndexPageContent = () => {
                             </div>
                         )}
 
-                        {/* Streaming loader */}
-                        {isStreaming && !response?.sentence && (
-                            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--tk-accent)', animation: 'pulse 1s infinite' }} />
-                                <span style={{ fontSize: 13, color: 'var(--tk-ink-3)', fontFamily: 'var(--font-mono)' }}>Translating…</span>
+                        {/* Streaming status bar */}
+                        {isStreaming && (
+                            <div className="tx-stream-status">
+                                <span className="tx-stream-dot" />
+                                <span className="tx-stream-label">
+                                    {streamPhase === 'reading' && 'Reading sentence…'}
+                                    {streamPhase === 'words'   && 'Tagging grammar · drafting translation…'}
+                                    {streamPhase === 'enriching' && 'Applying morphology…'}
+                                    {(streamPhase === 'idle' || streamPhase === 'done') && 'Translating…'}
+                                </span>
+                                <div className="tx-stream-tiers">
+                                    <span data-on={streamPhase !== 'reading' ? 'true' : 'false'}>tokens</span>
+                                    <span data-on={streamPhase === 'words' || streamPhase === 'enriching' || streamPhase === 'done' ? 'true' : 'false'}>words</span>
+                                    <span data-on={streamPhase === 'enriching' || streamPhase === 'done' ? 'true' : 'false'}>morph</span>
+                                </div>
                             </div>
                         )}
 
@@ -294,7 +304,7 @@ const IndexPageContent = () => {
                                         <div className="tx-sentence-label">
                                             Your sentence · {activeWords.length} word{activeWords.length !== 1 ? 's' : ''}
                                         </div>
-                                        <div className="tx-output-text" style={{ fontSize: activeWords.length > 15 ? 22 : 26 }}>
+<div className="tx-output-text" style={{ fontSize: activeWords.length > 15 ? 22 : 26 }}>
                                             {activeSentence}
                                         </div>
                                     </div>
@@ -329,26 +339,31 @@ const IndexPageContent = () => {
 
                                 {/* Interlinear display */}
                                 {(isStreaming && response?.sentence && !response?.words?.length) ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0' }}>
-                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--tk-accent)', animation: 'pulse 1s infinite' }} />
-                                        <span style={{ fontSize: 12.5, color: 'var(--tk-ink-3)', fontFamily: 'var(--font-mono)' }}>Analysing words…</span>
+                                    <div className="tx-stream-placeholder" style={{ padding: '12px 0' }}>
+                                        <span className="tx-stream-bar" style={{ width: '72%' }} />
+                                        <span className="tx-stream-bar" style={{ width: '55%' }} />
+                                        <span className="tx-stream-bar" style={{ width: '40%' }} />
                                     </div>
                                 ) : (
-                                    <div className="tx-interlinear">
+                                    <div className="tx-interlinear" data-streaming={isStreaming ? 'true' : 'false'}>
                                         {activeWords.map((w: any, i: number) => {
-                                            const hide = hideCommon && w.common;
                                             const saved = isWordSaved(w);
+                                            const isLastStreaming = isStreaming && i === activeWords.length - 1;
                                             return (
                                                 <Popover key={w.id || i}>
                                                     <PopoverTrigger asChild>
                                                         <span
                                                             className="tx-il-word"
-                                                            data-common={w.common ? 'true' : 'false'}
+                                                            data-common={w.common && !w.highlight ? 'true' : 'false'}
                                                             data-saved={saved ? 'true' : 'false'}
                                                             data-highlight={w.highlight ? 'true' : 'false'}
+                                                            data-stream-cursor={isLastStreaming ? 'true' : 'false'}
                                                         >
                                                             {w.fi}
-                                                            {!hide && <span className="tx-il-gloss">{(w.gloss || w.en).replace(/\s*\([^)]*\)/g, '').trim()}</span>}
+                                                            {(w.gloss || w.en)
+                                                                ? <span className="tx-il-gloss">{(w.gloss || w.en).replace(/\s*\([^)]*\)/g, '').trim()}</span>
+                                                                : <span className="tx-il-gloss-pending"><span className="tx-il-gloss-shimmer"/></span>
+                                                            }
                                                         </span>
                                                     </PopoverTrigger>
                                                     <PopoverContent
@@ -375,15 +390,26 @@ const IndexPageContent = () => {
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            {/* Lesson link — Tier 3/4 highlight */}
+                                                            {/* Grammar card — Tier 3/4 highlight */}
                                                             {w.highlight && GRAMMAR_BY_ID[w.highlight] && (
-                                                                <button
-                                                                    className="tx-lesson-link"
-                                                                    onClick={() => navigate(`/grammar/${w.highlight}`)}
-                                                                >
-                                                                    <ExternalLink size={11} />
-                                                                    {GRAMMAR_BY_ID[w.highlight].title}
-                                                                </button>
+                                                                <div className="tx-grammar-card">
+                                                                    <div className="tx-grammar-card-title">{GRAMMAR_BY_ID[w.highlight].title}</div>
+                                                                    {(GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle) && (
+                                                                        <div className="tx-grammar-card-desc">{GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle}</div>
+                                                                    )}
+                                                                    <div className="tx-grammar-card-actions">
+                                                                        <PopoverClose asChild>
+                                                                            <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                                                                                <BookOpen size={12} /> Open topic
+                                                                            </button>
+                                                                        </PopoverClose>
+                                                                        <PopoverClose asChild>
+                                                                            <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}?drill=1`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                                                                                <Play size={12} /> Drill this
+                                                                            </button>
+                                                                        </PopoverClose>
+                                                                    </div>
+                                                                </div>
                                                             )}
                                                             <div className="tx-peek-meta">
                                                                 <span>{w.type}</span>
