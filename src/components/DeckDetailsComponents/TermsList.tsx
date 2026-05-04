@@ -16,6 +16,9 @@ interface Props {
   crossDeckDupes?: { [cardId: string]: DuplicateInfo[] };
   onMergeDupes?: (card: Card) => void;
   onRemoveDupes?: (card: Card) => void;
+  onAcknowledgeDupe?: (cardId: string) => void;
+  initialAcknowledged?: string[];
+  onMoveCard?: (card: Card) => void;
 }
 
 const ScoreDots: React.FC<{ score: number }> = ({ score }) => (
@@ -24,12 +27,12 @@ const ScoreDots: React.FC<{ score: number }> = ({ score }) => (
   </div>
 );
 
-interface RowMenuProps { onEdit: () => void; onDelete: () => void; }
-const RowMenu: React.FC<RowMenuProps> = ({ onEdit, onDelete }) => (
+interface RowMenuProps { onEdit: () => void; onDelete: () => void; onMove: () => void; }
+const RowMenu: React.FC<RowMenuProps> = ({ onEdit, onDelete, onMove }) => (
   <div className="tl-menu">
     <button onClick={onEdit}><Pencil size={13} />Edit card</button>
     <button><ArrowRightLeft size={13} />Swap front/back</button>
-    <button><FolderOpen size={13} />Move to another deck…</button>
+    <button onClick={onMove}><FolderOpen size={13} />Move to another deck…</button>
     <div className="tl-menu-sep" />
     <button data-danger="true" onClick={onDelete}><Trash2 size={13} />Delete</button>
   </div>
@@ -76,10 +79,15 @@ const TagPill: React.FC<{ tone: string; children: React.ReactNode }> = ({ tone, 
   );
 };
 
-export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, completed, onAddCard, onPasteImport, onDeleteCard, onEditCard, crossDeckDupes = {}, onMergeDupes, onRemoveDupes }) => {
+export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, completed, onAddCard, onPasteImport, onDeleteCard, onEditCard, crossDeckDupes = {}, onMergeDupes, onRemoveDupes, onAcknowledgeDupe, initialAcknowledged = [], onMoveCard }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [menuForId, setMenuForId] = useState<string | null>(null);
   const [dupeBannerDismissed, setDupeBannerDismissed] = useState(false);
+  const [acknowledgedDupeIds, setAcknowledgedDupeIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (initialAcknowledged.length > 0)
+      setAcknowledgedDupeIds(s => new Set([...s, ...initialAcknowledged]));
+  }, [initialAcknowledged]);
   // Tracks which card's dupe popover is open + the viewport position of the badge
   const [dupeAnchor, setDupeAnchor] = useState<{
     cardId: string;
@@ -88,7 +96,12 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
   } | null>(null);
   const debouncedSearch = useDebounce(searchTerm, 250);
 
-  const dupeCardIds = useMemo(() => Object.keys(crossDeckDupes), [crossDeckDupes]);
+  const effectiveDupes = useMemo(() => {
+    if (acknowledgedDupeIds.size === 0) return crossDeckDupes;
+    return Object.fromEntries(Object.entries(crossDeckDupes).filter(([id]) => !acknowledgedDupeIds.has(id)));
+  }, [crossDeckDupes, acknowledgedDupeIds]);
+
+  const dupeCardIds = useMemo(() => Object.keys(effectiveDupes), [effectiveDupes]);
   const dupeCount = dupeCardIds.length;
 
   // Close popover when clicking outside (the overlay handles it) or on Escape
@@ -117,7 +130,7 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
   ];
 
   const renderRow = (c: Card) => {
-    const isDupe = !!crossDeckDupes[c._id]?.length;
+    const isDupe = !!effectiveDupes[c._id]?.length;
     return (
       <div key={c._id} className="tl-row">
         <div className="tl-fi">
@@ -135,7 +148,7 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
                 }
               }}
             >
-              <AlertTriangle size={9} />×{(crossDeckDupes[c._id]?.length ?? 0) + 1}
+              <AlertTriangle size={9} />×{(effectiveDupes[c._id]?.length ?? 0) + 1}
             </button>
           )}
         </div>
@@ -158,6 +171,7 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
               <RowMenu
                 onEdit={() => { setMenuForId(null); onEditCard(c); }}
                 onDelete={() => { setMenuForId(null); onDeleteCard(c._id); }}
+                onMove={() => { setMenuForId(null); onMoveCard?.(c); }}
               />
             )}
           </div>
@@ -168,7 +182,7 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
 
   // Card currently anchored for dupe popover
   const anchoredCard = dupeAnchor ? cards.find(c => c._id === dupeAnchor.cardId) : null;
-  const anchoredDupes = anchoredCard ? (crossDeckDupes[anchoredCard._id] ?? []) : [];
+  const anchoredDupes = anchoredCard ? (effectiveDupes[anchoredCard._id] ?? []) : [];
 
   return (
     <div style={{ marginTop: 28 }}>
@@ -252,7 +266,7 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
               onClose={() => setDupeAnchor(null)}
               onMerge={() => { setDupeAnchor(null); onMergeDupes?.(anchoredCard); }}
               onRemove={() => { setDupeAnchor(null); onRemoveDupes?.(anchoredCard); }}
-              onKeep={() => setDupeAnchor(null)}
+              onKeep={() => { setAcknowledgedDupeIds(s => new Set([...s, anchoredCard._id])); onAcknowledgeDupe?.(anchoredCard._id); setDupeAnchor(null); }}
             />
           </div>
         </>
