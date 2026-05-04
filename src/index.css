@@ -2165,7 +2165,6 @@ textarea.tk-textfield { resize: vertical; line-height: 1.55; }
 .tl-menu-sep { height: 1px; background: var(--tk-rule-soft); margin: 3px 0; }
 
 .tl-dupe-pop {
-  position: absolute; z-index: 50;
   width: 280px;
   background: var(--tk-card);
   border: 1px solid var(--tk-rule);

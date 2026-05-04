@@ -9,6 +9,7 @@ export interface HistoryItem {
     cardsStudied: number;
     quizType: 'learn' | 'review';
     randomName: string;
+    deckId?: string;
 }
 
 interface QuizHistory {
@@ -32,6 +33,22 @@ export const useFetchHistory = (userId: string | null, deckId: any) => {
         }
     }
     return { history, error, fetchHistory }
+}
+
+export const useFetchAllHistory = (userId: string | null) => {
+    const [history, setHistory] = useState<HistoryItem[]>([])
+
+    const fetchHistory = async () => {
+        try {
+            if (userId) {
+                const response = await axios.get(`/learning-history/${userId}`)
+                setHistory(response.data.history || [])
+            }
+        } catch (error) {
+            console.error('Error fetching all learning history: ', error)
+        }
+    }
+    return { history, fetchHistory }
 }
 
 export const useFetchNextQuizDate = (userId: string | null, deckId: any) => {

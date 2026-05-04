@@ -62,7 +62,7 @@ export const LearningPage: React.FC = () => {
     } = useQuizProgress(userId || '', id || '')
 
     const filteredAndSortedCards = useMemo(() => filterCards(), [cards, includeCompletedCards, cardsToLearn, shuffleCards]);
-    const { question, quizdone, score, saveAnswer, nextQuizDate: quizNextDate, answers } = useQuizLogic(
+    const { question, quizdone, score, saveAnswer, nextQuizDate: quizNextDate, answers, streakUpdate } = useQuizLogic(
         quiz, 
         id, 
         false, 
@@ -80,6 +80,16 @@ export const LearningPage: React.FC = () => {
     )
 
     const { nextQuizDate, fetchNextQuizDate } = useFetchNextQuizDate(userId, id)
+
+    useEffect(() => {
+        if (!streakUpdate?.updated) return;
+        const days = streakUpdate.current;
+        toast({
+            title: days === 1 ? "Streak started!" : `${days}-day streak!`,
+            description: days === 1 ? "Come back tomorrow to keep it going." : "Keep it up — you're on a roll.",
+            duration: 4000,
+        });
+    }, [streakUpdate]);
 
     // Animation helper
     const triggerAnimation = (animation: string) => {

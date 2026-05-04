@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDebounce } from "@uidotdev/usehooks";
-import { Search, Plus, Clipboard, Star, Volume2, MoreHorizontal, AlertTriangle, Pencil, ArrowRightLeft, FolderOpen, Trash2, GitMerge, X, Check } from "lucide-react";
+import { Search, Plus, Clipboard, Star, Volume2, MoreHorizontal, AlertTriangle, Pencil, ArrowRightLeft, FolderOpen, Trash2, GitMerge, Check, X } from "lucide-react";
 import { Card } from "@/types";
+import type { DuplicateInfo } from "@/state/hooks/useFindDuplicates";
 
 interface Props {
   cards: Card[];
@@ -12,6 +13,9 @@ interface Props {
   onPasteImport: () => void;
   onDeleteCard: (cardId: string) => void;
   onEditCard: (card: Card) => void;
+  crossDeckDupes?: { [cardId: string]: DuplicateInfo[] };
+  onMergeDupes?: (card: Card) => void;
+  onRemoveDupes?: (card: Card) => void;
 }
 
 const ScoreDots: React.FC<{ score: number }> = ({ score }) => (
@@ -20,8 +24,8 @@ const ScoreDots: React.FC<{ score: number }> = ({ score }) => (
   </div>
 );
 
-interface RowMenuProps { onClose: () => void; onEdit: () => void; onDelete: () => void; }
-const RowMenu: React.FC<RowMenuProps> = ({ onClose, onEdit, onDelete }) => (
+interface RowMenuProps { onEdit: () => void; onDelete: () => void; }
+const RowMenu: React.FC<RowMenuProps> = ({ onEdit, onDelete }) => (
   <div className="tl-menu">
     <button onClick={onEdit}><Pencil size={13} />Edit card</button>
     <button><ArrowRightLeft size={13} />Swap front/back</button>
@@ -31,11 +35,18 @@ const RowMenu: React.FC<RowMenuProps> = ({ onClose, onEdit, onDelete }) => (
   </div>
 );
 
-interface DupePopoverProps { word: string; count: number; onClose: () => void; onMerge: () => void; onRemove: () => void; onKeep: () => void; }
-const DupePopover: React.FC<DupePopoverProps> = ({ word, count, onClose, onMerge, onRemove, onKeep }) => (
-  <div className="tl-dupe-pop" style={{ left: 0, top: "calc(100% + 4px)" }}>
+interface DupePopoverProps {
+  word: string; count: number; dupeDecks: string[];
+  onClose: () => void; onMerge: () => void; onRemove: () => void; onKeep: () => void;
+}
+const DupePopover: React.FC<DupePopoverProps> = ({ word, count, dupeDecks, onClose, onMerge, onRemove, onKeep }) => (
+  <div className="tl-dupe-pop">
     <div className="tl-dupe-pop-head">Duplicate: <em>{word}</em></div>
-    <div className="tl-dupe-pop-sub">{count} copies of this word in this deck.</div>
+    <div className="tl-dupe-pop-sub">
+      {count} copies across your library
+      {dupeDecks.length > 0 && <> — in {dupeDecks.map((n, i) => <em key={i}>{i > 0 ? ', ' : ''}{n}</em>)}</>}.
+      Pick one:
+    </div>
     <button className="tl-dupe-pop-row" onClick={onMerge}>
       <span className="tl-dupe-pop-ic"><GitMerge size={12} /></span>
       <div><strong>Merge into one</strong><span>Keep highest progress. Other translations become notes.</span></div>
@@ -65,17 +76,33 @@ const TagPill: React.FC<{ tone: string; children: React.ReactNode }> = ({ tone, 
   );
 };
 
-export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, completed, onAddCard, onPasteImport, onDeleteCard, onEditCard }) => {
+export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, completed, onAddCard, onPasteImport, onDeleteCard, onEditCard, crossDeckDupes = {}, onMergeDupes, onRemoveDupes }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [menuForId, setMenuForId] = useState<string | null>(null);
-  const [dupePopForWord, setDupePopForWord] = useState<string | null>(null);
+  const [dupeBannerDismissed, setDupeBannerDismissed] = useState(false);
+  // Tracks which card's dupe popover is open + the viewport position of the badge
+  const [dupeAnchor, setDupeAnchor] = useState<{
+    cardId: string;
+    top: number;
+    left: number;
+  } | null>(null);
   const debouncedSearch = useDebounce(searchTerm, 250);
 
-  const dupeIndex = useMemo(() => {
-    const map = new Map<string, number>();
-    cards.forEach(c => { const k = c.userLangCard.toLowerCase(); map.set(k, (map.get(k) || 0) + 1); });
-    return map;
-  }, [cards]);
+  const dupeCardIds = useMemo(() => Object.keys(crossDeckDupes), [crossDeckDupes]);
+  const dupeCount = dupeCardIds.length;
+
+  // Close popover when clicking outside (the overlay handles it) or on Escape
+  useEffect(() => {
+    if (!dupeAnchor) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setDupeAnchor(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [dupeAnchor]);
+
+  // Reset banner dismissed state when dupes change (e.g. after merge/remove)
+  useEffect(() => {
+    if (dupeCount === 0) setDupeBannerDismissed(false);
+  }, [dupeCount]);
 
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return null;
@@ -90,26 +117,26 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
   ];
 
   const renderRow = (c: Card) => {
-    const dupeCount = dupeIndex.get(c.userLangCard.toLowerCase()) || 0;
-    const isDupe = dupeCount > 1;
+    const isDupe = !!crossDeckDupes[c._id]?.length;
     return (
       <div key={c._id} className="tl-row">
         <div className="tl-fi">
           {c.userLangCard}
           {isDupe && (
-            <button className="tl-dupe"
-              onClick={e => { e.stopPropagation(); setDupePopForWord(dupePopForWord === c.userLangCard ? null : c.userLangCard); }}>
-              <AlertTriangle size={9} />×{dupeCount}
+            <button
+              className="tl-dupe"
+              onClick={e => {
+                e.stopPropagation();
+                if (dupeAnchor?.cardId === c._id) {
+                  setDupeAnchor(null);
+                } else {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setDupeAnchor({ cardId: c._id, top: rect.bottom + 6, left: rect.left });
+                }
+              }}
+            >
+              <AlertTriangle size={9} />×{(crossDeckDupes[c._id]?.length ?? 0) + 1}
             </button>
-          )}
-          {dupePopForWord === c.userLangCard && (
-            <DupePopover
-              word={c.userLangCard} count={dupeCount}
-              onClose={() => setDupePopForWord(null)}
-              onMerge={() => setDupePopForWord(null)}
-              onRemove={() => setDupePopForWord(null)}
-              onKeep={() => setDupePopForWord(null)}
-            />
           )}
         </div>
         <div className="tl-en">{c.engCard}</div>
@@ -129,7 +156,6 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
             </button>
             {menuForId === c._id && (
               <RowMenu
-                onClose={() => setMenuForId(null)}
                 onEdit={() => { setMenuForId(null); onEditCard(c); }}
                 onDelete={() => { setMenuForId(null); onDeleteCard(c._id); }}
               />
@@ -139,6 +165,10 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
       </div>
     );
   };
+
+  // Card currently anchored for dupe popover
+  const anchoredCard = dupeAnchor ? cards.find(c => c._id === dupeAnchor.cardId) : null;
+  const anchoredDupes = anchoredCard ? (crossDeckDupes[anchoredCard._id] ?? []) : [];
 
   return (
     <div style={{ marginTop: 28 }}>
@@ -159,6 +189,29 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
         </div>
       </div>
 
+      {/* Duplicate summary banner */}
+      {dupeCount > 0 && !dupeBannerDismissed && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          marginBottom: 16, padding: "9px 14px",
+          background: "color-mix(in oklab, var(--tk-persimmon) 8%, var(--tk-card))",
+          border: "1px solid color-mix(in oklab, var(--tk-persimmon) 20%, var(--tk-rule))",
+          borderRadius: 8, fontSize: 12.5,
+        }}>
+          <AlertTriangle size={13} style={{ color: "var(--tk-persimmon)", flexShrink: 0 }} />
+          <span style={{ flex: 1, color: "var(--tk-ink-2)" }}>
+            <strong style={{ color: "var(--tk-ink)", fontWeight: 600 }}>{dupeCount} word{dupeCount !== 1 ? "s" : ""}</strong> found in other decks.
+            Click the <strong style={{ fontWeight: 600 }}>△</strong> badge on a card to merge or remove.
+          </span>
+          <button
+            onClick={() => setDupeBannerDismissed(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--tk-ink-3)", padding: 2, display: "flex" }}
+          >
+            <X size={13} />
+          </button>
+        </div>
+      )}
+
       {searchResults ? (
         <div style={{ background: "var(--tk-card)", border: "1px solid var(--tk-rule)", borderRadius: 12, padding: 6 }}>
           {searchResults.length === 0 ? (
@@ -177,6 +230,32 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
             </div>
           </div>
         ))
+      )}
+
+      {/* Dupe popover — rendered at root level with position:fixed to escape stacking contexts */}
+      {dupeAnchor && anchoredCard && (
+        <>
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 999 }}
+            onClick={() => setDupeAnchor(null)}
+          />
+          <div style={{
+            position: "fixed",
+            top: dupeAnchor.top,
+            left: dupeAnchor.left,
+            zIndex: 1000,
+          }}>
+            <DupePopover
+              word={anchoredCard.userLangCard}
+              count={anchoredDupes.length + 1}
+              dupeDecks={[...new Set(anchoredDupes.map(d => d.deckName))]}
+              onClose={() => setDupeAnchor(null)}
+              onMerge={() => { setDupeAnchor(null); onMergeDupes?.(anchoredCard); }}
+              onRemove={() => { setDupeAnchor(null); onRemoveDupes?.(anchoredCard); }}
+              onKeep={() => setDupeAnchor(null)}
+            />
+          </div>
+        </>
       )}
     </div>
   );

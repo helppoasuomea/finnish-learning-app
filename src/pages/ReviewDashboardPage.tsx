@@ -6,6 +6,7 @@ import { UserContext } from "@/contexts/UserContext";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { ReviewSession, ReviewDone } from "@/components/ReviewSession";
 import { Card } from "@/types";
+import axios from "axios";
 
 type DeckCard  = Card & { deckId: string; deckName: string };
 type Rating    = "again" | "hard" | "good" | "easy";
@@ -292,6 +293,25 @@ export const ReviewDashboardPage: React.FC = () => {
   const handleDone = (s: typeof summary) => {
     setSummary(s);
     refreshDecks();
+    if (!s) return;
+    const userId = localStorage.getItem("userId");
+    // Group by deck and save one history record per deck
+    const byDeck = new Map<string, { deckId: string; correct: number; total: number }>();
+    s.history.forEach(({ card, grade }) => {
+      const entry = byDeck.get(card.deckId) ?? { deckId: card.deckId, correct: 0, total: 0 };
+      entry.total += 1;
+      if (grade === "good" || grade === "easy") entry.correct += 1;
+      byDeck.set(card.deckId, entry);
+    });
+    byDeck.forEach(({ deckId, correct, total }) => {
+      axios.post("/learning-history/save-quiz-result", {
+        userId,
+        deckId,
+        cardsStudied: total,
+        correctAnswers: correct,
+        quizType: "review",
+      }).catch(() => {});
+    });
   };
 
   const startSession = (queue = sortedDue) => {

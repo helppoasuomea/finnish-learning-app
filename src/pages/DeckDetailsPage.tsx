@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useContext, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { ChevronRight, Pencil } from "lucide-react";
@@ -12,6 +12,8 @@ import { AddCardDrawer } from "../components/DeckDetailsComponents/AddCardDrawer
 import { PasteImportDrawer } from "../components/DeckDetailsComponents/PasteImportDrawer";
 import { EditDetailsModal } from "../components/DeckDetailsComponents/EditDetailsModal";
 import { DeckDetailsSidebar } from "../components/DeckDetailsComponents/DeckDetailsSidebar";
+import { DeckContext } from "@/contexts/DeckContext";
+import { useFindDuplicates } from "@/state/hooks/useFindDuplicates";
 import { Card } from "@/types";
 
 type Tab = "overview" | "terms";
@@ -19,6 +21,7 @@ type Tab = "overview" | "terms";
 export const DeckDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { deck, cards, deckName, deckTags, setDeck, setCards } = useFetchDeck(id);
+  const { decks, refreshDecks } = useContext(DeckContext);
 
   const [tab, setTab] = useState<Tab>("overview");
   const [addCardOpen, setAddCardOpen] = useState(false);
@@ -28,6 +31,10 @@ export const DeckDetailsPage: React.FC = () => {
 
   const { stillLearning, notStudied, completed } = organizeCardsByScore(cards);
   const percentage = calculateCompletePercentage(cards);
+
+  useEffect(() => { refreshDecks(); }, []);
+
+  const { duplicates } = useFindDuplicates(cards, decks, id ?? '', deckName);
 
   const existingFi = useMemo(
     () => new Set(cards.map(c => c.userLangCard.toLowerCase())),
@@ -96,6 +103,51 @@ export const DeckDetailsPage: React.FC = () => {
   const handleEditCard = useCallback((card: Card) => {
     showToast(`Edit for "${card.userLangCard}" coming soon`);
   }, []);
+
+  const handleMergeDupes = useCallback(async (card: Card) => {
+    const dupes = duplicates[card._id];
+    if (!dupes?.length) return;
+    // Pick keeper deck by highest progress; fall back to current deck
+    const allCandidates = [
+      { deckId: id!, cardScore: card.cardScore ?? 0, reps: card.reps ?? 0, definition: card.engCard },
+      ...dupes.map(d => ({ deckId: d.deckId, cardScore: d.cardScore, reps: d.reps, definition: d.definition })),
+    ];
+    allCandidates.sort((a, b) => (b.reps - a.reps) || (b.cardScore - a.cardScore));
+    const keeper = allCandidates[0];
+    // Deduplicate remove decks (exclude keeper)
+    const removeDeckIds = [...new Set(allCandidates.slice(1).map(c => c.deckId).filter(d => d !== keeper.deckId))];
+    const definitions = [...new Set(allCandidates.map(c => c.definition).filter(Boolean))];
+    const mergedEngCard = definitions.join(' / ');
+    try {
+      await axios.post('/decks/merge-card', { keepDeckId: keeper.deckId, userLangCard: card.userLangCard, removeDeckIds, mergedEngCard });
+      refreshDecks();
+      const res = await axios.get(`/decks/${id}`);
+      setDeck(res.data);
+      setCards(res.data.cards);
+      showToast(`Merged "${card.userLangCard}" into one card`);
+    } catch {
+      showToast('Failed to merge');
+    }
+  }, [id, duplicates, cards, setDeck, setCards, refreshDecks]);
+
+  const handleRemoveDupes = useCallback(async (card: Card) => {
+    const dupes = duplicates[card._id];
+    if (!dupes?.length) return;
+    // Keep oldest by _id (MongoDB ObjectId is chronological); current card is the reference
+    const allCandidates = [{ cardId: card._id, deckId: id! }, ...dupes.map(d => ({ cardId: d.cardId, deckId: d.deckId }))];
+    allCandidates.sort((a, b) => a.cardId < b.cardId ? -1 : 1);
+    const removePairs = allCandidates.slice(1);
+    try {
+      await Promise.all(removePairs.map(p => axios.delete(`/decks/${p.deckId}/cards/${p.cardId}`)));
+      refreshDecks();
+      const res = await axios.get(`/decks/${id}`);
+      setDeck(res.data);
+      setCards(res.data.cards);
+      showToast(`Removed duplicates of "${card.userLangCard}"`);
+    } catch {
+      showToast('Failed to remove duplicates');
+    }
+  }, [id, duplicates, setDeck, setCards, refreshDecks]);
 
   if (!deck) {
     return (
@@ -210,6 +262,9 @@ export const DeckDetailsPage: React.FC = () => {
               onPasteImport={() => setPasteOpen(true)}
               onDeleteCard={handleDeleteCard}
               onEditCard={handleEditCard}
+              crossDeckDupes={duplicates}
+              onMergeDupes={handleMergeDupes}
+              onRemoveDupes={handleRemoveDupes}
             />
           )}
         </div>

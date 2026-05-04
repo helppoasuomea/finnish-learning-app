@@ -97,7 +97,7 @@ export function MemoryGoalPanel({ deckId, currentTier }: Props) {
   async function handleSave() {
     setSaving(true);
     try {
-      await axios.put(`/api/decks/${deckId}/memory-goal`, { tier: selected });
+      await axios.put(`/decks/${deckId}/memory-goal`, { tier: selected });
       setDecks((prev: any[]) =>
         prev.map(d => d._id === deckId ? { ...d, memoryGoal: { tier: selected } } : d)
       );

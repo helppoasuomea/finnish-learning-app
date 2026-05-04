@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { Card, CardContent, CardTitle, CardHeader } from "../ui/card";
 import { Progress } from "../ui/progress";
@@ -69,7 +70,8 @@ export const ReviewPage = () => {
         }
     }, [reviewCards, quiz.length]);
 
-    const { question, answers, quizdone, score, saveAnswer, nextQuizDate: quizNextDate } = useQuizLogic(
+    const { toast } = useToast();
+    const { question, answers, quizdone, score, saveAnswer, nextQuizDate: quizNextDate, streakUpdate } = useQuizLogic(
         quiz, id, true,
         undefined, false, undefined, undefined,
         quiz.length > 0
@@ -81,6 +83,16 @@ export const ReviewPage = () => {
             fetchNextQuizDate();
         }
     }, [id, quizdone]);
+
+    useEffect(() => {
+        if (!streakUpdate?.updated) return;
+        const days = streakUpdate.current;
+        toast({
+            title: days === 1 ? "Streak started!" : `${days}-day streak!`,
+            description: days === 1 ? "Come back tomorrow to keep it going." : "Keep it up — you're on a roll.",
+            duration: 4000,
+        });
+    }, [streakUpdate]);
 
     if (deckCards.length === 0) return (
         <div className="flex items-center justify-center min-h-screen">
