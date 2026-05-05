@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { calculateCompletePercentage } from "@/utils/calculatePercentage";
-import { MoreVertical, Eye, Trash2, ArrowRight } from "lucide-react";
+import { MoreVertical, Eye, Trash2, ArrowRight, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -50,7 +50,8 @@ export const DockCardLarge: React.FC<{
         cards: any[];
         description?: string;
     };
-}> = ({ deck }) => {
+    mergeProps?: { isSelected: boolean; onSelect: () => void };
+}> = ({ deck, mergeProps }) => {
     const { deckName, deckTags, cards, _id, description } = deck;
     const { toast } = useToast();
     const { refreshDecks } = useContext(DeckContext);
@@ -62,6 +63,8 @@ export const DockCardLarge: React.FC<{
     const percentage = calculateCompletePercentage(cards);
     const numTerms = cards.length;
     const toneColor = TONE[deckTags[0]] ?? "var(--tk-ink-5)";
+    const isMerge = !!mergeProps;
+    const isSelected = mergeProps?.isSelected ?? false;
 
     const handleDeleteDeck = async () => {
         setDeleting(true);
@@ -78,38 +81,53 @@ export const DockCardLarge: React.FC<{
         }
     };
 
-    return (
+    const cardBody = (
         <>
-            <Link to={`/view-decks/${_id}`} data-testid="deck-card-container" className="dk-card">
-                <div className="dk-card-spine" style={{ background: toneColor }} />
+            <div className="dk-card-spine" style={{ background: toneColor }} />
 
-                {/* Top: tags + progress ring */}
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                        {deckTags.map((tag, i) => (
-                            <span key={i} className="dk-tag-pill">
-                                <span className="dk-tag-dot" style={{ background: i === 0 ? toneColor : "var(--tk-ink-5)" }} />
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
+            {/* Tags + progress ring */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                    {deckTags.map((tag, i) => (
+                        <span key={i} className="dk-tag-pill">
+                            <span className="dk-tag-dot" style={{ background: i === 0 ? toneColor : "var(--tk-ink-5)" }} />
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+                <div style={{ position: "relative" }}>
                     <ProgressRing value={percentage} size={38} stroke={2.5} />
+                    {isSelected && (
+                        <span style={{
+                            position: "absolute", top: -4, right: -4,
+                            width: 16, height: 16, borderRadius: "50%",
+                            background: "#2d4438", color: "#fff",
+                            fontSize: 9, fontWeight: 700,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                            1
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            <div className="dk-card-title">{deckName}</div>
+            {description && <div className="dk-card-desc">{description}</div>}
+
+            <div className="dk-card-foot">
+                <div className="dk-card-foot-meta">
+                    <span>{numTerms} {numTerms === 1 ? "card" : "cards"}</span>
+                    {_id !== "preview" && (
+                        <>
+                            <span style={{ color: "var(--tk-ink-5)" }}>·</span>
+                            <span>{relativeTime(_id)}</span>
+                        </>
+                    )}
                 </div>
 
-                <div className="dk-card-title">{deckName}</div>
-
-                {description && <div className="dk-card-desc">{description}</div>}
-
-                <div className="dk-card-foot">
-                    <div className="dk-card-foot-meta">
-                        <span>{numTerms} {numTerms === 1 ? "card" : "cards"}</span>
-                        {_id !== "preview" && (
-                            <>
-                                <span style={{ color: "var(--tk-ink-5)" }}>·</span>
-                                <span>{relativeTime(_id)}</span>
-                            </>
-                        )}
-                    </div>
+                {isSelected ? (
+                    <Check size={16} style={{ color: "#2d4438" }} />
+                ) : isMerge ? null : (
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/view-decks/${_id}`); }}
@@ -145,8 +163,31 @@ export const DockCardLarge: React.FC<{
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
+                )}
+            </div>
+        </>
+    );
+
+    return (
+        <>
+            {isMerge ? (
+                <div
+                    data-testid="deck-card-container"
+                    className="dk-card"
+                    onClick={isSelected ? undefined : mergeProps?.onSelect}
+                    style={{
+                        cursor: isSelected ? "default" : "pointer",
+                        outline: isSelected ? "2px solid #2d4438" : undefined,
+                        outlineOffset: isSelected ? "2px" : undefined,
+                    }}
+                >
+                    {cardBody}
                 </div>
-            </Link>
+            ) : (
+                <Link to={`/view-decks/${_id}`} data-testid="deck-card-container" className="dk-card">
+                    {cardBody}
+                </Link>
+            )}
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent onClick={e => e.stopPropagation()}>
