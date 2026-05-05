@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowRight, BookOpen, Plus, Check, X, Play } from "lucide-react";
 import { GRAMMAR_BY_ID } from "@/data/grammar/index";
 import { Popover, PopoverTrigger, PopoverContent, PopoverClose } from "@/components/ui/popover";
+import { OnboardingFlow } from "@/components/OnboardingFlow";
 
 const ConfidenceRing = ({ value }: { value: number }) => {
     const r = 11;
@@ -76,6 +77,11 @@ const IndexPageContent = () => {
     const [authGateOpen, setAuthGateOpen] = useState(false);
     const [authGateWord, setAuthGateWord] = useState<string | null>(null);
     const [authGateWordObj, setAuthGateWordObj] = useState<any>(null);
+    const [onboardingOpen, setOnboardingOpen] = useState(false);
+    const [onboardingWord, setOnboardingWord] = useState("");
+    const [saveDone, setSaveDone] = useState<{ count: number; deckName: string } | null>(null);
+    const needsReloadRef = useRef(false);
+    const pendingOnboardingRef = useRef(false);
     const lastAutoSavedSentenceRef = useRef<string | null>(null);
     const wordDetailsRef = useRef<HTMLDivElement>(null);
 
@@ -98,6 +104,19 @@ const IndexPageContent = () => {
         }
     }, [response, inputText, setInputText]);
 
+    const closeSaveDialog = () => {
+        const reload = needsReloadRef.current;
+        const onboard = pendingOnboardingRef.current;
+        needsReloadRef.current = false;
+        pendingOnboardingRef.current = false;
+        setSaveDone(null);
+        setCreateFlashcardsOpen(false);
+        setSelectedDeckId("");
+        setWordsToSave(null);
+        if (onboard) setOnboardingOpen(true);
+        if (reload && !onboard) { setInputText(""); window.location.reload(); }
+    };
+
     const handleSave = async () => {
         if (!selectedDeckId) return;
         const sourceWords = wordsToSave ?? response?.words;
@@ -114,19 +133,18 @@ const IndexPageContent = () => {
                 .filter((w: any) => w.engCard?.trim() && w.userLangCard?.trim());
 
             const result = await axios.post(`/decks/${selectedDeckId}/save-all`, { words: toSave });
-            toast({ title: "Saved!", description: `${result.data.added} flashcard${result.data.added !== 1 ? 's' : ''} added to your deck.` });
 
-            // Mark saved IDs locally
+            if (result.data.showOnboarding && toSave[0]?.userLangCard) {
+                setOnboardingWord(toSave[0].userLangCard);
+                pendingOnboardingRef.current = true;
+            }
+
             sourceWords.forEach((w: any) => { if (w.id) setLocalSavedIds(s => new Set([...s, w.id])); });
 
-            setCreateFlashcardsOpen(false);
-            setSelectedDeckId("");
-            setWordsToSave(null);
+            if (!wordsToSave) needsReloadRef.current = true;
 
-            if (!wordsToSave) {
-                setInputText("");
-                window.location.reload();
-            }
+            const savedDeck = filteredDecks.find((d: any) => d._id === selectedDeckId);
+            setSaveDone({ count: result.data.added, deckName: savedDeck?.deckName || 'your deck' });
         } catch (error) {
             toast({ title: "Error", description: "Failed to save words. Please try again.", variant: "destructive" });
         } finally {
@@ -673,7 +691,7 @@ const IndexPageContent = () => {
             </Dialog>
 
             {/* Save dialog */}
-            <Dialog open={createFlashcardsOpen} onOpenChange={(open) => { setCreateFlashcardsOpen(open); if (!open) { setWordsToSave(null); setSelectedDeckId(''); } }}>
+            <Dialog open={createFlashcardsOpen} onOpenChange={(open) => { if (!open) closeSaveDialog(); }}>
                 <DialogContent className="p-0 gap-0 overflow-hidden" style={{ maxWidth: 520, borderRadius: 16, border: '1px solid var(--tk-rule)' }}>
                     <DialogTitle className="sr-only">Save to a deck</DialogTitle>
 
@@ -681,17 +699,30 @@ const IndexPageContent = () => {
                     <div className="sv-modal-head">
                         <div>
                             <div className="sv-modal-eyebrow">Save to a deck</div>
-                            <div className="sv-modal-title">Pick a shelf</div>
+                            <div className="sv-modal-title">{saveDone ? "Done" : "Pick a shelf"}</div>
                         </div>
-                        <button
-                            className="tx-icon-btn"
-                            onClick={() => { setCreateFlashcardsOpen(false); setWordsToSave(null); setSelectedDeckId(''); }}
-                            aria-label="Close"
-                        >
+                        <button className="tx-icon-btn" onClick={closeSaveDialog} aria-label="Close">
                             <X size={15} />
                         </button>
                     </div>
 
+                    {/* Done confirmation panel */}
+                    {saveDone && (
+                        <div className="sv-done">
+                            <div className="sv-done-check"><Check size={22} strokeWidth={2.5} /></div>
+                            <div className="sv-done-count">{saveDone.count} {saveDone.count === 1 ? "word" : "words"} saved</div>
+                            <div className="sv-done-desc">Into <em>{saveDone.deckName}</em>. Ready to study tonight.</div>
+                            <div className="sv-done-actions">
+                                <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={closeSaveDialog}>Back to sentence</button>
+                                <button className="tk-btn tk-btn-sm" style={{ background: '#2d4438', color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}
+                                    onClick={() => { closeSaveDialog(); navigate('/review'); }}>
+                                    Study now <ArrowRight size={13} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {!saveDone && <>
                     {/* Step indicator */}
                     <div className="sv-stepper">
                         <div className="sv-step" data-active="true">
@@ -783,9 +814,17 @@ const IndexPageContent = () => {
                             </button>
                         </div>
                     </div>
+                    </>}
                 </DialogContent>
             </Dialog>
 
+            {onboardingOpen && (
+                <OnboardingFlow
+                    word={onboardingWord}
+                    onClose={() => setOnboardingOpen(false)}
+                    onGoToReview={() => navigate('/review')}
+                />
+            )}
 
         </div>
     );

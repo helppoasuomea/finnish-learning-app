@@ -500,7 +500,8 @@ export const ReviewDashboardPage: React.FC = () => {
         </div>
         <div className="rv-hero-cta">
           <button className="rv-start-btn" onClick={() => startSession()}>
-            <Play size={14} /> Begin review <span className="mono">{totalDue} cards</span>
+            <span className="rv-start-btn-label"><Play size={14} /> Begin review</span>
+            <span className="mono">{totalDue} cards</span>
           </button>
           <button className="rv-cta-secondary" onClick={() => navigate("/view-all-decks")}>Custom session…</button>
         </div>
