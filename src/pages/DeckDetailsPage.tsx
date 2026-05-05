@@ -81,6 +81,7 @@ export const DeckDetailsPage: React.FC = () => {
       const res = await axios.put(`/decks/update/${id}`, {
         deckName: patch.deckName,
         deckTags: patch.deckTags,
+        description: patch.description,
         deckPercentage: percentage,
         cards,
       });

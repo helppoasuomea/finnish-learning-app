@@ -107,13 +107,13 @@ export const Sidebar = () => {
 
     const navItems = [
         { path: "/", label: "Translate", icon: Languages },
+        { path: "/grammar", label: "Grammar", icon: BookOpen },
         ...(user
             ? [
                   { path: "/view-all-decks", label: "Decks", icon: Library },
                   { path: "/review", label: "Review", icon: RotateCcw },
                   { path: "/vocabulary", label: "Vocabulary", icon: Compass },
                   { path: "/saved-sentences", label: "Saved sentences", icon: Bookmark },
-                  { path: "/grammar", label: "Grammar", icon: BookOpen },
                   { path: "/browse", label: "Browse", icon: Globe },
               ]
             : []),

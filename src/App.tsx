@@ -25,15 +25,17 @@ axios.defaults.baseURL = 'http://localhost:2323/api/'
 axios.defaults.withCredentials = true
 
 const AUTH_ROUTES = ["/login", "/register"];
+const PUBLIC_ROUTES = ["/grammar"];
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate()
-  
+
   useEffect(() => {
       const userId = localStorage.getItem('userId')
       const isAuthRoute = AUTH_ROUTES.includes(location.pathname)
-      if (!userId && !isAuthRoute) navigate('/')
+      const isPublicRoute = PUBLIC_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'))
+      if (!userId && !isAuthRoute && !isPublicRoute) navigate('/')
   }, [navigate, location.pathname])
 
   return (
