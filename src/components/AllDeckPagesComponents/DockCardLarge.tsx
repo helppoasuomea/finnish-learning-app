@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { calculateCompletePercentage } from "@/utils/calculatePercentage";
-import { MoreVertical, Eye, Pencil, Trash2, ArrowRight } from "lucide-react";
+import { MoreVertical, Eye, Trash2, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -112,7 +112,7 @@ export const DockCardLarge: React.FC<{
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/learn-decks/${_id}`); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/view-decks/${_id}`); }}
                             className="tk-btn"
                             style={{ padding: "4px 10px", fontSize: 12, gap: 4, display: "inline-flex", alignItems: "center" }}
                             aria-label="Study"
@@ -133,11 +133,6 @@ export const DockCardLarge: React.FC<{
                                 <DropdownMenuItem asChild>
                                     <Link to={`/view-decks/${_id}`} className="flex items-center gap-2 cursor-pointer" onClick={e => e.stopPropagation()}>
                                         <Eye size={14} /> View Details
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link to={`/edit-deck/${_id}`} className="flex items-center gap-2 cursor-pointer" onClick={e => e.stopPropagation()}>
-                                        <Pencil size={14} /> Edit Deck
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />

@@ -9,12 +9,8 @@ import { DeckContextProvider } from './contexts/DeckContext'
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext'
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from './components/Header'
-import { EditPage } from './components/edit-deck/edit-deck'
-import { QuizReport } from './components/LearningReport'
 import { VocabularyPage } from './components/vocabulary-page'
 import { useEffect } from 'react'
-import { LearningPage } from './components/LearningPage/LearningPage'
-import { ReviewPage } from './components/ReviewPage/ReviewPage'
 import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
@@ -87,11 +83,7 @@ const AppContent = ({ location }: { location: any }) => {
           <Route index element={<IndexPage />} />
           <Route path="/view-all-decks" element={<AllDecks />} />
           <Route path="/view-decks/:id" element={<DeckDetailsPage />} />
-          <Route path="/learn-decks/:id" element={<LearningPage />} />
-          <Route path="/edit-deck/:id" element={<EditPage />} />
-          <Route path='/view-decks/:id/learning-report/:reportId' element={<QuizReport />} />
           <Route path='/vocabulary' element={<VocabularyPage />} />
-          <Route path='/review-page/:id' element={<ReviewPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />
           <Route path='/review' element={<ReviewDashboardPage />} />
           <Route path='/grammar' element={<GrammarIndex />} />

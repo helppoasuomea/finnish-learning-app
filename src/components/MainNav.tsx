@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from "./ui/breadcrumb";
-import { Home, LogOut, Settings, Library, BookOpen, Edit3 } from "lucide-react";
+import { Home, LogOut, Settings, Library, BookOpen } from "lucide-react";
 import { useContext } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
@@ -98,7 +98,7 @@ export const MainNav = ({ highlightUser }: { highlightUser?: boolean }) => {
                                     </Link>   
                                 )}
                             </BreadcrumbItem>
-                            {(isPage('/view-decks') || isPage('/learn-decks') || isPage('/matchgame') || isPage(`/view-decks/${deckId}`) || isPage('/flashcards') || isPage('/testpage') || isPage('/edit-deck')) &&  (
+                            {(isPage('/view-decks') || isPage('/matchgame') || isPage(`/view-decks/${deckId}`) || isPage('/flashcards') || isPage('/testpage')) &&  (
                                 <>
                                     <BreadcrumbSeparator />
                                     <BreadcrumbItem>
@@ -108,54 +108,6 @@ export const MainNav = ({ highlightUser }: { highlightUser?: boolean }) => {
                                                 Deck Details
                                                 <AnimatePresence>
                                                     {location.pathname === `/view-decks/${deckId}` && <Underline key="underline-details" />}
-                                                </AnimatePresence>
-                                            </span>
-                                        </Link>
-                                    </BreadcrumbItem>
-                                </>
-                            )}
-                            {isPage('/learn-decks') && (
-                                <>
-                                    <BreadcrumbSeparator />
-                                    <BreadcrumbItem>
-                                        <Link to={`${location.pathname}`} className="ml-1 flex gap-1 items-center relative">
-                                            <BookOpen className="w-4 h-4" />
-                                            <span className={getLinkClassName('/learn-decks') + ' flex items-center'}>
-                                                Deck Learning
-                                                <AnimatePresence>
-                                                    {isPage('/learn-decks') && <Underline key="underline-learning" />}
-                                                </AnimatePresence>
-                                            </span>
-                                        </Link>
-                                    </BreadcrumbItem>
-                                </>
-                            )}
-                            {isPage('/edit-deck') && (
-                                <>
-                                    <BreadcrumbSeparator />
-                                    <BreadcrumbItem>
-                                        <Link to={`${location.pathname}`} className="ml-1 flex gap-1 items-center relative">
-                                            <Edit3 className="w-4 h-4" />
-                                            <span className={getLinkClassName('/edit-deck') + ' flex items-center'}>
-                                                Edit deck
-                                                <AnimatePresence>
-                                                    {isPage('/edit-deck') && <Underline key="underline-edit" />}
-                                                </AnimatePresence>
-                                            </span>
-                                        </Link>
-                                    </BreadcrumbItem>
-                                </>
-                            )}
-                            {isPage(`/view-decks/${deckId}/learning-report`) && (
-                                <>
-                                    <BreadcrumbSeparator />
-                                    <BreadcrumbItem>
-                                        <Link to={`${location.pathname}`} className="ml-1 flex gap-1 items-center relative">
-                                            <Library className="w-4 h-4" />
-                                            <span className={getLinkClassName(`/view-decks/${deckId}/learning-report`) + ' flex items-center'}>
-                                                Learning Report
-                                                <AnimatePresence>
-                                                    {isPage(`/view-decks/${deckId}/learning-report`) && <Underline key="underline-report" />}
                                                 </AnimatePresence>
                                             </span>
                                         </Link>

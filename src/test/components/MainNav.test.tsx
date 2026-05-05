@@ -54,15 +54,8 @@ describe('MainNav Breadcrumbs', () => {
         expect(screen.getByText('Your decks')).toBeInTheDocument()
         expect(screen.getByText('Deck Details')).toBeInTheDocument()
     })
-    it('shows "Your decks", "Deck Details", and "Deck Learning" on learn page', () => {
-        mockUseLocation.mockReturnValue({ pathname: '/learn-decks/123' })
-        renderWithProviders(<MainNav />)
-        expect(screen.getByText('Your decks')).toBeInTheDocument()
-        expect(screen.getByText('Deck Details')).toBeInTheDocument()
-        expect(screen.getByText('Deck Learning')).toBeInTheDocument()
-    })
-    it('shows "Your decks", "Deck Details", and "Edit deck" on edit page', () => {
-        mockUseLocation.mockReturnValue({ pathname: '/edit-deck/123' })
+    it('shows "Your decks" and "Deck Details" on deck details page', () => {
+        mockUseLocation.mockReturnValue({ pathname: '/view-decks/123' })
         renderWithProviders(<MainNav />)
         expect(screen.getByText('Your decks')).toBeInTheDocument()
         expect(screen.getByText('Deck Details')).toBeInTheDocument()
