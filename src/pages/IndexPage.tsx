@@ -73,6 +73,9 @@ const IndexPageContent = () => {
     const [wordsToSave, setWordsToSave] = useState<any[] | null>(null);
     const [localSavedIds, setLocalSavedIds] = useState<Set<string>>(new Set());
     const [hideCommon, setHideCommon] = useState(true);
+    const [authGateOpen, setAuthGateOpen] = useState(false);
+    const [authGateWord, setAuthGateWord] = useState<string | null>(null);
+    const [authGateWordObj, setAuthGateWordObj] = useState<any>(null);
     const lastAutoSavedSentenceRef = useRef<string | null>(null);
     const wordDetailsRef = useRef<HTMLDivElement>(null);
 
@@ -132,11 +135,18 @@ const IndexPageContent = () => {
     };
 
     const openSaveWord = (word: any) => {
+        if (!user) {
+            setAuthGateWord(word.fi || word.original_word || null);
+            setAuthGateWordObj(word);
+            setAuthGateOpen(true);
+            return;
+        }
         setWordsToSave([word]);
         setCreateFlashcardsOpen(true);
     };
 
     const openSaveAll = () => {
+        if (!user) { setAuthGateWord(null); setAuthGateOpen(true); return; }
         setWordsToSave(null);
         setCreateFlashcardsOpen(true);
     };
@@ -194,6 +204,21 @@ const IndexPageContent = () => {
         };
         autoSave();
     }, [user, response, inputText, fromLanguage, savedWordKeys]);
+
+    // After login/register, auto-open save dialog for the card the user was trying to save
+    useEffect(() => {
+        if (!user) return;
+        const raw = localStorage.getItem('lukea:pendingCard');
+        if (!raw) return;
+        try {
+            const word = JSON.parse(raw);
+            localStorage.removeItem('lukea:pendingCard');
+            setWordsToSave([word]);
+            setCreateFlashcardsOpen(true);
+        } catch {
+            localStorage.removeItem('lukea:pendingCard');
+        }
+    }, [user]);
 
     useEffect(() => {
         if (hoveredFlashcardFi && wordDetailsRef.current) {
@@ -368,7 +393,7 @@ const IndexPageContent = () => {
                                                     </PopoverTrigger>
                                                     <PopoverContent
                                                         className="p-0"
-                                                        style={{ width: 272, background: 'var(--tk-card)', border: '1px solid var(--tk-rule)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+                                                        style={{ width: 320, background: 'var(--tk-card)', border: '1px solid var(--tk-rule)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
                                                         align="start"
                                                         sideOffset={8}
                                                     >
@@ -578,6 +603,74 @@ const IndexPageContent = () => {
                     )}
                 </div>
             </div>
+
+            {/* Auth gate modal */}
+            <Dialog open={authGateOpen} onOpenChange={setAuthGateOpen}>
+                <DialogContent className="p-0 gap-0 overflow-hidden" style={{ maxWidth: 740, borderRadius: 16, border: 'none', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
+                    <DialogTitle className="sr-only">Sign in to save</DialogTitle>
+                    <div className="ag-layout">
+                        {/* Left — brand */}
+                        <div className="ag-left">
+                            <div className="ag-brand">
+                                <span className="ag-brand-name">Lukea</span>
+                                <span className="ag-brand-tag">READING ROOM</span>
+                            </div>
+                            <div className="ag-hero">
+                                <p className="ag-hero-sub">The words you read</p>
+                                <p className="ag-hero-title">become the words you know.</p>
+                                <p className="ag-hero-body">Paste a sentence. We translate it, explain each word, and quietly build it into your flashcards.</p>
+                            </div>
+                            <div className="ag-langs">FINNISH · VIETNAMESE · KOREAN · JAPANESE</div>
+                        </div>
+
+                        {/* Right — CTA */}
+                        <div className="ag-right">
+                            <button className="ag-close" onClick={() => setAuthGateOpen(false)} aria-label="Close">
+                                <X size={15} />
+                            </button>
+                            <div className="tk-eyebrow" style={{ marginBottom: 10 }}>Sign in to save</div>
+                            <h2 className="ag-heading">Keep this word on your shelf.</h2>
+                            <p className="ag-desc">Saved words become flashcards — reviewed at the right moment, not randomly.</p>
+
+                            {authGateWord && (
+                                <div className="ag-saving-chip">
+                                    <span className="ag-saving-dot" />
+                                    <span className="ag-saving-label">SAVING</span>
+                                    <span className="ag-saving-word">{authGateWord}</span>
+                                </div>
+                            )}
+
+                            <div className="ag-actions">
+                                <button
+                                    className="ag-btn-primary"
+                                    onClick={() => {
+                                        if (authGateWordObj) localStorage.setItem('lukea:pendingCard', JSON.stringify(authGateWordObj));
+                                        setAuthGateOpen(false);
+                                        navigate('/login');
+                                    }}
+                                >
+                                    Sign in <ArrowRight size={15} />
+                                </button>
+                                <button
+                                    className="ag-btn-secondary"
+                                    onClick={() => {
+                                        if (authGateWordObj) localStorage.setItem('lukea:pendingCard', JSON.stringify(authGateWordObj));
+                                        setAuthGateOpen(false);
+                                        navigate('/register');
+                                    }}
+                                >
+                                    Create an account
+                                </button>
+                                <button className="ag-btn-ghost" onClick={() => setAuthGateOpen(false)}>
+                                    Keep translating as a guest
+                                </button>
+                            </div>
+
+                            <p className="ag-fine">No credit card. Free forever for personal use.</p>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Save dialog */}
             <Dialog open={createFlashcardsOpen} onOpenChange={(open) => { setCreateFlashcardsOpen(open); if (!open) { setWordsToSave(null); setSelectedDeckId(''); } }}>

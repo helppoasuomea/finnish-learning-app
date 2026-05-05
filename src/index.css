@@ -1000,7 +1000,7 @@
 }
 .tx-peek-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -1017,14 +1017,17 @@
   font-weight: 600;
   color: var(--tk-accent);
   flex-shrink: 0;
+  margin-top: 2px;
   background: var(--tk-accent-wash);
 }
 .tx-peek-fi {
   font-family: var(--font-sans);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--tk-ink);
-  line-height: 1.2;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 .tx-peek-en {
   font-size: 13px;
@@ -5167,4 +5170,109 @@ textarea.tk-textfield { resize: vertical; line-height: 1.55; }
   .pd-page { padding: 24px 16px; }
   .pd-hero { flex-direction: column; }
   .pd-title { font-size: 22px; }
+}
+
+/* ── Auth Gate Modal (ag-*) ──────────────────────────────────────────────── */
+.ag-layout {
+  display: grid; grid-template-columns: 1fr 1fr; min-height: 480px;
+}
+
+/* Left — dark brand panel */
+.ag-left {
+  background: #2d4438; color: #f0ece4;
+  padding: 36px 32px; display: flex; flex-direction: column; justify-content: space-between;
+  border-radius: 16px 0 0 16px;
+}
+.ag-brand {
+  display: flex; align-items: baseline; gap: 10px;
+}
+.ag-brand-name {
+  font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: #f0ece4;
+}
+.ag-brand-tag {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
+  color: rgba(240,236,228,0.5);
+}
+.ag-hero { display: flex; flex-direction: column; gap: 14px; }
+.ag-hero-sub {
+  font-size: 14px; font-style: italic; color: rgba(240,236,228,0.6); margin: 0;
+}
+.ag-hero-title {
+  font-size: 30px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.15;
+  color: #f0ece4; margin: 0;
+}
+.ag-hero-body {
+  font-size: 13px; color: rgba(240,236,228,0.55); line-height: 1.6; margin: 0;
+}
+.ag-langs {
+  font-size: 9.5px; letter-spacing: 0.12em; color: rgba(240,236,228,0.35);
+}
+
+/* Right — CTA panel */
+.ag-right {
+  background: var(--tk-paper); padding: 36px 32px; position: relative;
+  display: flex; flex-direction: column; border-radius: 0 16px 16px 0;
+}
+.ag-close {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: none; cursor: pointer;
+  color: var(--tk-ink-4); padding: 4px; border-radius: 6px; display: flex;
+}
+.ag-close:hover { color: var(--tk-ink); background: var(--tk-paper-deep); }
+.ag-heading {
+  font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--tk-ink); margin: 0 0 10px; line-height: 1.25;
+}
+.ag-desc {
+  font-size: 13.5px; color: var(--tk-ink-3); line-height: 1.55; margin: 0 0 20px;
+}
+.ag-saving-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 12px; border-radius: 8px; border: 1px solid var(--tk-rule);
+  background: var(--tk-paper-deep); margin-bottom: 20px; align-self: flex-start;
+}
+.ag-saving-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--tk-accent); flex-shrink: 0;
+}
+.ag-saving-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--tk-ink-4);
+}
+.ag-saving-word {
+  font-size: 13px; font-weight: 500; color: var(--tk-ink);
+}
+.ag-actions {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
+}
+.ag-btn-primary {
+  width: 100%; height: 48px; border-radius: 10px;
+  background: #2d4438; color: #fff; border: none; cursor: pointer;
+  font-size: 15px; font-weight: 500; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity 130ms;
+}
+.ag-btn-primary:hover { opacity: 0.88; }
+.ag-btn-secondary {
+  width: 100%; height: 48px; border-radius: 10px;
+  background: var(--tk-paper); color: var(--tk-ink);
+  border: 1px solid var(--tk-rule); cursor: pointer;
+  font-size: 15px; font-weight: 500; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 130ms;
+}
+.ag-btn-secondary:hover { background: var(--tk-paper-deep); }
+.ag-btn-ghost {
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; color: var(--tk-accent); font-family: inherit;
+  text-decoration: underline; text-underline-offset: 3px; padding: 4px 0;
+  text-align: center;
+}
+.ag-fine {
+  margin-top: auto; font-size: 11px; color: var(--tk-ink-4);
+  font-family: var(--font-mono); text-align: center; padding-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .ag-layout { grid-template-columns: 1fr; }
+  .ag-left { display: none; }
+  .ag-right { border-radius: 16px; }
 }
