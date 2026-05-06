@@ -9,31 +9,34 @@ import { DeckContextProvider } from './contexts/DeckContext'
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext'
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from './components/Header'
-import { EditPage } from './components/edit-deck/edit-deck'
-import { QuizReport } from './components/LearningReport'
 import { VocabularyPage } from './components/vocabulary-page'
 import { useEffect } from 'react'
-import { LearningPage } from './components/LearningPage/LearningPage'
-import { ReviewPage } from './components/ReviewPage/ReviewPage'
 import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
 import { ReviewDashboardPage } from './pages/ReviewDashboardPage'
+import { HistoryPage } from './pages/HistoryPage'
 import { AuthPage } from './pages/AuthPage'
+import { GrammarIndex } from './components/GrammarPage/GrammarBrowser'
+import { GrammarTopicPage } from './components/GrammarPage/GrammarTopicPage'
+import { BrowsePage } from './pages/BrowsePage'
+import { PublicDeckPage } from './pages/PublicDeckPage'
 
 axios.defaults.baseURL = 'http://localhost:2323/api/'
 axios.defaults.withCredentials = true
 
 const AUTH_ROUTES = ["/login", "/register"];
+const PUBLIC_ROUTES = ["/grammar"];
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate()
-  
+
   useEffect(() => {
       const userId = localStorage.getItem('userId')
       const isAuthRoute = AUTH_ROUTES.includes(location.pathname)
-      if (!userId && !isAuthRoute) navigate('/')
+      const isPublicRoute = PUBLIC_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'))
+      if (!userId && !isAuthRoute && !isPublicRoute) navigate('/')
   }, [navigate, location.pathname])
 
   return (
@@ -83,13 +86,14 @@ const AppContent = ({ location }: { location: any }) => {
           <Route index element={<IndexPage />} />
           <Route path="/view-all-decks" element={<AllDecks />} />
           <Route path="/view-decks/:id" element={<DeckDetailsPage />} />
-          <Route path="/learn-decks/:id" element={<LearningPage />} />
-          <Route path="/edit-deck/:id" element={<EditPage />} />
-          <Route path='/view-decks/:id/learning-report/:reportId' element={<QuizReport />} />
           <Route path='/vocabulary' element={<VocabularyPage />} />
-          <Route path='/review-page/:id' element={<ReviewPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />
           <Route path='/review' element={<ReviewDashboardPage />} />
+          <Route path='/history' element={<HistoryPage />} />
+          <Route path='/grammar' element={<GrammarIndex />} />
+          <Route path='/grammar/:topicId' element={<GrammarTopicPage />} />
+          <Route path='/browse' element={<BrowsePage />} />
+          <Route path='/browse/:id' element={<PublicDeckPage />} />
 
           {/* Routes that DON'T need deck context */}
           <Route path="/settings" element={<SettingsPage />} />

@@ -11,6 +11,7 @@ interface UseQuizLogicReturn {
     cards: Card[];
     nextQuizDate?: Date | null;
     loading: boolean;
+    streakUpdate: { updated: boolean; current: number } | null;
 }
 
 const useQuizLogic = (quiz: QuizItem[], deckId: any, isReviewMode: boolean = false, _mapInput?: Record<string, number>, isResumeMode: boolean = false, resumeData?: { currentQuestion: number, answers: Answer[], score: number }, originalQuizItems?: QuizItem[], isQuizStarted: boolean = false): UseQuizLogicReturn => {
@@ -22,6 +23,7 @@ const useQuizLogic = (quiz: QuizItem[], deckId: any, isReviewMode: boolean = fal
     const [cards, setCards] = useState<Card[]>([])
     const [nextQuizDate, setNextQuizDate] = useState<Date | null>(null)
     const [loading, setLoading] = useState(true)
+    const [streakUpdate, setStreakUpdate] = useState<{ updated: boolean; current: number } | null>(null)
 
     const startTimeRef = useRef<number>(0)
     const loadingRef = useRef(true)
@@ -85,6 +87,7 @@ const useQuizLogic = (quiz: QuizItem[], deckId: any, isReviewMode: boolean = fal
                 quizDetails: quizDetails
             })
             setNextQuizDate(new Date(response.data.nextQuizDate))
+            if (response.data.streak) setStreakUpdate(response.data.streak)
         } catch (error) {
             console.error('Error saving quiz result: ', error)
         }
@@ -162,7 +165,7 @@ const useQuizLogic = (quiz: QuizItem[], deckId: any, isReviewMode: boolean = fal
         }
     }
 
-    return { question, answers, quizdone, score, saveAnswer, cards, nextQuizDate, loading }
+    return { question, answers, quizdone, score, saveAnswer, cards, nextQuizDate, loading, streakUpdate }
 }
 
 export default useQuizLogic

@@ -1,5 +1,5 @@
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useSidebar } from "@/contexts/SidebarContext";
@@ -17,6 +17,8 @@ import {
     ArrowRight,
     User,
     Play,
+    BookOpen,
+    Globe,
 } from "lucide-react";
 import axios from "axios";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -40,7 +42,7 @@ const Seal = ({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            fontFamily: '"Instrument Serif", Georgia, serif',
+            fontFamily: 'var(--font-display)',
             fontSize: size * 0.44,
             lineHeight: 1,
             flexShrink: 0,
@@ -107,12 +109,16 @@ export const Sidebar = () => {
         { path: "/", label: "Translate", icon: Languages },
         ...(user
             ? [
+                  { path: "/review", label: "Learn", icon: RotateCcw },
+                  { path: "/vocabulary", label: "Words", icon: Compass },
                   { path: "/view-all-decks", label: "Decks", icon: Library },
-                  { path: "/review", label: "Review", icon: RotateCcw },
-                  { path: "/vocabulary", label: "Vocabulary", icon: Compass },
-                  { path: "/saved-sentences", label: "Saved sentences", icon: Bookmark },
+                  { path: "/saved-sentences", label: "Sentences", icon: Bookmark },
+                  { path: "/grammar", label: "Grammar", icon: BookOpen },
+                  { path: "/browse", label: "Browse", icon: Globe },
               ]
-            : []),
+            : [
+                  { path: "/grammar", label: "Grammar", icon: BookOpen },
+              ]),
     ];
 
     const sidebarW = isCollapsed ? 64 : 248;
@@ -152,11 +158,12 @@ export const Sidebar = () => {
                         >
                             <span
                                 style={{
-                                    fontFamily: '"Instrument Serif", Georgia, serif',
+                                    fontFamily: 'var(--font-display)',
                                     fontSize: 26,
                                     color: "var(--tk-ink)",
                                     letterSpacing: "-0.01em",
                                     lineHeight: 1,
+                                    fontWeight: 400,
                                 }}
                             >
                                 Lukeā
@@ -215,7 +222,7 @@ export const Sidebar = () => {
                         </div>
                     )}
 
-                    {navItems.map((item) => {
+                    {navItems.map((item, idx) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
 
@@ -245,6 +252,10 @@ export const Sidebar = () => {
                             </Link>
                         );
 
+                        const divider = idx === 2 && !isCollapsed
+                            ? <div key="div" style={{ height: 1, background: "var(--tk-rule)", margin: "8px 10px" }} />
+                            : null;
+
                         if (isCollapsed) {
                             return (
                                 <Tooltip key={item.path}>
@@ -253,7 +264,7 @@ export const Sidebar = () => {
                                 </Tooltip>
                             );
                         }
-                        return navBtn;
+                        return <React.Fragment key={item.path}>{divider}{navBtn}</React.Fragment>;
                     })}
 
                     {/* ── Recent decks ── */}

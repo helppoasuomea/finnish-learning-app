@@ -60,7 +60,7 @@ export const FlashcardGameOverlay: React.FC<Props> = ({ deckName, cards, onClose
             </span>
             <button className="fc-nav-btn" onClick={next}><ArrowRight size={14} /></button>
           </div>
-          <div style={{ fontSize: 11, color: "var(--tk-ink-4)", fontFamily: "'IBM Plex Mono', Menlo, monospace", letterSpacing: "0.08em" }}>
+          <div style={{ fontSize: 11, color: "var(--tk-ink-4)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
             SPACE TO FLIP
           </div>
         </div>

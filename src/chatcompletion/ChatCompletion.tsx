@@ -3,26 +3,66 @@ import axios from "axios"
 
 const API_KEY = import.meta.env.VITE_GPT_KEY
 
-// Non-streaming chat completion with two-pass translation (initial + review)
-// Now calls backend API instead of directly using Cerebras
+// SSE streaming types
+export type StreamEvent =
+    | { type: 'status'; phase: string }
+    | { type: 'sentence'; sentence: string }
+    | { type: 'word'; word: any; index: number }
+    | { type: 'enriched'; sentence: string; words: any[]; confidence?: number; confidenceDetails?: any }
+    | { type: 'done' }
+    | { type: 'error'; error: string };
+
+// Real SSE streaming translation — yields StreamEvent objects as they arrive
 export const chatCompletionStream = async function* (
-    data: { language: string, text: string}
-) {
-    const {language, text} = data;
+    data: { language: string, text: string }
+): AsyncGenerator<StreamEvent> {
+    const { language, text } = data;
 
+    // axios.defaults.baseURL = 'http://localhost:2323/api/' — fetch doesn't inherit it
+    const base = (axios.defaults.baseURL as string ?? '').replace(/\/$/, '');
+    let response: Response;
     try {
-        // Call backend API for translation
-        const response = await axios.post('/translate', {
-            language,
-            text
+        response = await fetch(`${base}/translate/stream`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ language, text }),
         });
+    } catch (err: any) {
+        throw new Error(err.message || 'Network error');
+    }
 
-        // Yield the result (maintaining the same interface)
-        yield response.data;
-    } catch (error: any) {
-        console.error('Translation API error:', error);
-        // If API call fails, throw the error
-        throw new Error(error.response?.data?.error || error.message || 'Translation failed');
+    if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        try {
+            const parsed = JSON.parse(body);
+            throw new Error(parsed.error || `HTTP ${response.status}`);
+        } catch {
+            throw new Error(`HTTP ${response.status}`);
+        }
+    }
+
+    if (!response.body) throw new Error('No response body');
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+                const event: StreamEvent = JSON.parse(line.slice(6));
+                if (event.type === 'error') throw new Error((event as any).error);
+                yield event;
+            } catch (parseErr: any) {
+                if (parseErr.message !== 'Translation failed') throw parseErr;
+            }
+        }
     }
 };
 

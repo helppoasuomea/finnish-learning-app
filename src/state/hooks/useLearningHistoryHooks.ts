@@ -9,6 +9,7 @@ export interface HistoryItem {
     cardsStudied: number;
     quizType: 'learn' | 'review';
     randomName: string;
+    deckId?: string;
 }
 
 interface QuizHistory {
@@ -32,6 +33,22 @@ export const useFetchHistory = (userId: string | null, deckId: any) => {
         }
     }
     return { history, error, fetchHistory }
+}
+
+export const useFetchAllHistory = (userId: string | null) => {
+    const [history, setHistory] = useState<HistoryItem[]>([])
+
+    const fetchHistory = async () => {
+        try {
+            if (userId) {
+                const response = await axios.get(`/learning-history/${userId}`)
+                setHistory(response.data.history || [])
+            }
+        } catch (error) {
+            console.error('Error fetching all learning history: ', error)
+        }
+    }
+    return { history, fetchHistory }
 }
 
 export const useFetchNextQuizDate = (userId: string | null, deckId: any) => {
@@ -59,6 +76,53 @@ export const useFetchNextQuizDate = (userId: string | null, deckId: any) => {
     }
     return { nextQuizDate, loading, error, fetchNextQuizDate }
 }
+
+export interface HistoryPageCard {
+    question: string;
+    correctAnswer: string;
+    correct: boolean;
+}
+
+export interface HistoryPageSession {
+    id: string;
+    date: string;
+    deckId: string | null;
+    deckName: string;
+    quizType: 'learn' | 'review';
+    cardsStudied: number;
+    correctAnswers: number;
+    randomName: string;
+    cards: HistoryPageCard[];
+}
+
+export interface HistoryPageData {
+    total: number;
+    matching: number;
+    totalCards: number;
+    heatmap: Record<string, number>;
+    sessions: HistoryPageSession[];
+}
+
+export const useFetchHistoryPage = (userId: string | null) => {
+    const [data, setData] = useState<HistoryPageData | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const fetch = async (range: string, type: string) => {
+        if (!userId) return;
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({ range });
+            if (type !== 'any') params.set('type', type);
+            const response = await axios.get(`/learning-history/history-page/${userId}?${params}`);
+            setData(response.data);
+        } catch (error) {
+            console.error('Error fetching history page data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    return { data, loading, fetch };
+};
 
 export const useFetchQuizHistory = (historyId: string) => {
     const [quizHistory, setQuizHistory] = useState<QuizHistory | null>(null)

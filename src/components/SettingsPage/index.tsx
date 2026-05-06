@@ -14,6 +14,7 @@ import { Switch } from "../ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 import ProfilePicture from "./ProfilePicture"
 import { useToast } from "../ui/use-toast"
+import { DifficultyLabelPicker } from "@/components/DifficultyLabelPicker"
 import axios from "axios"
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -55,6 +56,14 @@ export const SettingsPage = () => {
     // Preferences state — seeded from user object
     const [baseForm, setBaseForm] = useState(user?.flashcardWordForm === 'base')
     const [audioFlip, setAudioFlip] = useState(user?.audioOnCardFlip ?? false)
+    const [difficultyLabel, setDifficultyLabel] = useState<'plain' | 'cefr' | 'both'>(user?.difficultyLabel ?? 'plain')
+
+    useEffect(() => {
+        if (!user) return
+        setBaseForm(user.flashcardWordForm === 'base')
+        setAudioFlip(user.audioOnCardFlip ?? false)
+        setDifficultyLabel(user.difficultyLabel ?? 'plain')
+    }, [user])
 
     useEffect(() => {
         const calendar = searchParams.get('calendar')
@@ -79,6 +88,21 @@ export const SettingsPage = () => {
                 avatarUrl: user?.avatarUrl,
                 flashcardWordForm: field === 'baseForm' ? (value ? 'base' : 'original') : user?.flashcardWordForm,
                 audioOnCardFlip: field === 'audioFlip' ? value : audioFlip,
+            })
+            refreshUserStats()
+        } catch {
+            toast({ title: 'Failed to save preference', variant: 'destructive' })
+        }
+    }
+
+    const handleDifficultyLabel = async (value: 'plain' | 'cefr' | 'both') => {
+        setDifficultyLabel(value)
+        try {
+            await axios.put('/update', {
+                name: user?.name,
+                username: user?.username,
+                avatarUrl: user?.avatarUrl,
+                difficultyLabel: value,
             })
             refreshUserStats()
         } catch {
@@ -179,6 +203,13 @@ export const SettingsPage = () => {
                         checked={audioFlip}
                         onChange={v => handlePref('audioFlip', v)}
                     />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>
+                        <div>
+                            <div className="st-pref-label">Difficulty labels</div>
+                            <div className="st-pref-desc">How difficulty levels appear on your flashcards.</div>
+                        </div>
+                        <DifficultyLabelPicker value={difficultyLabel} onChange={handleDifficultyLabel} compact />
+                    </div>
                 </div>
 
                 {/* Daily nudge */}

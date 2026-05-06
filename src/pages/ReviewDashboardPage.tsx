@@ -5,7 +5,9 @@ import { useDeckContext } from "@/contexts/DeckContext";
 import { UserContext } from "@/contexts/UserContext";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { ReviewSession, ReviewDone } from "@/components/ReviewSession";
+import { flushQueue } from "@/utils/reviewAnswerQueue";
 import { Card } from "@/types";
+import axios from "axios";
 
 type DeckCard  = Card & { deckId: string; deckName: string };
 type Rating    = "again" | "hard" | "good" | "easy";
@@ -289,9 +291,28 @@ export const ReviewDashboardPage: React.FC = () => {
   const [sessionQueue, setSessionQueue] = useState<DeckCard[]>([]);
   const [summary, setSummary] = useState<{ reviewed: number; history: { card: DeckCard; grade: Rating }[] } | null>(null);
 
-  const handleDone = (s: typeof summary) => {
+  const handleDone = async (s: typeof summary) => {
     setSummary(s);
+    await flushQueue();
     refreshDecks();
+    if (!s) return;
+    const userId = localStorage.getItem("userId");
+    const byDeck = new Map<string, { deckId: string; correct: number; total: number }>();
+    s.history.forEach(({ card, grade }) => {
+      const entry = byDeck.get(card.deckId) ?? { deckId: card.deckId, correct: 0, total: 0 };
+      entry.total += 1;
+      if (grade === "good" || grade === "easy") entry.correct += 1;
+      byDeck.set(card.deckId, entry);
+    });
+    byDeck.forEach(({ deckId, correct, total }) => {
+      axios.post("/learning-history/save-quiz-result", {
+        userId,
+        deckId,
+        cardsStudied: total,
+        correctAnswers: correct,
+        quizType: "review",
+      }).catch(() => {});
+    });
   };
 
   const startSession = (queue = sortedDue) => {
@@ -320,7 +341,7 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta">
             <button className="rv-start-btn" onClick={() => navigate("/")}>
-              <Play size={14} /> Go to Translate
+              <span className="rv-start-btn-label"><Play size={14} /> Go to Translate</span>
             </button>
             <button className="rv-cta-secondary" onClick={() => navigate("/view-all-decks")}>Browse starter decks →</button>
           </div>
@@ -338,7 +359,9 @@ export const ReviewDashboardPage: React.FC = () => {
             Tomorrow <strong>{tomorrowDue} {tomorrowDue === 1 ? "card" : "cards"}</strong> come back for a visit.{streak > 0 ? ` Streak ${streak} is safe — rest is part of the method.` : ""}
           </div>
           <div className="rv-hero-cta">
-            <button className="rv-start-btn" onClick={() => navigate("/view-all-decks")}>Browse your words</button>
+            <button className="rv-start-btn" onClick={() => navigate("/view-all-decks")}>
+              <span className="rv-start-btn-label">Browse your words</span>
+            </button>
             <button className="rv-cta-secondary" onClick={() => startSession()}>Study ahead (5) →</button>
           </div>
         </div>
@@ -366,7 +389,8 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta">
             <button className="rv-start-btn" onClick={() => startSession(sortedDue.slice(0, DAILY_CAP))}>
-              <Play size={14} /> Ease back in <span className="mono">{Math.min(DAILY_CAP, totalDue)} cards · ~{Math.max(1, Math.round(Math.min(DAILY_CAP, totalDue) * 0.32))} min</span>
+              <span className="rv-start-btn-label"><Play size={14} /> Ease back in</span>
+              <span className="mono">{Math.min(DAILY_CAP, totalDue)} cards · ~{Math.max(1, Math.round(Math.min(DAILY_CAP, totalDue) * 0.32))} min</span>
             </button>
             <button className="rv-cta-secondary" onClick={() => startSession()}>Show me everything</button>
           </div>
@@ -390,7 +414,8 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta" style={{ marginBottom: 16 }}>
             <button className="rv-start-btn" onClick={() => startSession()}>
-              🌱 Plant them <span className="mono">{totalDue} cards</span>
+              <span className="rv-start-btn-label">🌱 Plant them</span>
+              <span className="mono">{totalDue} cards</span>
             </button>
           </div>
           <div className="rv-hero-hint">
@@ -418,7 +443,8 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta">
             <button className="rv-start-btn" onClick={() => startSession(sortedDue.slice(0, DAILY_CAP))}>
-              <Play size={14} /> Review {DAILY_CAP} now <span className="mono">~{Math.round(DAILY_CAP * 0.32)} min</span>
+              <span className="rv-start-btn-label"><Play size={14} /> Review {DAILY_CAP} now</span>
+              <span className="mono">~{Math.round(DAILY_CAP * 0.32)} min</span>
             </button>
             <button className="rv-cta-secondary" onClick={() => startSession()}>Or do all {totalDue} →</button>
           </div>
@@ -480,7 +506,8 @@ export const ReviewDashboardPage: React.FC = () => {
         </div>
         <div className="rv-hero-cta">
           <button className="rv-start-btn" onClick={() => startSession()}>
-            <Play size={14} /> Begin review <span className="mono">{totalDue} cards</span>
+            <span className="rv-start-btn-label"><Play size={14} /> Begin review</span>
+            <span className="mono">{totalDue} cards</span>
           </button>
           <button className="rv-cta-secondary" onClick={() => navigate("/view-all-decks")}>Custom session…</button>
         </div>
@@ -515,10 +542,10 @@ export const ReviewDashboardPage: React.FC = () => {
       <div className="tk-page-header" style={{ marginBottom: 14 }}>
         <div>
           <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Review · reading room</div>
-          <h1 style={{ fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 500, letterSpacing: "-0.03em", color: "var(--tk-ink)", lineHeight: 1.1, marginBottom: 8 }}>
+          <h1 style={{ fontSize: "clamp(32px, 5vw, 48px)", letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 10 }}>
             The shelf, tended.
           </h1>
-          <p style={{ color: "var(--tk-ink-3)", fontSize: 15, fontStyle: "italic" }}>
+          <p style={{ color: "var(--tk-ink-3)", fontSize: 15, fontStyle: "italic", fontFamily: "var(--font-display)" }}>
             Spaced repetition remembers the intervals, so you don't have to.
           </p>
         </div>

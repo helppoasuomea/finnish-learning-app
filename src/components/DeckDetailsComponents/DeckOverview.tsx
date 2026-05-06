@@ -17,6 +17,7 @@ interface Props {
   notStudied: Card[];
   completed: Card[];
   onEditDeck: () => void;
+  onCram: () => void;
 }
 
 const PHASE_ROWS = [
@@ -41,7 +42,7 @@ function isDue(card: Card): boolean {
   return (card as any).reps === 0 || card.cardScore < 5;
 }
 
-export const DeckOverview: React.FC<Props> = ({ deckId, deckName, cards, stillLearning, notStudied, completed, onEditDeck }) => {
+export const DeckOverview: React.FC<Props> = ({ deckId, deckName, cards, stillLearning, notStudied, completed, onEditDeck, onCram }) => {
   const [game, setGame] = useState<GameKey | null>(null);
   const navigate = useNavigate();
 
@@ -77,7 +78,7 @@ export const DeckOverview: React.FC<Props> = ({ deckId, deckName, cards, stillLe
           </div>
         </div>
 
-        <WarmUpTray onOpen={setGame} />
+        <WarmUpTray onOpen={setGame} onCram={onCram} />
 
         {/* Needs another look */}
         {recentlyLearning.length > 0 && (

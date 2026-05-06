@@ -10,7 +10,7 @@ import { useContext } from "react"
 import { UserContext } from "@/contexts/UserContext"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog"
 import { LoginPage } from "./UsersComponents/LoginPage"
-import { Home, LogOut, Settings, Library, BookOpen, Edit3 } from "lucide-react"
+import { Home, LogOut, Settings, Library, BookOpen } from "lucide-react"
 import axios from "axios"
 
 export function MobileNav() {
@@ -171,7 +171,7 @@ export function MobileNav() {
                   </DialogContent>
                 </Dialog>
               )}
-              {(isPage('/view-decks') || isPage('/learn-decks') || isPage('/edit-deck')) && (
+              {isPage('/view-decks') && (
                 <MobileLink 
                   to={`/view-decks/${deckId}`} 
                   onOpenChange={setOpen} 
@@ -181,42 +181,6 @@ export function MobileNav() {
                 >
                   <BookOpen className="w-4 h-4" aria-hidden="true" />
                   Deck Details
-                </MobileLink>
-              )}
-              {isPage('/learn-decks') && (
-                <MobileLink 
-                  to={location.pathname} 
-                  onOpenChange={setOpen} 
-                  className="flex items-center gap-2"
-                  aria-label="Deck learning"
-                  data-testid="mobile-nav-deck-learning"
-                >
-                  <BookOpen className="w-4 h-4" aria-hidden="true" />
-                  Deck Learning
-                </MobileLink>
-              )}
-              {isPage('/edit-deck') && (
-                <MobileLink 
-                  to={location.pathname} 
-                  onOpenChange={setOpen} 
-                  className="flex items-center gap-2"
-                  aria-label="Edit deck"
-                  data-testid="mobile-nav-edit-deck"
-                >
-                  <Edit3 className="w-4 h-4" aria-hidden="true" />
-                  Edit deck
-                </MobileLink>
-              )}
-              {isPage(`/view-decks/${deckId}/learning-report`) && (
-                <MobileLink 
-                  to={location.pathname} 
-                  onOpenChange={setOpen} 
-                  className="flex items-center gap-2"
-                  aria-label="Learning report"
-                  data-testid="mobile-nav-learning-report"
-                >
-                  <Library className="w-4 h-4" aria-hidden="true" />
-                  Learning Report
                 </MobileLink>
               )}
             </div>

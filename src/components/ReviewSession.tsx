@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, RotateCcw, Volume2, Clock, ArrowRight } from "lucide-react";
 import { Card } from "@/types";
 import { enqueue, dequeue, getPendingCount, type PrevSnapshot } from "@/utils/reviewAnswerQueue";
@@ -63,6 +63,30 @@ function relativeTime(dateStr: string | null | undefined): string | null {
   return `${days}d ago`;
 }
 
+function kindDotColor(kind: string | undefined): string {
+  switch (kind) {
+    case "sentence": return "var(--tk-tag-sky, #8AA0B0)";
+    case "cloze":    return "var(--tk-tag-plum, #A07D8E)";
+    case "grammar":  return "var(--tk-tag-clay, #C89B7C)";
+    default:         return "var(--tk-accent)";
+  }
+}
+
+function GrammarPrompt({ text }: { text: string }) {
+  const colonIdx = text.indexOf(": ");
+  if (colonIdx === -1) {
+    return <div className="rvs-card-fi">{text}</div>;
+  }
+  const label = text.slice(0, colonIdx + 2);
+  const target = text.slice(colonIdx + 2);
+  return (
+    <div className="rvs-card-fi">
+      <span style={{ color: "var(--tk-ink-3)", fontWeight: 400 }}>{label}</span>
+      <em style={{ fontStyle: "italic", color: "var(--tk-ink)" }}>{target}</em>
+    </div>
+  );
+}
+
 export const ReviewSession: React.FC<{
   queue: DeckCard[];
   onClose: () => void;
@@ -80,11 +104,31 @@ export const ReviewSession: React.FC<{
   } | null>(null);
   const gradTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Cloze state
+  const [clozeInput, setClozeInput] = useState("");
+  const [clozeResult, setClozeResult] = useState<"correct" | "wrong" | null>(null);
+  const clozeInputRef = useRef<HTMLInputElement>(null);
+
   const total = queue.length;
   const current = queue[idx];
   const pct = total > 0 ? ((idx / total) * 100) : 0;
   const intervals = current ? projectIntervals(current) : { again: "", hard: "", good: "", easy: "" };
-  const lastSeen = current ? relativeTime(current.lastReviewDate) : null;
+  const lastSeen = current ? relativeTime(current.lastReviewDate ?? current.lastSeenAt) : null;
+
+  const cardKind = current?.cardKind ?? "word";
+
+  // For cloze: split sentence by ___
+  const clozeParts = cardKind === "cloze" ? (current?.userLangCard ?? "").split("___") : [];
+  const clozeAnswer = current?.comment ?? "";
+
+  // Reset cloze state on card change
+  useEffect(() => {
+    setClozeInput("");
+    setClozeResult(null);
+    if (cardKind === "cloze") {
+      setTimeout(() => clozeInputRef.current?.focus(), 80);
+    }
+  }, [idx, cardKind]);
 
   const commitGrade = (g: Rating, historySnapshot: { card: DeckCard; grade: Rating; prevSnapshot: PrevSnapshot }[], currentIdx: number) => {
     const card = queue[currentIdx];
@@ -124,19 +168,26 @@ export const ReviewSession: React.FC<{
         const { pendingGrade } = graduation;
         setGraduation(null);
         commitGrade(pendingGrade, history, idx);
-      }, 2800);
+      }, 1600);
     }
     return () => {
       if (gradTimerRef.current) clearTimeout(gradTimerRef.current);
     };
   }, [graduation]);
 
+  const checkCloze = () => {
+    if (!clozeInput.trim()) return;
+    const normalize = (s: string) => s.trim().toLowerCase().replace(/[.,!?;:]/g, "");
+    const correct = normalize(clozeInput) === normalize(clozeAnswer);
+    setClozeResult(correct ? "correct" : "wrong");
+    setRevealed(true);
+  };
+
   const undo = () => {
     if (history.length === 0) return;
     const last = history[history.length - 1];
     const wasDequeued = dequeue(last.card._id);
     if (!wasDequeued) {
-      // Already sent to server — ask it to restore the exact pre-grade state
       fetch(`/api/review/answer/${last.card._id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -162,7 +213,23 @@ export const ReviewSession: React.FC<{
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
-      } else if (e.key === " " && !revealed) {
+        return;
+      }
+      // Cloze: Enter checks, Tab skips
+      if (cardKind === "cloze") {
+        if (!revealed) {
+          if (e.key === "Tab") { e.preventDefault(); setRevealed(true); }
+          // Enter is handled by the input's onKeyDown
+        } else {
+          if (e.key === "1") grade("again");
+          else if (e.key === "2") grade("hard");
+          else if (e.key === "3") grade("good");
+          else if (e.key === "4") grade("easy");
+        }
+        return;
+      }
+      // Other card kinds
+      if (e.key === " " && !revealed) {
         e.preventDefault();
         setRevealed(true);
       } else if (revealed) {
@@ -174,9 +241,18 @@ export const ReviewSession: React.FC<{
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [revealed, idx, history, graduation]);
+  }, [revealed, idx, history, graduation, cardKind, clozeInput]);
 
   if (!current) return null;
+
+  const kindBadgeLabel =
+    cardKind === "cloze"    ? "Cloze · Type the answer" :
+    cardKind === "sentence" ? "Sentence" :
+    cardKind === "grammar"  ? `Grammar · ${(current.type ?? "").replace(/\b\w/g, c => c.toUpperCase()) || "Form drill"}` :
+    null;
+
+  const reviewCount = current.reps ?? current.cardScore ?? 0;
+  const lapses = current.lapses ?? 0;
 
   return (
     <div className="rvs-overlay">
@@ -202,38 +278,137 @@ export const ReviewSession: React.FC<{
 
       <div className="rvs-body">
         <div className="rvs-card" key={current._id}>
+          {/* Phase + deck row */}
           <div className="rvs-card-top">
             <span className="rvs-card-phase" data-phase={phaseOf(current)}>{phaseOf(current)}</span>
             <span className="rvs-card-deck">{current.deckName}</span>
           </div>
-          <div className="rvs-card-fi">{current.userLangCard}</div>
-          <div className="rvs-card-meta">
-            <button className="rvs-card-speak" onClick={speak}><Volume2 size={14} /></button>
-          </div>
-          {revealed && (
-            <div className="rvs-card-back">
-              <div className="rvs-card-en">{current.engCard}</div>
+
+          {/* Kind pill (sentence / cloze / grammar only) */}
+          {kindBadgeLabel && (
+            <div className="rvs-kind-pill">
+              <span className="rvs-kind-dot" style={{ background: kindDotColor(cardKind) }} />
+              {kindBadgeLabel}
             </div>
           )}
+
+          {/* ── Word card (default) ── */}
+          {(cardKind === "word" || !cardKind) && (
+            <>
+              <div className="rvs-card-fi">{current.userLangCard}</div>
+              <div className="rvs-card-meta">
+                <button className="rvs-card-speak" onClick={speak}><Volume2 size={14} /></button>
+              </div>
+              {revealed && (
+                <div className="rvs-card-back">
+                  <div className="rvs-card-en">{current.engCard}</div>
+                  {current.pronunciation && <div className="rvs-card-note">{current.pronunciation}</div>}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── Sentence card ── */}
+          {cardKind === "sentence" && (
+            <>
+              <div className="rvs-card-fi">{current.userLangCard}</div>
+              <div className="rvs-speak-row">
+                <button className="rvs-card-speak-lg" onClick={speak}><Volume2 size={15} /></button>
+                <span className="rvs-speak-label">tap to hear</span>
+              </div>
+              {revealed && (
+                <div className="rvs-card-back">
+                  <div className="rvs-card-en">{current.engCard}</div>
+                  {current.comment && <div className="rvs-card-note">{current.comment}</div>}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── Cloze card ── */}
+          {cardKind === "cloze" && (
+            <>
+              <div className="rvs-cloze-sentence">
+                {clozeParts.map((part, i) => (
+                  <React.Fragment key={i}>
+                    {part && <span className="rvs-cloze-part">{part}</span>}
+                    {i < clozeParts.length - 1 && (
+                      revealed ? (
+                        <span className={`rvs-cloze-revealed-word${clozeResult ? ` is-${clozeResult}` : ""}`}>
+                          {clozeResult === "correct" ? clozeInput : clozeAnswer}
+                        </span>
+                      ) : (
+                        <input
+                          ref={i === 0 ? clozeInputRef : undefined}
+                          className="rvs-cloze-input"
+                          value={clozeInput}
+                          onChange={e => setClozeInput(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") { e.preventDefault(); checkCloze(); }
+                            if (e.key === "Tab")   { e.preventDefault(); setRevealed(true); }
+                          }}
+                          spellCheck={false}
+                          autoComplete="off"
+                          size={1}
+                        />
+                      )
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+              {!revealed && (
+                <div className="rvs-cloze-check-hint">
+                  <kbd>↵</kbd> to check <span style={{ margin: "0 4px", color: "var(--tk-ink-5)" }}>·</span> <kbd>tab</kbd> to skip
+                </div>
+              )}
+              {revealed && current.engCard && (
+                <div className="rvs-card-back">
+                  <div style={{ fontSize: 15, color: "var(--tk-ink-3)", fontStyle: "italic" }}>{current.engCard}</div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── Grammar card ── */}
+          {cardKind === "grammar" && (
+            <>
+              <GrammarPrompt text={current.userLangCard} />
+              {revealed && (
+                <div className="rvs-card-back">
+                  <div className="rvs-card-en">{current.engCard}</div>
+                  {current.pronunciation && <div className="rvs-card-note">{current.pronunciation}</div>}
+                  {current.comment && (
+                    <div className="rvs-grammar-rule">{current.comment}</div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Footnote */}
           <div className="rvs-card-footnote">
             <Clock size={11} />
             {lastSeen ? `Last seen ${lastSeen}` : "Not yet reviewed"}
-            {current.cardScore > 0 && <> · {current.cardScore} review{current.cardScore !== 1 ? "s" : ""}</>}
+            {reviewCount > 0 && <> · {reviewCount} review{reviewCount !== 1 ? "s" : ""}</>}
+            {lapses > 0 && <> · {lapses} lapse{lapses !== 1 ? "s" : ""}</>}
           </div>
         </div>
 
+        {/* Below-card controls */}
         {!revealed ? (
-          <>
-            <button className="rvs-reveal" onClick={() => setRevealed(true)}>Show answer</button>
-            <div className="rvs-reveal-hint">SPACE TO REVEAL</div>
-          </>
+          cardKind !== "cloze" ? (
+            <>
+              <button className="rvs-reveal" onClick={() => setRevealed(true)}>Show answer</button>
+              <div className="rvs-reveal-hint">SPACE TO REVEAL</div>
+            </>
+          ) : null
         ) : (
           <div className="rvs-grade">
             {([
               { key: "again", label: "Again", n: 1 },
-              { key: "hard", label: "Hard", n: 2 },
-              { key: "good", label: "Good", n: 3 },
-              { key: "easy", label: "Easy", n: 4 },
+              { key: "hard",  label: "Hard",  n: 2 },
+              { key: "good",  label: "Good",  n: 3 },
+              { key: "easy",  label: "Easy",  n: 4 },
             ] as { key: Rating; label: string; n: number }[]).map(btn => (
               <button
                 key={btn.key}

@@ -27,6 +27,7 @@ export interface User {
     nudgeQuietDays?: 'never' | 'weekends'
     nudgeStreakGrace?: boolean
     email?: string
+    difficultyLabel?: 'plain' | 'cefr' | 'both'
 }
 
 interface UserContextType {

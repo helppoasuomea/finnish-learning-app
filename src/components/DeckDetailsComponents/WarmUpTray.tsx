@@ -2,6 +2,7 @@ type GameKey = "flashcards" | "match" | "type";
 
 interface Props {
   onOpen: (game: GameKey) => void;
+  onCram: () => void;
 }
 
 const FlashcardsGlyph = () => (
@@ -36,13 +37,22 @@ const TypeGlyph = () => (
   </svg>
 );
 
+const CramGlyph = () => (
+  <svg width="40" height="32" viewBox="0 0 40 32" fill="none">
+    <line x1="4" y1="16" x2="12" y2="16" stroke="rgba(240,236,228,0.5)" strokeWidth="1.5" />
+    <circle cx="15" cy="16" r="2.5" fill="var(--tk-persimmon)" />
+    <line x1="18" y1="16" x2="28" y2="16" stroke="rgba(240,236,228,0.7)" strokeWidth="1.5" />
+    <line x1="30" y1="16" x2="36" y2="16" stroke="rgba(240,236,228,0.3)" strokeWidth="1.5" strokeDasharray="2 2" />
+  </svg>
+);
+
 const GAMES: { key: GameKey; label: string; line: string; time: string; Glyph: () => JSX.Element }[] = [
   { key: "flashcards", label: "Flashcards", line: "Flip through at your own pace.", time: "no timer", Glyph: FlashcardsGlyph },
   { key: "match",      label: "Match",      line: "Pair the word with its meaning.", time: "~2 min",  Glyph: MatchGlyph },
   { key: "type",       label: "Type it",    line: "See the meaning, type the word.", time: "~3 min", Glyph: TypeGlyph },
 ];
 
-export const WarmUpTray: React.FC<Props> = ({ onOpen }) => (
+export const WarmUpTray: React.FC<Props> = ({ onOpen, onCram }) => (
   <div style={{ background: "var(--tk-card)", border: "1px solid var(--tk-rule)", borderRadius: 16, padding: 24, marginBottom: 20 }}>
     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
       <div className="tk-eyebrow">Warm up · optional practice</div>
@@ -50,8 +60,54 @@ export const WarmUpTray: React.FC<Props> = ({ onOpen }) => (
         Doesn't affect your review schedule.
       </span>
     </div>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-      {GAMES.map(g => (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      {/* Flashcards, Match */}
+      {GAMES.slice(0, 2).map(g => (
+        <button
+          key={g.key}
+          onClick={() => onOpen(g.key)}
+          className="wu-card"
+          style={{
+            textAlign: "left", padding: 18,
+            background: "var(--tk-paper)", border: "1px solid var(--tk-rule)",
+            borderRadius: 8, cursor: "pointer",
+            display: "flex", flexDirection: "column", gap: 10, minHeight: 128,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <g.Glyph />
+            <span className="tk-mono" style={{ fontSize: 10.5, color: "var(--tk-ink-3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{g.time}</span>
+          </div>
+          <div>
+            <div style={{ fontSize: 15, color: "var(--tk-ink)", fontWeight: 500, marginBottom: 3 }}>{g.label}</div>
+            <div style={{ fontSize: 12.5, color: "var(--tk-ink-3)", fontStyle: "italic", lineHeight: 1.45 }}>{g.line}</div>
+          </div>
+        </button>
+      ))}
+
+      {/* Cram — 3rd tile */}
+      <button
+        onClick={onCram}
+        className="wu-card"
+        style={{
+          textAlign: "left", padding: 18,
+          background: "#0e1115", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 8, cursor: "pointer",
+          display: "flex", flexDirection: "column", gap: 10, minHeight: 128,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <CramGlyph />
+          <span className="tk-mono" style={{ fontSize: 10.5, color: "var(--tk-persimmon)", letterSpacing: "0.08em", textTransform: "uppercase" }}>~5–10 min</span>
+        </div>
+        <div>
+          <div style={{ fontSize: 15, color: "#f0ece4", fontWeight: 500, marginBottom: 3 }}>Cram</div>
+          <div style={{ fontSize: 12.5, color: "rgba(240,236,228,0.55)", fontStyle: "italic", lineHeight: 1.45 }}>Drill a slice until it sticks.</div>
+        </div>
+      </button>
+
+      {/* Type it — 4th tile */}
+      {GAMES.slice(2).map(g => (
         <button
           key={g.key}
           onClick={() => onOpen(g.key)}

@@ -85,7 +85,7 @@ export const MatchGameOverlay: React.FC<Props> = ({ deckName, cards, onClose }) 
               <div className="tk-mono" style={{ fontSize: 16 }}>{accuracy}%</div>
             </div>
           </div>
-          <div style={{ fontSize: 11, color: "var(--tk-ink-4)", fontFamily: "'IBM Plex Mono', Menlo, monospace", letterSpacing: "0.08em" }}>
+          <div style={{ fontSize: 11, color: "var(--tk-ink-4)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
             TAP TO PAIR
           </div>
         </div>

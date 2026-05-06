@@ -9,8 +9,10 @@ import { useDeckContext } from "@/contexts/DeckContext";
 import { UserContext } from "@/contexts/UserContext";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowRight, BookOpen, Plus, Check, X } from "lucide-react";
+import { ArrowRight, BookOpen, Plus, Check, X, Play } from "lucide-react";
+import { GRAMMAR_BY_ID } from "@/data/grammar/index";
 import { Popover, PopoverTrigger, PopoverContent, PopoverClose } from "@/components/ui/popover";
+import { OnboardingFlow } from "@/components/OnboardingFlow";
 
 const ConfidenceRing = ({ value }: { value: number }) => {
     const r = 11;
@@ -59,7 +61,7 @@ const timeOfDay = () => {
 };
 
 const IndexPageContent = () => {
-    const { fromLanguage, setFromLanguage, inputText, setInputText, ready, isStreaming, validationError, response, handleTranslationStream, refreshResponseFromStorage } = useTranslation();
+    const { fromLanguage, setFromLanguage, inputText, setInputText, ready, isStreaming, streamPhase, validationError, response, handleTranslationStream, refreshResponseFromStorage } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { decks } = useDeckContext();
@@ -72,6 +74,14 @@ const IndexPageContent = () => {
     const [wordsToSave, setWordsToSave] = useState<any[] | null>(null);
     const [localSavedIds, setLocalSavedIds] = useState<Set<string>>(new Set());
     const [hideCommon, setHideCommon] = useState(true);
+    const [authGateOpen, setAuthGateOpen] = useState(false);
+    const [authGateWord, setAuthGateWord] = useState<string | null>(null);
+    const [authGateWordObj, setAuthGateWordObj] = useState<any>(null);
+    const [onboardingOpen, setOnboardingOpen] = useState(false);
+    const [onboardingWord, setOnboardingWord] = useState("");
+    const [saveDone, setSaveDone] = useState<{ count: number; deckName: string } | null>(null);
+    const needsReloadRef = useRef(false);
+    const pendingOnboardingRef = useRef(false);
     const lastAutoSavedSentenceRef = useRef<string | null>(null);
     const wordDetailsRef = useRef<HTMLDivElement>(null);
 
@@ -94,6 +104,19 @@ const IndexPageContent = () => {
         }
     }, [response, inputText, setInputText]);
 
+    const closeSaveDialog = () => {
+        const reload = needsReloadRef.current;
+        const onboard = pendingOnboardingRef.current;
+        needsReloadRef.current = false;
+        pendingOnboardingRef.current = false;
+        setSaveDone(null);
+        setCreateFlashcardsOpen(false);
+        setSelectedDeckId("");
+        setWordsToSave(null);
+        if (onboard) setOnboardingOpen(true);
+        if (reload && !onboard) { setInputText(""); window.location.reload(); }
+    };
+
     const handleSave = async () => {
         if (!selectedDeckId) return;
         const sourceWords = wordsToSave ?? response?.words;
@@ -110,19 +133,18 @@ const IndexPageContent = () => {
                 .filter((w: any) => w.engCard?.trim() && w.userLangCard?.trim());
 
             const result = await axios.post(`/decks/${selectedDeckId}/save-all`, { words: toSave });
-            toast({ title: "Saved!", description: `${result.data.added} flashcard${result.data.added !== 1 ? 's' : ''} added to your deck.` });
 
-            // Mark saved IDs locally
+            if (result.data.showOnboarding && toSave[0]?.userLangCard) {
+                setOnboardingWord(toSave[0].userLangCard);
+                pendingOnboardingRef.current = true;
+            }
+
             sourceWords.forEach((w: any) => { if (w.id) setLocalSavedIds(s => new Set([...s, w.id])); });
 
-            setCreateFlashcardsOpen(false);
-            setSelectedDeckId("");
-            setWordsToSave(null);
+            if (!wordsToSave) needsReloadRef.current = true;
 
-            if (!wordsToSave) {
-                setInputText("");
-                window.location.reload();
-            }
+            const savedDeck = filteredDecks.find((d: any) => d._id === selectedDeckId);
+            setSaveDone({ count: result.data.added, deckName: savedDeck?.deckName || 'your deck' });
         } catch (error) {
             toast({ title: "Error", description: "Failed to save words. Please try again.", variant: "destructive" });
         } finally {
@@ -131,11 +153,18 @@ const IndexPageContent = () => {
     };
 
     const openSaveWord = (word: any) => {
+        if (!user) {
+            setAuthGateWord(word.fi || word.original_word || null);
+            setAuthGateWordObj(word);
+            setAuthGateOpen(true);
+            return;
+        }
         setWordsToSave([word]);
         setCreateFlashcardsOpen(true);
     };
 
     const openSaveAll = () => {
+        if (!user) { setAuthGateWord(null); setAuthGateOpen(true); return; }
         setWordsToSave(null);
         setCreateFlashcardsOpen(true);
     };
@@ -194,6 +223,21 @@ const IndexPageContent = () => {
         autoSave();
     }, [user, response, inputText, fromLanguage, savedWordKeys]);
 
+    // After login/register, auto-open save dialog for the card the user was trying to save
+    useEffect(() => {
+        if (!user) return;
+        const raw = localStorage.getItem('lukea:pendingCard');
+        if (!raw) return;
+        try {
+            const word = JSON.parse(raw);
+            localStorage.removeItem('lukea:pendingCard');
+            setWordsToSave([word]);
+            setCreateFlashcardsOpen(true);
+        } catch {
+            localStorage.removeItem('lukea:pendingCard');
+        }
+    }, [user]);
+
     useEffect(() => {
         if (hoveredFlashcardFi && wordDetailsRef.current) {
             wordDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -225,7 +269,7 @@ const IndexPageContent = () => {
                         <h1 className="tk-page-title">
                             Good {greeting}{firstName ? `, ${firstName}` : ''}.
                         </h1>
-                        <p style={{ color: 'var(--tk-ink-3)', fontSize: 16, marginTop: 6, fontFamily: 'var(--font-display)', fontStyle: 'italic' }}>
+                        <p style={{ color: 'var(--tk-ink-3)', fontSize: 16, marginTop: 6, fontFamily: 'var(--font-body)', fontStyle: 'italic' }}>
                             A sentence in, flashcards out. Study what you're already reading.
                         </p>
                     </div>
@@ -275,11 +319,21 @@ const IndexPageContent = () => {
                             </div>
                         )}
 
-                        {/* Streaming loader */}
-                        {isStreaming && !response?.sentence && (
-                            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--tk-accent)', animation: 'pulse 1s infinite' }} />
-                                <span style={{ fontSize: 13, color: 'var(--tk-ink-3)', fontFamily: 'var(--font-mono)' }}>Translating…</span>
+                        {/* Streaming status bar */}
+                        {isStreaming && (
+                            <div className="tx-stream-status">
+                                <span className="tx-stream-dot" />
+                                <span className="tx-stream-label">
+                                    {streamPhase === 'reading' && 'Reading sentence…'}
+                                    {streamPhase === 'words'   && 'Tagging grammar · drafting translation…'}
+                                    {streamPhase === 'enriching' && 'Applying morphology…'}
+                                    {(streamPhase === 'idle' || streamPhase === 'done') && 'Translating…'}
+                                </span>
+                                <div className="tx-stream-tiers">
+                                    <span data-on={streamPhase !== 'reading' ? 'true' : 'false'}>tokens</span>
+                                    <span data-on={streamPhase === 'words' || streamPhase === 'enriching' || streamPhase === 'done' ? 'true' : 'false'}>words</span>
+                                    <span data-on={streamPhase === 'enriching' || streamPhase === 'done' ? 'true' : 'false'}>morph</span>
+                                </div>
                             </div>
                         )}
 
@@ -293,7 +347,7 @@ const IndexPageContent = () => {
                                         <div className="tx-sentence-label">
                                             Your sentence · {activeWords.length} word{activeWords.length !== 1 ? 's' : ''}
                                         </div>
-                                        <div className="tx-output-text" style={{ fontSize: activeWords.length > 15 ? 22 : 26 }}>
+<div className="tx-output-text" style={{ fontSize: activeWords.length > 15 ? 22 : 26 }}>
                                             {activeSentence}
                                         </div>
                                     </div>
@@ -328,30 +382,36 @@ const IndexPageContent = () => {
 
                                 {/* Interlinear display */}
                                 {(isStreaming && response?.sentence && !response?.words?.length) ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0' }}>
-                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--tk-accent)', animation: 'pulse 1s infinite' }} />
-                                        <span style={{ fontSize: 12.5, color: 'var(--tk-ink-3)', fontFamily: 'var(--font-mono)' }}>Analysing words…</span>
+                                    <div className="tx-stream-placeholder" style={{ padding: '12px 0' }}>
+                                        <span className="tx-stream-bar" style={{ width: '72%' }} />
+                                        <span className="tx-stream-bar" style={{ width: '55%' }} />
+                                        <span className="tx-stream-bar" style={{ width: '40%' }} />
                                     </div>
                                 ) : (
-                                    <div className="tx-interlinear">
+                                    <div className="tx-interlinear" data-streaming={isStreaming ? 'true' : 'false'}>
                                         {activeWords.map((w: any, i: number) => {
-                                            const hide = hideCommon && w.common;
                                             const saved = isWordSaved(w);
+                                            const isLastStreaming = isStreaming && i === activeWords.length - 1;
                                             return (
                                                 <Popover key={w.id || i}>
                                                     <PopoverTrigger asChild>
                                                         <span
                                                             className="tx-il-word"
-                                                            data-common={w.common ? 'true' : 'false'}
+                                                            data-common={w.common && !w.highlight ? 'true' : 'false'}
                                                             data-saved={saved ? 'true' : 'false'}
+                                                            data-highlight={w.highlight ? 'true' : 'false'}
+                                                            data-stream-cursor={isLastStreaming ? 'true' : 'false'}
                                                         >
                                                             {w.fi}
-                                                            {!hide && <span className="tx-il-gloss">{w.en}</span>}
+                                                            {(w.gloss || w.en)
+                                                                ? <span className="tx-il-gloss">{(w.gloss || w.en).replace(/\s*\([^)]*\)/g, '').trim()}</span>
+                                                                : <span className="tx-il-gloss-pending"><span className="tx-il-gloss-shimmer"/></span>
+                                                            }
                                                         </span>
                                                     </PopoverTrigger>
                                                     <PopoverContent
                                                         className="p-0"
-                                                        style={{ width: 272, background: 'var(--tk-card)', border: '1px solid var(--tk-rule)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+                                                        style={{ width: 320, background: 'var(--tk-card)', border: '1px solid var(--tk-rule)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
                                                         align="start"
                                                         sideOffset={8}
                                                     >
@@ -364,6 +424,36 @@ const IndexPageContent = () => {
                                                                 </div>
                                                             </div>
                                                             {w.comment && <div className="tx-peek-note">{w.comment}</div>}
+                                                            {/* Morphology badge — Tier 2/4 output */}
+                                                            {(w.lemma || (w.features && w.features.length > 0)) && (
+                                                                <div className="tx-morph-badge">
+                                                                    {w.lemma && <span className="tx-morph-lemma">{w.lemma}</span>}
+                                                                    {w.features && w.features.length > 0 && (
+                                                                        <span className="tx-morph-features">{w.features.join(' · ')}</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            {/* Grammar card — Tier 3/4 highlight */}
+                                                            {w.highlight && GRAMMAR_BY_ID[w.highlight] && (
+                                                                <div className="tx-grammar-card">
+                                                                    <div className="tx-grammar-card-title">{GRAMMAR_BY_ID[w.highlight].title}</div>
+                                                                    {(GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle) && (
+                                                                        <div className="tx-grammar-card-desc">{GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle}</div>
+                                                                    )}
+                                                                    <div className="tx-grammar-card-actions">
+                                                                        <PopoverClose asChild>
+                                                                            <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                                                                                <BookOpen size={12} /> Open topic
+                                                                            </button>
+                                                                        </PopoverClose>
+                                                                        <PopoverClose asChild>
+                                                                            <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}?drill=1`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                                                                                <Play size={12} /> Drill this
+                                                                            </button>
+                                                                        </PopoverClose>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                             <div className="tx-peek-meta">
                                                                 <span>{w.type}</span>
                                                                 {w.original_word && w.original_word !== w.fi && (
@@ -532,8 +622,76 @@ const IndexPageContent = () => {
                 </div>
             </div>
 
+            {/* Auth gate modal */}
+            <Dialog open={authGateOpen} onOpenChange={setAuthGateOpen}>
+                <DialogContent className="p-0 gap-0 overflow-hidden" style={{ maxWidth: 740, borderRadius: 16, border: 'none', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
+                    <DialogTitle className="sr-only">Sign in to save</DialogTitle>
+                    <div className="ag-layout">
+                        {/* Left — brand */}
+                        <div className="ag-left">
+                            <div className="ag-brand">
+                                <span className="ag-brand-name">Lukea</span>
+                                <span className="ag-brand-tag">READING ROOM</span>
+                            </div>
+                            <div className="ag-hero">
+                                <p className="ag-hero-sub">The words you read</p>
+                                <p className="ag-hero-title">become the words you know.</p>
+                                <p className="ag-hero-body">Paste a sentence. We translate it, explain each word, and quietly build it into your flashcards.</p>
+                            </div>
+                            <div className="ag-langs">FINNISH · VIETNAMESE · KOREAN · JAPANESE</div>
+                        </div>
+
+                        {/* Right — CTA */}
+                        <div className="ag-right">
+                            <button className="ag-close" onClick={() => setAuthGateOpen(false)} aria-label="Close">
+                                <X size={15} />
+                            </button>
+                            <div className="tk-eyebrow" style={{ marginBottom: 10 }}>Sign in to save</div>
+                            <h2 className="ag-heading">Keep this word on your shelf.</h2>
+                            <p className="ag-desc">Saved words become flashcards — reviewed at the right moment, not randomly.</p>
+
+                            {authGateWord && (
+                                <div className="ag-saving-chip">
+                                    <span className="ag-saving-dot" />
+                                    <span className="ag-saving-label">SAVING</span>
+                                    <span className="ag-saving-word">{authGateWord}</span>
+                                </div>
+                            )}
+
+                            <div className="ag-actions">
+                                <button
+                                    className="ag-btn-primary"
+                                    onClick={() => {
+                                        if (authGateWordObj) localStorage.setItem('lukea:pendingCard', JSON.stringify(authGateWordObj));
+                                        setAuthGateOpen(false);
+                                        navigate('/login');
+                                    }}
+                                >
+                                    Sign in <ArrowRight size={15} />
+                                </button>
+                                <button
+                                    className="ag-btn-secondary"
+                                    onClick={() => {
+                                        if (authGateWordObj) localStorage.setItem('lukea:pendingCard', JSON.stringify(authGateWordObj));
+                                        setAuthGateOpen(false);
+                                        navigate('/register');
+                                    }}
+                                >
+                                    Create an account
+                                </button>
+                                <button className="ag-btn-ghost" onClick={() => setAuthGateOpen(false)}>
+                                    Keep translating as a guest
+                                </button>
+                            </div>
+
+                            <p className="ag-fine">No credit card. Free forever for personal use.</p>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* Save dialog */}
-            <Dialog open={createFlashcardsOpen} onOpenChange={(open) => { setCreateFlashcardsOpen(open); if (!open) { setWordsToSave(null); setSelectedDeckId(''); } }}>
+            <Dialog open={createFlashcardsOpen} onOpenChange={(open) => { if (!open) closeSaveDialog(); }}>
                 <DialogContent className="p-0 gap-0 overflow-hidden" style={{ maxWidth: 520, borderRadius: 16, border: '1px solid var(--tk-rule)' }}>
                     <DialogTitle className="sr-only">Save to a deck</DialogTitle>
 
@@ -541,17 +699,30 @@ const IndexPageContent = () => {
                     <div className="sv-modal-head">
                         <div>
                             <div className="sv-modal-eyebrow">Save to a deck</div>
-                            <div className="sv-modal-title">Pick a shelf</div>
+                            <div className="sv-modal-title">{saveDone ? "Done" : "Pick a shelf"}</div>
                         </div>
-                        <button
-                            className="tx-icon-btn"
-                            onClick={() => { setCreateFlashcardsOpen(false); setWordsToSave(null); setSelectedDeckId(''); }}
-                            aria-label="Close"
-                        >
+                        <button className="tx-icon-btn" onClick={closeSaveDialog} aria-label="Close">
                             <X size={15} />
                         </button>
                     </div>
 
+                    {/* Done confirmation panel */}
+                    {saveDone && (
+                        <div className="sv-done">
+                            <div className="sv-done-check"><Check size={22} strokeWidth={2.5} /></div>
+                            <div className="sv-done-count">{saveDone.count} {saveDone.count === 1 ? "word" : "words"} saved</div>
+                            <div className="sv-done-desc">Into <em>{saveDone.deckName}</em>. Ready to study tonight.</div>
+                            <div className="sv-done-actions">
+                                <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={closeSaveDialog}>Back to sentence</button>
+                                <button className="tk-btn tk-btn-sm" style={{ background: '#2d4438', color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}
+                                    onClick={() => { closeSaveDialog(); navigate('/review'); }}>
+                                    Study now <ArrowRight size={13} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {!saveDone && <>
                     {/* Step indicator */}
                     <div className="sv-stepper">
                         <div className="sv-step" data-active="true">
@@ -643,9 +814,17 @@ const IndexPageContent = () => {
                             </button>
                         </div>
                     </div>
+                    </>}
                 </DialogContent>
             </Dialog>
 
+            {onboardingOpen && (
+                <OnboardingFlow
+                    word={onboardingWord}
+                    onClose={() => setOnboardingOpen(false)}
+                    onGoToReview={() => navigate('/review')}
+                />
+            )}
 
         </div>
     );

@@ -1,8 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { DeckContext } from "@/contexts/DeckContext";
-import { useFetchHistory, HistoryItem } from "@/state/hooks/useLearningHistoryHooks";
+import { useFetchAllHistory, HistoryItem } from "@/state/hooks/useLearningHistoryHooks";
+import { MemoryGoalPanel } from "./MemoryGoalPanel";
+import { PublishPanel } from "./PublishPanel";
+import type { MemoryGoalTier } from "@/types";
 
 interface Props {
   deckId: string;
@@ -42,16 +46,18 @@ function nextReviewLabel(cards: { nextReviewDate?: string | null; cardScore?: nu
 
 export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
   const userId = localStorage.getItem("userId");
+  const navigate = useNavigate();
   const { decks } = useContext(DeckContext);
-  const { history, fetchHistory } = useFetchHistory(userId, deckId);
+  const { history, fetchHistory } = useFetchAllHistory(userId);
+  const currentDeck = decks.find((d: any) => d._id === deckId);
+  const memoryTier: MemoryGoalTier = currentDeck?.memoryGoal?.tier ?? 'sapling';
   const [streak, setStreak] = useState<number>(0);
 
   useEffect(() => {
     fetchHistory();
-    axios.get("/gamification/stats").then(r => setStreak(r.data.currentStreak ?? 0)).catch(() => {});
+    axios.get("/review/stats").then(r => setStreak(r.data.currentStreak ?? 0)).catch(() => {});
   }, [deckId]);
 
-  // Top 3 other decks with due cards
   const upcomingDecks = decks
     .filter(d => d._id !== deckId)
     .map(d => ({
@@ -63,11 +69,21 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
     .sort((a, b) => b.dueCount - a.dueCount)
     .slice(0, 3);
 
-  const recentHistory = history.slice(0, 4);
+  const sevenDaysAgo = Date.now() - 7 * 86400000;
+  const recentHistory = history
+    .filter(h => new Date(h.date).getTime() >= sevenDaysAgo)
+    .slice(0, 5);
+
+  const getDeckName = (h: HistoryItem) => {
+    if (h.deckId) {
+      const d = decks.find((d: any) => d._id === h.deckId);
+      if (d) return d.deckName;
+    }
+    return deckName;
+  };
 
   return (
     <>
-      {/* Upcoming reviews */}
       {upcomingDecks.length > 0 && (
         <div className="tx-aside-card" style={{ padding: 20, marginBottom: 16 }}>
           <div className="tk-eyebrow" style={{ marginBottom: 12 }}>Upcoming reviews</div>
@@ -89,44 +105,80 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
                 <div style={{ fontSize: 13, color: "var(--tk-ink)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.deckName}</div>
                 <div style={{ fontSize: 11.5, color: "var(--tk-ink-3)" }}>{d.dueCount} cards · {d.when}</div>
               </div>
+              <span style={{ fontSize: 13, color: "var(--tk-ink-3)" }}>→</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Learning history */}
       <div className="tx-aside-card" style={{ padding: 20, marginBottom: 16 }}>
-        <div className="tk-eyebrow" style={{ marginBottom: 12 }}>Learning history</div>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+          <div className="tk-eyebrow">Recent sessions</div>
+          <div style={{ fontSize: 11, color: "var(--tk-ink-3)" }}>last 7 days</div>
+        </div>
         {recentHistory.length === 0 ? (
           <div style={{ fontSize: 13, color: "var(--tk-ink-3)", fontStyle: "italic" }}>
-            There is no learning history for this deck yet.
+            No sessions in the last 7 days.
           </div>
         ) : (
-          recentHistory.map((h, i) => (
-            <div key={h.id} style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "10px 0",
-              borderTop: i > 0 ? "1px solid var(--tk-rule-soft)" : "none",
-            }}>
-              <div>
-                <div style={{ fontSize: 13, color: "var(--tk-ink)", fontWeight: 500 }}>{relativeDate(h.date)}</div>
-                <div style={{ fontSize: 11.5, color: "var(--tk-ink-3)" }}>
-                  {h.quizType === "learn" ? "Learn" : "Review"} · {deckName}
+          <>
+            {recentHistory.map((h, i) => (
+              <div key={h.id} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "10px 0",
+                borderTop: i > 0 ? "1px solid var(--tk-rule-soft)" : "none",
+              }}>
+                <div>
+                  <div style={{ fontSize: 13, color: "var(--tk-ink)", fontWeight: 500 }}>{relativeDate(h.date)}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--tk-ink-3)" }}>
+                    {h.quizType === "learn" ? "Learn" : "Review"} · {getDeckName(h)}
+                  </div>
+                </div>
+                <div className="tk-mono" style={{
+                  fontSize: 12.5,
+                  color: h.correctAnswers === h.cardsStudied ? "var(--tk-accent)" : "var(--tk-ink-2)",
+                }}>
+                  {h.correctAnswers ?? "—"}/{h.cardsStudied}
                 </div>
               </div>
-              <div className="tk-mono" style={{
-                fontSize: 12.5,
-                color: h.correctAnswers === h.cardsStudied ? "var(--tk-accent)" : "var(--tk-ink-2)",
-              }}>
-                {h.correctAnswers ?? "—"}/{h.cardsStudied}
-              </div>
+            ))}
+            <div style={{ marginTop: 12, borderTop: "1px solid var(--tk-rule-soft)", paddingTop: 10 }}>
+              <button
+                onClick={() => navigate('/history')}
+                style={{
+                  background: "none", border: "none", padding: 0, cursor: "pointer",
+                  fontSize: 12.5, color: "var(--tk-accent)", fontWeight: 500,
+                }}
+              >
+                See full history →
+              </button>
             </div>
-          ))
+          </>
         )}
       </div>
 
-      {/* Streak */}
-      <div className="tx-aside-card" style={{ padding: 20, background: "var(--tk-paper-deep)" }}>
+      <MemoryGoalPanel deckId={deckId} currentTier={memoryTier} />
+
+      <PublishPanel
+        deckId={deckId}
+        deckName={deckName}
+        deckTags={(currentDeck as any)?.deckTags ?? []}
+        deckDescription={(currentDeck as any)?.description ?? ""}
+        initialState={{
+          isPublic:              (currentDeck as any)?.isPublic ?? false,
+          level:                 (currentDeck as any)?.level ?? "",
+          category:              (currentDeck as any)?.category ?? "",
+          publicDeckName:        (currentDeck as any)?.publicDeckName ?? "",
+          publicDescription:     (currentDeck as any)?.publicDescription ?? "",
+          showPublicDescription: (currentDeck as any)?.showPublicDescription ?? true,
+          publisherName:         (currentDeck as any)?.publisherName ?? "",
+          showPublisherName:     (currentDeck as any)?.showPublisherName ?? false,
+          publicTags:            (currentDeck as any)?.publicTags ?? [],
+          showPublicTags:        (currentDeck as any)?.showPublicTags ?? true,
+        }}
+      />
+
+      <div className="tx-aside-card" style={{ padding: 20, background: "var(--tk-paper-deep)", marginTop: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Flame size={18} style={{ color: "var(--tk-persimmon)" }} />
           <div>

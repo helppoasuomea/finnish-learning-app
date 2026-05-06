@@ -29,29 +29,45 @@ function persist(q: QueuedAnswer[]) {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
 }
 
-let flushing = false;
+// Shared promise — all callers await the same flush, not independent ones.
+let activeFlush: Promise<void> | null = null;
 
-export async function flushQueue(): Promise<void> {
-  if (flushing || !navigator.onLine) return;
-  const pending = load();
-  if (!pending.length) return;
-  flushing = true;
-  const remaining: QueuedAnswer[] = [];
-  for (const item of pending) {
-    try {
-      const res = await fetch('/api/review/answer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),
-        credentials: 'include',
-      });
-      if (!res.ok) remaining.push(item);
-    } catch {
-      remaining.push(item);
+async function _doFlush(): Promise<void> {
+  if (!navigator.onLine) return;
+  try {
+    while (true) {
+      const pending = load();
+      if (!pending.length) break;
+      const succeeded = new Set<string>();
+      for (const item of pending) {
+        try {
+          const res = await fetch('/api/review/answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),
+            credentials: 'include',
+          });
+          // 4xx = permanent failure (card/deck not found) — remove, don't retry
+          if (res.ok || (res.status >= 400 && res.status < 500)) succeeded.add(item.id);
+        } catch {
+          // network error — leave in queue for retry
+        }
+      }
+      // Re-read localStorage in case enqueue() added new items during the await
+      persist(load().filter(i => !succeeded.has(i.id)));
+      if (succeeded.size === 0) break;
     }
+  } finally {
+    activeFlush = null;
   }
-  persist(remaining);
-  flushing = false;
+}
+
+/** Flush the queue. Returns a promise that resolves when the queue is empty or a network error stops progress. */
+export function flushQueue(): Promise<void> {
+  if (!activeFlush) {
+    activeFlush = _doFlush();
+  }
+  return activeFlush;
 }
 
 /** Adds a grade to the queue (deduplicating by cardId) and immediately attempts flush. */
