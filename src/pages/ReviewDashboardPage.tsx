@@ -341,7 +341,7 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta">
             <button className="rv-start-btn" onClick={() => navigate("/")}>
-              <Play size={14} /> Go to Translate
+              <span className="rv-start-btn-label"><Play size={14} /> Go to Translate</span>
             </button>
             <button className="rv-cta-secondary" onClick={() => navigate("/view-all-decks")}>Browse starter decks →</button>
           </div>
@@ -359,7 +359,9 @@ export const ReviewDashboardPage: React.FC = () => {
             Tomorrow <strong>{tomorrowDue} {tomorrowDue === 1 ? "card" : "cards"}</strong> come back for a visit.{streak > 0 ? ` Streak ${streak} is safe — rest is part of the method.` : ""}
           </div>
           <div className="rv-hero-cta">
-            <button className="rv-start-btn" onClick={() => navigate("/view-all-decks")}>Browse your words</button>
+            <button className="rv-start-btn" onClick={() => navigate("/view-all-decks")}>
+              <span className="rv-start-btn-label">Browse your words</span>
+            </button>
             <button className="rv-cta-secondary" onClick={() => startSession()}>Study ahead (5) →</button>
           </div>
         </div>
@@ -412,7 +414,8 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta" style={{ marginBottom: 16 }}>
             <button className="rv-start-btn" onClick={() => startSession()}>
-              🌱 Plant them <span className="mono">{totalDue} cards</span>
+              <span className="rv-start-btn-label">🌱 Plant them</span>
+              <span className="mono">{totalDue} cards</span>
             </button>
           </div>
           <div className="rv-hero-hint">
@@ -539,10 +542,10 @@ export const ReviewDashboardPage: React.FC = () => {
       <div className="tk-page-header" style={{ marginBottom: 14 }}>
         <div>
           <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Review · reading room</div>
-          <h1 style={{ fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 500, letterSpacing: "-0.03em", color: "var(--tk-ink)", lineHeight: 1.1, marginBottom: 8 }}>
+          <h1 style={{ fontSize: "clamp(32px, 5vw, 48px)", letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 10 }}>
             The shelf, tended.
           </h1>
-          <p style={{ color: "var(--tk-ink-3)", fontSize: 15, fontStyle: "italic" }}>
+          <p style={{ color: "var(--tk-ink-3)", fontSize: 15, fontStyle: "italic", fontFamily: "var(--font-display)" }}>
             Spaced repetition remembers the intervals, so you don't have to.
           </p>
         </div>

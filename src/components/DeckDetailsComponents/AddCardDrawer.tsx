@@ -202,7 +202,7 @@ export const AddCardDrawer: React.FC<Props> = ({ deckName, existingFi, onClose, 
         {/* Kind selector */}
         <div className="tk-field">
           <div className="tk-field-label">Kind of card</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {(["word", "sentence", "cloze", "grammar"] as CardKind[]).map(k => {
               const meta = KIND_META[k];
               const active = kind === k;
@@ -211,8 +211,8 @@ export const AddCardDrawer: React.FC<Props> = ({ deckName, existingFi, onClose, 
                   key={k}
                   onClick={() => switchKind(k)}
                   style={{
-                    padding: "12px 14px",
-                    borderRadius: 10,
+                    padding: "16px 18px",
+                    borderRadius: 12,
                     border: "1.5px solid",
                     borderColor: active ? "var(--tk-accent)" : "var(--tk-rule)",
                     background: active ? "color-mix(in oklab, var(--tk-accent) 8%, var(--tk-card))" : "var(--tk-card)",
@@ -221,11 +221,11 @@ export const AddCardDrawer: React.FC<Props> = ({ deckName, existingFi, onClose, 
                     transition: "all 120ms",
                   }}
                 >
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: meta.dot, marginBottom: 8, opacity: active ? 1 : 0.5 }} />
-                  <div style={{ fontSize: 15, fontWeight: 600, color: active ? "var(--tk-ink)" : "var(--tk-ink-2)", letterSpacing: "-0.01em", marginBottom: 3 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: meta.dot, marginBottom: 12, opacity: active ? 1 : 0.45 }} />
+                  <div style={{ fontSize: 15, fontWeight: 500, color: active ? "var(--tk-ink)" : "var(--tk-ink-2)", letterSpacing: "-0.01em", marginBottom: 4 }}>
                     {k.charAt(0).toUpperCase() + k.slice(1)}
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--tk-ink-4)", lineHeight: 1.4 }}>{meta.subtitle}</div>
+                  <div style={{ fontSize: 12, color: "var(--tk-ink-4)", lineHeight: 1.45 }}>{meta.subtitle}</div>
                 </button>
               );
             })}

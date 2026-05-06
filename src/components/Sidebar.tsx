@@ -1,5 +1,5 @@
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useSidebar } from "@/contexts/SidebarContext";
@@ -107,16 +107,18 @@ export const Sidebar = () => {
 
     const navItems = [
         { path: "/", label: "Translate", icon: Languages },
-        { path: "/grammar", label: "Grammar", icon: BookOpen },
+        { path: "/review", label: "Learn", icon: RotateCcw },
         ...(user
             ? [
+                  { path: "/vocabulary", label: "Words", icon: Compass },
                   { path: "/view-all-decks", label: "Decks", icon: Library },
-                  { path: "/review", label: "Review", icon: RotateCcw },
-                  { path: "/vocabulary", label: "Vocabulary", icon: Compass },
-                  { path: "/saved-sentences", label: "Saved sentences", icon: Bookmark },
+                  { path: "/saved-sentences", label: "Sentences", icon: Bookmark },
+                  { path: "/grammar", label: "Grammar", icon: BookOpen },
                   { path: "/browse", label: "Browse", icon: Globe },
               ]
-            : []),
+            : [
+                  { path: "/grammar", label: "Grammar", icon: BookOpen },
+              ]),
     ];
 
     const sidebarW = isCollapsed ? 64 : 248;
@@ -220,7 +222,7 @@ export const Sidebar = () => {
                         </div>
                     )}
 
-                    {navItems.map((item) => {
+                    {navItems.map((item, idx) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
 
@@ -250,6 +252,10 @@ export const Sidebar = () => {
                             </Link>
                         );
 
+                        const divider = idx === 2 && !isCollapsed
+                            ? <div key="div" style={{ height: 1, background: "var(--tk-rule)", margin: "8px 10px" }} />
+                            : null;
+
                         if (isCollapsed) {
                             return (
                                 <Tooltip key={item.path}>
@@ -258,7 +264,7 @@ export const Sidebar = () => {
                                 </Tooltip>
                             );
                         }
-                        return navBtn;
+                        return <React.Fragment key={item.path}>{divider}{navBtn}</React.Fragment>;
                     })}
 
                     {/* ── Recent decks ── */}
