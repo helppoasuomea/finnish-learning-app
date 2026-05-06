@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useFetchAllHistory, HistoryItem } from "@/state/hooks/useLearningHistoryHooks";
 import { MemoryGoalPanel } from "./MemoryGoalPanel";
@@ -45,6 +46,7 @@ function nextReviewLabel(cards: { nextReviewDate?: string | null; cardScore?: nu
 
 export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
   const userId = localStorage.getItem("userId");
+  const navigate = useNavigate();
   const { decks } = useContext(DeckContext);
   const { history, fetchHistory } = useFetchAllHistory(userId);
   const currentDeck = decks.find((d: any) => d._id === deckId);
@@ -142,6 +144,7 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
             ))}
             <div style={{ marginTop: 12, borderTop: "1px solid var(--tk-rule-soft)", paddingTop: 10 }}>
               <button
+                onClick={() => navigate('/history')}
                 style={{
                   background: "none", border: "none", padding: 0, cursor: "pointer",
                   fontSize: 12.5, color: "var(--tk-accent)", fontWeight: 500,

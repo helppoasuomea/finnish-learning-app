@@ -387,7 +387,8 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta">
             <button className="rv-start-btn" onClick={() => startSession(sortedDue.slice(0, DAILY_CAP))}>
-              <Play size={14} /> Ease back in <span className="mono">{Math.min(DAILY_CAP, totalDue)} cards · ~{Math.max(1, Math.round(Math.min(DAILY_CAP, totalDue) * 0.32))} min</span>
+              <span className="rv-start-btn-label"><Play size={14} /> Ease back in</span>
+              <span className="mono">{Math.min(DAILY_CAP, totalDue)} cards · ~{Math.max(1, Math.round(Math.min(DAILY_CAP, totalDue) * 0.32))} min</span>
             </button>
             <button className="rv-cta-secondary" onClick={() => startSession()}>Show me everything</button>
           </div>
@@ -439,7 +440,8 @@ export const ReviewDashboardPage: React.FC = () => {
           </div>
           <div className="rv-hero-cta">
             <button className="rv-start-btn" onClick={() => startSession(sortedDue.slice(0, DAILY_CAP))}>
-              <Play size={14} /> Review {DAILY_CAP} now <span className="mono">~{Math.round(DAILY_CAP * 0.32)} min</span>
+              <span className="rv-start-btn-label"><Play size={14} /> Review {DAILY_CAP} now</span>
+              <span className="mono">~{Math.round(DAILY_CAP * 0.32)} min</span>
             </button>
             <button className="rv-cta-secondary" onClick={() => startSession()}>Or do all {totalDue} →</button>
           </div>

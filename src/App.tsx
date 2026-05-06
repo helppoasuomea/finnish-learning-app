@@ -15,6 +15,7 @@ import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
 import { ReviewDashboardPage } from './pages/ReviewDashboardPage'
+import { HistoryPage } from './pages/HistoryPage'
 import { AuthPage } from './pages/AuthPage'
 import { GrammarIndex } from './components/GrammarPage/GrammarBrowser'
 import { GrammarTopicPage } from './components/GrammarPage/GrammarTopicPage'
@@ -88,6 +89,7 @@ const AppContent = ({ location }: { location: any }) => {
           <Route path='/vocabulary' element={<VocabularyPage />} />
           <Route path='/saved-sentences' element={<SavedSentencesPage />} />
           <Route path='/review' element={<ReviewDashboardPage />} />
+          <Route path='/history' element={<HistoryPage />} />
           <Route path='/grammar' element={<GrammarIndex />} />
           <Route path='/grammar/:topicId' element={<GrammarTopicPage />} />
           <Route path='/browse' element={<BrowsePage />} />
