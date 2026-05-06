@@ -34,7 +34,7 @@ const Drawer: React.FC<{ title: string; subtitle: string; width?: number; onClos
 );
 
 export const PasteImportDrawer: React.FC<Props> = ({ deckName, existingFi, onClose, onImport }) => {
-  const [text, setText] = useState("kirjakauppa — bookstore\nkahvila — café\nrakastaa — to love\nkiitos — thank you");
+  const [text, setText] = useState("");
   const [sep, setSep] = useState<"dash" | "tab">("dash");
 
   const parsed = useMemo<ParsedRow[]>(() => {
@@ -66,14 +66,14 @@ export const PasteImportDrawer: React.FC<Props> = ({ deckName, existingFi, onClo
       onClose={onClose}
       footer={
         <>
-          <div style={{ fontSize: 12, color: "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace" }}>
+          <div style={{ fontSize: 12, color: "var(--tk-ink-3)", fontFamily: "var(--font-mono)" }}>
             {stats.new} new · {stats.dupes} duplicates · {stats.errors} skipped
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={onClose}>Cancel</button>
             <button className="tk-btn tk-btn-accent tk-btn-sm" disabled={stats.new === 0}
-              onClick={() => { onImport(parsed.filter(p => p.status !== "error")); onClose(); }}>
-              Import {stats.new + stats.dupes} words <ArrowRight size={13} />
+              onClick={() => { onImport(parsed.filter(p => p.status === "new")); onClose(); }}>
+              Import {stats.new} words <ArrowRight size={13} />
             </button>
           </div>
         </>
@@ -83,12 +83,18 @@ export const PasteImportDrawer: React.FC<Props> = ({ deckName, existingFi, onClo
         <div className="tk-field-label">
           Paste your list
           <small>One per line. Separator:
-            <button onClick={() => setSep("dash")} style={{ marginLeft: 6, color: sep === "dash" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace" }}>— dash</button>
+            <button onClick={() => setSep("dash")} style={{ marginLeft: 6, color: sep === "dash" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "var(--font-mono)" }}>— dash</button>
             <span style={{ color: "var(--tk-ink-5)" }}> · </span>
-            <button onClick={() => setSep("tab")} style={{ color: sep === "tab" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "'Geist Mono', monospace" }}>↹ tab</button>
+            <button onClick={() => setSep("tab")} style={{ color: sep === "tab" ? "var(--tk-accent)" : "var(--tk-ink-3)", fontFamily: "var(--font-mono)" }}>↹ tab</button>
           </small>
         </div>
-        <textarea className="tk-textfield" value={text} onChange={e => setText(e.target.value)} rows={8} />
+        <textarea
+          className="tk-textfield"
+          value={text}
+          onChange={e => setText(e.target.value)}
+          rows={8}
+          placeholder={"kirjakauppa — bookstore\nkahvila — café\nrakastaa — to love\nkiitos — thank you"}
+        />
       </div>
       <div className="tk-eyebrow" style={{ marginTop: 20, marginBottom: 8 }}>Preview · {parsed.length} lines</div>
       <div style={{ background: "var(--tk-card)", border: "1px solid var(--tk-rule)", borderRadius: 8, overflow: "hidden" }}>

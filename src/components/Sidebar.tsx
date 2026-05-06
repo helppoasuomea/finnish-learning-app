@@ -42,7 +42,7 @@ const Seal = ({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            fontFamily: '"Geist", sans-serif',
+            fontFamily: 'var(--font-display)',
             fontSize: size * 0.44,
             lineHeight: 1,
             flexShrink: 0,
@@ -156,11 +156,12 @@ export const Sidebar = () => {
                         >
                             <span
                                 style={{
-                                    fontFamily: '"Geist", sans-serif',
+                                    fontFamily: 'var(--font-display)',
                                     fontSize: 26,
                                     color: "var(--tk-ink)",
                                     letterSpacing: "-0.01em",
                                     lineHeight: 1,
+                                    fontWeight: 400,
                                 }}
                             >
                                 Lukeā

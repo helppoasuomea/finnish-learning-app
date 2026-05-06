@@ -50,7 +50,7 @@ export const DeckDetailsPage: React.FC = () => {
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const handleAddCard = useCallback(async (newCard: { userLangCard: string; engCard: string; type: string; pronunciation: string }) => {
+  const handleAddCard = useCallback(async (newCard: { userLangCard: string; engCard: string; cardKind: string; type: string; pronunciation: string; comment: string }) => {
     if (!id) return;
     try {
       const res = await axios.put(`/decks/${id}/add-card`, newCard);

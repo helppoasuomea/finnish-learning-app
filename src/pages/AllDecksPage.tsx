@@ -1,5 +1,5 @@
 import { DockCardLarge } from "../components/AllDeckPagesComponents/DockCardLarge"
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { DeckContext } from "../contexts/DeckContext";
 import { sortAndFilterDecks } from "../utils/sortAndFilterDecks";
 import { useToast } from "@/components/ui/use-toast";
@@ -290,7 +290,7 @@ export const AllDecks = () => {
                         {/* Keep originals checkbox */}
                         <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, color: "var(--tk-ink-2)", cursor: "pointer", marginBottom: 24 }}>
                             <input type="checkbox" checked={keepOriginals} onChange={e => setKeepOriginals(e.target.checked)} style={{ width: 16, height: 16, accentColor: "#2d4438" }} />
-                            Keep original decks (otherwise they're archived)
+                            Keep original decks (otherwise they're permanently deleted)
                         </label>
 
                         {/* Footer */}

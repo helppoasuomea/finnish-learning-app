@@ -95,7 +95,7 @@ export const TypeItGameOverlay: React.FC<Props> = ({ deckName, cards, onClose })
             <span><span style={{ color: "var(--tk-accent)" }}>●</span> {correct} correct</span>
             <span><span style={{ color: "var(--tk-persimmon)" }}>●</span> {close} close</span>
           </div>
-          <div style={{ fontSize: 11, color: "var(--tk-ink-4)", fontFamily: "'Geist Mono', monospace", letterSpacing: "0.08em" }}>
+          <div style={{ fontSize: 11, color: "var(--tk-ink-4)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
             ENTER TO SUBMIT
           </div>
         </div>

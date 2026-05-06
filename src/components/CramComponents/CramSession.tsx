@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { X } from "lucide-react";
-import axios from "axios";
 import { Card } from "@/types";
+import { enqueue as enqueueReview } from "@/utils/reviewAnswerQueue";
 import { CramConfig, CramQueueEntry, CramHistoryRow, CramSummary } from "./CramTypes";
 
 function cramPhase(c: Card): "seed" | "sprout" | "sapling" | "tree" {
@@ -173,11 +173,12 @@ export const CramSession: React.FC<Props> = ({ deck, config, onExit, onComplete 
     }]);
 
     if (countAsReview) {
-      axios.post("/review/answer", {
+      enqueueReview({
         cardId,
         deckId: deck._id,
         grade: g === "got" ? "good" : "again",
-      }).catch(() => {});
+        clientTimeIso: new Date().toISOString(),
+      });
     }
 
     setQueue(q => {

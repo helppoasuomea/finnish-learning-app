@@ -29,13 +29,12 @@ function persist(q: QueuedAnswer[]) {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
 }
 
-let flushing = false;
+// Shared promise — all callers await the same flush, not independent ones.
+let activeFlush: Promise<void> | null = null;
 
-export async function flushQueue(): Promise<void> {
-  if (flushing || !navigator.onLine) return;
-  flushing = true;
+async function _doFlush(): Promise<void> {
+  if (!navigator.onLine) return;
   try {
-    // Loop so items enqueued *during* a flush get processed too.
     while (true) {
       const pending = load();
       if (!pending.length) break;
@@ -48,20 +47,27 @@ export async function flushQueue(): Promise<void> {
             body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),
             credentials: 'include',
           });
-          if (res.ok) succeeded.add(item.id);
+          // 4xx = permanent failure (card/deck not found) — remove, don't retry
+          if (res.ok || (res.status >= 400 && res.status < 500)) succeeded.add(item.id);
         } catch {
-          // network error — leave in queue
+          // network error — leave in queue for retry
         }
       }
-      // Reload and remove only the IDs we successfully sent,
-      // preserving anything newly enqueued while awaiting.
+      // Re-read localStorage in case enqueue() added new items during the await
       persist(load().filter(i => !succeeded.has(i.id)));
-      // Nothing got through → stop to avoid hammering a dead server.
       if (succeeded.size === 0) break;
     }
   } finally {
-    flushing = false;
+    activeFlush = null;
   }
+}
+
+/** Flush the queue. Returns a promise that resolves when the queue is empty or a network error stops progress. */
+export function flushQueue(): Promise<void> {
+  if (!activeFlush) {
+    activeFlush = _doFlush();
+  }
+  return activeFlush;
 }
 
 /** Adds a grade to the queue (deduplicating by cardId) and immediately attempts flush. */

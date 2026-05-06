@@ -269,7 +269,7 @@ const IndexPageContent = () => {
                         <h1 className="tk-page-title">
                             Good {greeting}{firstName ? `, ${firstName}` : ''}.
                         </h1>
-                        <p style={{ color: 'var(--tk-ink-3)', fontSize: 16, marginTop: 6, fontFamily: '"Geist", -apple-system, sans-serif', fontStyle: 'italic' }}>
+                        <p style={{ color: 'var(--tk-ink-3)', fontSize: 16, marginTop: 6, fontFamily: 'var(--font-body)', fontStyle: 'italic' }}>
                             A sentence in, flashcards out. Study what you're already reading.
                         </p>
                     </div>

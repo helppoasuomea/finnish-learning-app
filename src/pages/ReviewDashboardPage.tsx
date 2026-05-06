@@ -5,6 +5,7 @@ import { useDeckContext } from "@/contexts/DeckContext";
 import { UserContext } from "@/contexts/UserContext";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { ReviewSession, ReviewDone } from "@/components/ReviewSession";
+import { flushQueue } from "@/utils/reviewAnswerQueue";
 import { Card } from "@/types";
 import axios from "axios";
 
@@ -290,12 +291,12 @@ export const ReviewDashboardPage: React.FC = () => {
   const [sessionQueue, setSessionQueue] = useState<DeckCard[]>([]);
   const [summary, setSummary] = useState<{ reviewed: number; history: { card: DeckCard; grade: Rating }[] } | null>(null);
 
-  const handleDone = (s: typeof summary) => {
+  const handleDone = async (s: typeof summary) => {
     setSummary(s);
+    await flushQueue();
     refreshDecks();
     if (!s) return;
     const userId = localStorage.getItem("userId");
-    // Group by deck and save one history record per deck
     const byDeck = new Map<string, { deckId: string; correct: number; total: number }>();
     s.history.forEach(({ card, grade }) => {
       const entry = byDeck.get(card.deckId) ?? { deckId: card.deckId, correct: 0, total: 0 };
