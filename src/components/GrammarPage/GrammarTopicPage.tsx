@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { ArrowLeft, ArrowRight, ChevronDown, BookOpen, Eye, Bookmark } from 'lucide-react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import type { GrammarTopic, Section } from '@/data/grammar/types';
 import { grammarProgress, getTopic } from '@/data/grammar/index';
+import { UserContext } from '@/contexts/UserContext';
+import { formatLevelLabel } from '@/utils/levelDisplay';
 import {
   MorphologyBlock, ExampleList, RelativeExamples,
   GrammarIndexLegend, SourcesBlock,
@@ -235,6 +237,7 @@ function TopicReference({ topic, onDrill, onDrillSection }: {
 // ── Stub topic page ──
 function GrammarTopicStub({ topic }: { topic: GrammarTopic }) {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   return (
     <div className="gr-topic">
       <div className="gr-topic-main">
@@ -252,7 +255,7 @@ function GrammarTopicStub({ topic }: { topic: GrammarTopic }) {
         <div className="gr-aside-card">
           <div className="text-eyebrow">Status</div>
           <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5, marginTop: 6 }}>
-            <div><strong>Level:</strong> {topic.level}</div>
+            <div><strong>Level:</strong> {formatLevelLabel(topic.level, user?.difficultyLabel)}</div>
             <div><strong>Category:</strong> {topic.category}</div>
             <div style={{ marginTop: 8, color: 'var(--ink-3)' }}>Lesson in production.</div>
           </div>
@@ -270,6 +273,7 @@ export function GrammarTopicPage() {
   const { topicId } = useParams<{ topicId: string }>();
   const topic = getTopic(topicId ?? '');
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
 
   if (!topic) return <Navigate to="/grammar" replace />;
   const [view, setView] = useState<TopicView>(() => (localStorage.getItem('toko:grammarTopicView') as TopicView) ?? 'textbook');
@@ -297,7 +301,7 @@ export function GrammarTopicPage() {
           <a onClick={e => { e.preventDefault(); navigate('/grammar'); }} href="#">← Grammar</a>
           <span style={{ color: 'var(--ink-4)' }}>/</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            {topic.level} · {topic.tags?.join(' · ')}
+            {formatLevelLabel(topic.level, user?.difficultyLabel)} · {topic.tags?.join(' · ')}
           </span>
         </div>
 

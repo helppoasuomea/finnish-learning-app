@@ -1,10 +1,12 @@
 import { DockCardLarge } from "../components/AllDeckPagesComponents/DockCardLarge"
 import React, { useContext, useState } from "react";
 import { DeckContext } from "../contexts/DeckContext";
+import { UserContext } from "@/contexts/UserContext";
 import { sortAndFilterDecks } from "../utils/sortAndFilterDecks";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import { Plus, X, GitMerge } from "lucide-react";
+import { formatLevelLabel } from "@/utils/levelDisplay";
 
 const SORT_OPTS = [
     { key: "recent", label: "Recent" },
@@ -27,6 +29,7 @@ const QUICK_TAGS = ["travel", "food", "work", "grammar"];
 
 export const AllDecks = () => {
     const { decks, refreshDecks } = useContext(DeckContext);
+    const { user } = useContext(UserContext);
     const [sortBy, setSortBy] = useState("recent");
     const { displayedDecks } = sortAndFilterDecks(decks, sortBy, false);
     const { toast } = useToast();
@@ -458,7 +461,7 @@ export const AllDecks = () => {
                                                         transition: "all 150ms",
                                                     }}
                                                 >
-                                                    {l}
+                                                    {formatLevelLabel(l, user?.difficultyLabel)}
                                                 </button>
                                             ))}
                                         </div>

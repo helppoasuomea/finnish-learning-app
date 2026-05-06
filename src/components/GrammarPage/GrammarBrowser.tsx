@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Shuffle } from 'lucide-react';
 import { GRAMMAR_TOPICS, grammarProgress } from '@/data/grammar/index';
 import { useGrammarSync } from '@/data/grammar/useGrammarSync';
 import type { GrammarTopic } from '@/data/grammar/types';
+import { UserContext } from '@/contexts/UserContext';
+import { formatLevelLabel } from '@/utils/levelDisplay';
 
 // ── Library index ─────────────────────────────────────────────────────────────
 
@@ -11,6 +13,7 @@ type SortKey = 'default' | 'alpha' | 'level' | 'mastery';
 
 function GrammarLibrary() {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const allProgress = grammarProgress.read();
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('default');
@@ -63,7 +66,7 @@ function GrammarLibrary() {
               className={`gr-lib-row${t.isStub ? ' is-locked' : ''}${isMastered ? ' is-mastered' : ''}`}
               onClick={() => !t.isStub && navigate(`/grammar/${t.id}`)}
             >
-              <span className="gr-lib-level">{t.level}</span>
+              <span className="gr-lib-level">{formatLevelLabel(t.level, user?.difficultyLabel)}</span>
               <div>
                 <div className="gr-lib-title">{t.title}</div>
                 <div className="gr-lib-sub">{t.subtitle}</div>
@@ -158,7 +161,7 @@ function GrammarMap() {
                   <div className="gr-map-node-title">{t.title}</div>
                   <div className="gr-map-node-sub">{t.subtitle}</div>
                   <div className="gr-map-node-foot">
-                    <span className="gr-lib-level">{t.level}</span>
+                    <span className="gr-lib-level">{formatLevelLabel(t.level, user?.difficultyLabel)}</span>
                     <div className="gr-map-node-ring" style={{ '--pct': masteryPct } as React.CSSProperties}>
                       <span>{masteryPct}</span>
                     </div>

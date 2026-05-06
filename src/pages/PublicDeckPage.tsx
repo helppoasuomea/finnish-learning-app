@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Users, BookOpen, Clock, ChevronLeft, Plus, Check, Play } from "lucide-react";
 import axios from "axios";
 import { DeckContext } from "@/contexts/DeckContext";
+import { UserContext } from "@/contexts/UserContext";
+import { formatLevelLabel } from "@/utils/levelDisplay";
 
 interface PublicCard {
   _id: string;
@@ -149,6 +151,7 @@ export const PublicDeckPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { refreshDecks } = useContext(DeckContext);
+  const { user } = useContext(UserContext);
 
   const [deck, setDeck] = useState<PublicDeckData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -259,7 +262,7 @@ export const PublicDeckPage: React.FC = () => {
           <div className="pd-hero">
             <div style={{ position: "relative", display: "inline-block", flexShrink: 0 }}>
               <div className="pd-avatar">{letter}</div>
-              {deck.level && <span className="pd-level-badge">{deck.level}</span>}
+              {deck.level && <span className="pd-level-badge">{formatLevelLabel(deck.level, user?.difficultyLabel)}</span>}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="tk-eyebrow" style={{ marginBottom: 6 }}>

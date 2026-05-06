@@ -124,9 +124,9 @@
 }
 .gr-lib-row {
   display: grid;
-  grid-template-columns: 80px 1.3fr 1.4fr 240px 110px;
-  align-items: center;
-  gap: 20px;
+  grid-template-columns: 132px 1.25fr 1.35fr 220px 110px;
+  align-items: start;
+  gap: 18px;
   padding: 18px 12px;
   border-bottom: 1px solid var(--rule-soft);
   text-align: left;
@@ -146,16 +146,22 @@
   letter-spacing: 0.1em;
   color: var(--ink-3);
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 3px 8px;
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: var(--r-xs);
-  width: fit-content;
+  width: 100%;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gr-lib-title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1.15;
   color: var(--ink);
   letter-spacing: -0.01em;
@@ -226,6 +232,10 @@
   .gr-lib-row {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+  .gr-lib-level {
+    width: fit-content;
+    max-width: 100%;
   }
   .gr-lib-time { text-align: left; }
 }

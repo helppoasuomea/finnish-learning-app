@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { Globe, Lock, X } from "lucide-react";
 import axios from "axios";
+import { UserContext } from "@/contexts/UserContext";
+import { formatLevelLabel } from "@/utils/levelDisplay";
 
 const LEVELS = ["A1", "A2", "B1", "B2"] as const;
 
@@ -69,6 +71,7 @@ function FieldRow({ label, on, onChange, children }: {
 export const PublishPanel: React.FC<Props> = ({
   deckId, deckName, deckTags = [], deckDescription = "", initialState,
 }) => {
+  const { user } = useContext(UserContext);
   const [isPublic, setIsPublic] = useState(initialState?.isPublic ?? false);
   const [level, setLevel] = useState(initialState?.level ?? "");
   const [category, setCategory] = useState(initialState?.category ?? "");
@@ -204,7 +207,7 @@ export const PublishPanel: React.FC<Props> = ({
                       border: `1px solid ${level === l ? "var(--tk-ink)" : "var(--tk-rule)"}`,
                       transition: "all 130ms",
                     }}>
-                      {l || "—"}
+                      {l ? formatLevelLabel(l, user?.difficultyLabel) : "—"}
                     </button>
                   ))}
                 </div>

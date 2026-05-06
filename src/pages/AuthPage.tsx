@@ -2,6 +2,7 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Check, X, Delete } from "lucide-react";
 import axios, { AxiosError } from "axios";
+import { DifficultyLabelPicker } from "@/components/DifficultyLabelPicker";
 
 // ─── Device ID ───────────────────────────────────────────────────────────────
 function getDeviceId(): string {
@@ -369,6 +370,7 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [learning, setLearning] = useState("fi");
+  const [difficultyLabel, setDifficultyLabel] = useState<'plain' | 'cefr' | 'both'>('plain');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -379,7 +381,7 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
     if (!name || !username || !pw) { setError("All fields are required."); return; }
     setBusy(true); setError("");
     try {
-      await axios.post("/register", { name, username, password: pw });
+      await axios.post("/register", { name, username, password: pw, difficultyLabel });
       // Automatically log in the user after successful registration
       await axios.post("/login", { username, password: pw });
       localStorage.setItem("lukea:lastUsername", username);
@@ -456,6 +458,14 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
               <span>{l.label}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="au-field">
+        <label className="au-label">Difficulty labels</label>
+        <DifficultyLabelPicker value={difficultyLabel} onChange={setDifficultyLabel} />
+        <div style={{ fontSize: 12, color: 'var(--tk-ink-4)', marginTop: 2 }}>
+          You can change this anytime in Settings.
         </div>
       </div>
 

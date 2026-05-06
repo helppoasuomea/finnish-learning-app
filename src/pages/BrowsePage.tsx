@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Search, ArrowRight, Users, BookOpen, Clock } from "lucide-react";
 import axios from "axios";
 import { DeckContext } from "@/contexts/DeckContext";
+import { UserContext } from "@/contexts/UserContext";
+import { formatLevelLabel } from "@/utils/levelDisplay";
 
 interface PublicDeck {
   _id: string;
@@ -19,6 +21,19 @@ interface PublicDeck {
 }
 
 type SortKey = "newest" | "alpha" | "largest";
+type LevelBand = "A" | "B" | "C";
+
+const LEVEL_BAND_LABEL: Record<LevelBand, string> = {
+  A: "Beginner",
+  B: "Intermediate",
+  C: "Advanced",
+};
+
+function formatLevelBandLabel(band: LevelBand, mode?: "plain" | "cefr" | "both"): string {
+  if (mode === "cefr") return band;
+  if (mode === "both") return `${LEVEL_BAND_LABEL[band]} · ${band}`;
+  return LEVEL_BAND_LABEL[band];
+}
 
 function estMinutes(count: number) {
   return Math.max(1, Math.round((count * 36) / 60));
@@ -33,9 +48,9 @@ function DeckAvatar({ name, size = 32 }: { name: string; size?: number }) {
   );
 }
 
-function LevelBadge({ level }: { level: string }) {
+function LevelBadge({ level, displayMode }: { level: string; displayMode?: "plain" | "cefr" | "both" }) {
   if (!level) return null;
-  return <span className="br-level-badge">{level}</span>;
+  return <span className="br-level-badge">{formatLevelLabel(level, displayMode)}</span>;
 }
 
 function MetaRow({ deck }: { deck: PublicDeck }) {
@@ -59,12 +74,13 @@ function MetaRow({ deck }: { deck: PublicDeck }) {
 export const BrowsePage: React.FC = () => {
   const navigate = useNavigate();
   const { refreshDecks } = useContext(DeckContext);
+  const { user } = useContext(UserContext);
 
   const [decks, setDecks] = useState<PublicDeck[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState("All");
-  const [activeLevel, setActiveLevel] = useState<string>("");
+  const [activeLevelBand, setActiveLevelBand] = useState<LevelBand | "">("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<Set<string>>(new Set());
@@ -118,8 +134,8 @@ export const BrowsePage: React.FC = () => {
     if (activeCat !== "All") {
       result = result.filter(d => (d.category || d.deckTags[0] || "Other") === activeCat);
     }
-    if (activeLevel) {
-      result = result.filter(d => d.level === activeLevel);
+    if (activeLevelBand) {
+      result = result.filter(d => d.level?.toUpperCase().startsWith(activeLevelBand));
     }
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -132,10 +148,10 @@ export const BrowsePage: React.FC = () => {
     if (sort === "alpha") result = [...result].sort((a, b) => a.deckName.localeCompare(b.deckName));
     else if (sort === "largest") result = [...result].sort((a, b) => b.cards.length - a.cards.length);
     return result;
-  }, [decks, activeCat, activeLevel, query, sort]);
+  }, [decks, activeCat, activeLevelBand, query, sort]);
 
   const featured = useMemo(() => decks.filter(d => d.featured).slice(0, 3), [decks]);
-  const nonFeatured = filtered.filter(d => !d.featured || activeCat !== "All" || activeLevel || query);
+  const nonFeatured = filtered.filter(d => !d.featured || activeCat !== "All" || activeLevelBand || query);
 
   return (
     <div className="tk-page br-page">
@@ -179,14 +195,14 @@ export const BrowsePage: React.FC = () => {
       </div>
 
       {/* Featured strip */}
-      {featured.length > 0 && activeCat === "All" && !activeLevel && !query && (
+      {featured.length > 0 && activeCat === "All" && !activeLevelBand && !query && (
         <>
           <div className="br-featured-label">On the front table</div>
           <div className="br-featured-grid">
             {featured.map(deck => (
               <button key={deck._id} className="br-feat-card" onClick={() => openDeck(deck)}>
                 <div className="br-feat-top">
-                  <LevelBadge level={deck.level} />
+                  <LevelBadge level={deck.level} displayMode={user?.difficultyLabel} />
                   <span className="br-cat-badge">{deck.category || deck.deckTags[0]}</span>
                 </div>
                 <div>
@@ -218,13 +234,13 @@ export const BrowsePage: React.FC = () => {
       {/* Level + sort bar */}
       <div className="br-bar">
         <div className="br-bar-left">
-          {["A1", "A2", "B1", "B2"].map(l => (
+              {(["A", "B", "C"] as const).map((band) => (
             <button
-              key={l}
-              className={`br-level-btn ${activeLevel === l ? "is-on" : ""}`}
-              onClick={() => setActiveLevel(activeLevel === l ? "" : l)}
+                  key={band}
+                  className={`br-level-btn ${activeLevelBand === band ? "is-on" : ""}`}
+                  onClick={() => setActiveLevelBand(activeLevelBand === band ? "" : band)}
             >
-              {l}
+                  {formatLevelBandLabel(band, user?.difficultyLabel)}
             </button>
           ))}
           <div className="br-sort-group" style={{ marginLeft: 8 }}>
@@ -256,7 +272,7 @@ export const BrowsePage: React.FC = () => {
             <button key={deck._id} className="br-card" onClick={() => openDeck(deck)}>
               <div className="br-card-top">
                 <DeckAvatar name={deck.publicDeckName || deck.deckName} />
-                <LevelBadge level={deck.level} />
+                <LevelBadge level={deck.level} displayMode={user?.difficultyLabel} />
               </div>
               <div>
                 <div className="br-card-title">{deck.publicDeckName || deck.deckName}</div>
