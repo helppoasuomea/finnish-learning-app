@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Users, BookOpen, Clock, ChevronLeft, Plus, Check, Play } from "lucide-react";
+import { Users, BookOpen, Clock, ChevronLeft, Plus, Check, Play, Pencil, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { DeckContext } from "@/contexts/DeckContext";
 import { UserContext } from "@/contexts/UserContext";
 import { formatLevelLabel } from "@/utils/levelDisplay";
+import { PublishSettingsModal } from "@/components/DeckDetailsComponents/PublishSettingsModal";
 
 interface PublicCard {
   _id: string;
@@ -14,6 +15,7 @@ interface PublicCard {
 
 interface PublicDeckData {
   _id: string;
+  owner: string;
   deckName: string;
   publicDeckName: string;
   deckTags: string[];
@@ -162,8 +164,9 @@ export const PublicDeckPage: React.FC = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cherryCloning, setCherryCloning] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [publishOpen, setPublishOpen] = useState(false);
 
-  useEffect(() => {
+  const loadDeck = useCallback(() => {
     if (!id) return;
     axios.get<PublicDeckData>(`/browse/${id}`)
       .then(r => { setDeck(r.data); setLoading(false); })
@@ -172,6 +175,8 @@ export const PublicDeckPage: React.FC = () => {
         if (err.response?.status === 404) setNotFound(true);
       });
   }, [id]);
+
+  useEffect(() => { loadDeck(); }, [loadDeck]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -242,6 +247,7 @@ export const PublicDeckPage: React.FC = () => {
   const displayTags = deck.showPublicTags ? (deck.publicTags?.length ? deck.publicTags : deck.deckTags) : [];
   const updatedLabel = formatUpdated(deck.updatedAt);
   const tryCount = Math.min(5, deck.cards.length);
+  const isOwner = !!user && !!deck.owner && user._id === deck.owner;
 
   return (
     <div className="tk-page pd-page">
@@ -269,6 +275,12 @@ export const PublicDeckPage: React.FC = () => {
                 PUBLIC DECK{deck.category ? ` · ${deck.category.toUpperCase()}` : ""}
               </div>
               <h1 className="pd-title">{displayName}</h1>
+              {isOwner && (
+                <div className="pd-owner-banner">
+                  <span className="pd-owner-dot" />
+                  <span>This is your published deck — only you see this notice.</span>
+                </div>
+              )}
               {displayDescription && <p className="pd-description">{displayDescription}</p>}
               <div className="pd-meta">
                 <span className="pd-meta-item"><Users size={12} /> {deck.saves.toLocaleString()} learners</span>
@@ -360,56 +372,96 @@ export const PublicDeckPage: React.FC = () => {
 
         {/* ── Sidebar ── */}
         <aside className="pd-sidebar">
-          {/* Add to your decks */}
-          <div className="tx-aside-card" style={{ padding: 20 }}>
-            <div className="tk-eyebrow" style={{ marginBottom: 14 }}>Add to your decks</div>
-            <button
-              className="tk-btn tk-btn-accent"
-              style={{ width: "100%", justifyContent: "center", gap: 8, fontSize: 13 }}
-              onClick={handleClone}
-              disabled={cloning || cloned}
-            >
-              {cloned
-                ? <><Check size={14} /> Saved to library</>
-                : cloning
-                  ? "Saving…"
-                  : <><Plus size={14} /> Clone full deck · {deck.cards.length} cards</>}
-            </button>
-            <div style={{ textAlign: "center", fontSize: 11.5, color: "var(--tk-ink-4)", margin: "12px 0" }}>— or —</div>
-            <button
-              className="tk-btn tk-btn-ghost"
-              style={{ width: "100%", justifyContent: "center", gap: 6, fontSize: 13 }}
-              onClick={() => setTab("cherry")}
-            >
-              <Check size={13} /> Cherry-pick cards
-            </button>
-          </div>
+          {isOwner ? (
+            /* ── Owner sidebar ── */
+            <>
+              <div className="pd-owner-sidebar">
+                <div className="tk-eyebrow" style={{ marginBottom: 10 }}>Your published deck</div>
+                <p style={{ fontSize: 12.5, color: "var(--tk-ink-3)", lineHeight: 1.6, margin: "0 0 16px" }}>
+                  This is how learners see your deck. You can edit its public details or go back to manage the cards.
+                </p>
+                <button
+                  className="tk-btn tk-btn-accent"
+                  style={{ width: "100%", justifyContent: "center", gap: 8, fontSize: 13, marginBottom: 8 }}
+                  onClick={() => navigate(`/decks/${deck._id}`)}
+                >
+                  <ArrowRight size={14} /> Go to your deck
+                </button>
+                <button
+                  className="tk-btn tk-btn-ghost"
+                  style={{ width: "100%", justifyContent: "center", gap: 8, fontSize: 13 }}
+                  onClick={() => setPublishOpen(true)}
+                >
+                  <Pencil size={13} /> Edit publish settings
+                </button>
+              </div>
 
-          {/* Try before you save */}
-          {tryCount > 0 && (
-            <div className="tx-aside-card" style={{ padding: 20, marginTop: 12, background: "var(--tk-paper-deep)" }}>
-              <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Try before you save</div>
-              <p style={{ fontSize: 12.5, color: "var(--tk-ink-3)", lineHeight: 1.55, margin: "0 0 14px" }}>
-                A {tryCount}-card mini Learn session, no account needed.
-              </p>
-              <button
-                className="tk-btn tk-btn-ghost"
-                style={{ width: "100%", justifyContent: "center", gap: 6, fontSize: 13 }}
-                onClick={() => setTab("try")}
-              >
-                <Play size={12} /> Start {tryCount}-card preview
-              </button>
-            </div>
+              <div className="tx-aside-card" style={{ padding: 20, marginTop: 12, background: "var(--tk-paper-deep)" }}>
+                <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Learner view</div>
+                <div className="pd-owner-stats">
+                  <div className="pd-owner-stat">
+                    <span className="pd-owner-stat-value">{deck.saves.toLocaleString()}</span>
+                    <span className="pd-owner-stat-label">saves</span>
+                  </div>
+                  <div className="pd-owner-stat">
+                    <span className="pd-owner-stat-value">{deck.cards.length}</span>
+                    <span className="pd-owner-stat-label">cards</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* ── Visitor sidebar ── */
+            <>
+              <div className="tx-aside-card" style={{ padding: 20 }}>
+                <div className="tk-eyebrow" style={{ marginBottom: 14 }}>Add to your decks</div>
+                <button
+                  className="tk-btn tk-btn-accent"
+                  style={{ width: "100%", justifyContent: "center", gap: 8, fontSize: 13 }}
+                  onClick={handleClone}
+                  disabled={cloning || cloned}
+                >
+                  {cloned
+                    ? <><Check size={14} /> Saved to library</>
+                    : cloning
+                      ? "Saving…"
+                      : <><Plus size={14} /> Clone full deck · {deck.cards.length} cards</>}
+                </button>
+                <div style={{ textAlign: "center", fontSize: 11.5, color: "var(--tk-ink-4)", margin: "12px 0" }}>— or —</div>
+                <button
+                  className="tk-btn tk-btn-ghost"
+                  style={{ width: "100%", justifyContent: "center", gap: 6, fontSize: 13 }}
+                  onClick={() => setTab("cherry")}
+                >
+                  <Check size={13} /> Cherry-pick cards
+                </button>
+              </div>
+
+              {tryCount > 0 && (
+                <div className="tx-aside-card" style={{ padding: 20, marginTop: 12, background: "var(--tk-paper-deep)" }}>
+                  <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Try before you save</div>
+                  <p style={{ fontSize: 12.5, color: "var(--tk-ink-3)", lineHeight: 1.55, margin: "0 0 14px" }}>
+                    A {tryCount}-card mini Learn session, no account needed.
+                  </p>
+                  <button
+                    className="tk-btn tk-btn-ghost"
+                    style={{ width: "100%", justifyContent: "center", gap: 6, fontSize: 13 }}
+                    onClick={() => setTab("try")}
+                  >
+                    <Play size={12} /> Start {tryCount}-card preview
+                  </button>
+                </div>
+              )}
+
+              <div className="tx-aside-card" style={{ padding: 20, marginTop: 12, background: "var(--tk-paper-deep)" }}>
+                <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Provenance</div>
+                <p style={{ fontSize: 12, color: "var(--tk-ink-3)", lineHeight: 1.6, margin: 0 }}>
+                  Words sourced from <em>Wiktionary</em> &amp; <em>Tatoeba</em> (CC-BY-SA), curated and edited by the Tokō team.{" "}
+                  <span style={{ color: "var(--tk-accent)", cursor: "pointer" }}>About our sources →</span>
+                </p>
+              </div>
+            </>
           )}
-
-          {/* Provenance */}
-          <div className="tx-aside-card" style={{ padding: 20, marginTop: 12, background: "var(--tk-paper-deep)" }}>
-            <div className="tk-eyebrow" style={{ marginBottom: 8 }}>Provenance</div>
-            <p style={{ fontSize: 12, color: "var(--tk-ink-3)", lineHeight: 1.6, margin: 0 }}>
-              Words sourced from <em>Wiktionary</em> &amp; <em>Tatoeba</em> (CC-BY-SA), curated and edited by the Tokō team.{" "}
-              <span style={{ color: "var(--tk-accent)", cursor: "pointer" }}>About our sources →</span>
-            </p>
-          </div>
         </aside>
       </div>
 
@@ -417,6 +469,33 @@ export const PublicDeckPage: React.FC = () => {
         <div className="tx-toast" style={{ left: "50%", right: "auto", transform: "translateX(-50%)" }}>
           <span style={{ fontSize: 13 }}>{toast}</span>
         </div>
+      )}
+
+      {publishOpen && deck && (
+        <PublishSettingsModal
+          deckId={deck._id}
+          deckName={deck.deckName}
+          deckTags={deck.deckTags}
+          deckDescription={deck.description}
+          initialState={{
+            isPublic:              true,
+            level:                 deck.level,
+            category:              deck.category,
+            publicDeckName:        deck.publicDeckName,
+            publicDescription:     deck.publicDescription,
+            showPublicDescription: deck.showPublicDescription,
+            publisherName:         deck.publisherName,
+            showPublisherName:     deck.showPublisherName,
+            publicTags:            deck.publicTags,
+            showPublicTags:        deck.showPublicTags,
+          }}
+          onClose={() => setPublishOpen(false)}
+          onSaved={() => {
+            setPublishOpen(false);
+            loadDeck();
+            showToast("Publish settings saved");
+          }}
+        />
       )}
     </div>
   );

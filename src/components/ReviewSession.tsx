@@ -2,66 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { X, RotateCcw, Volume2, Clock, ArrowRight } from "lucide-react";
 import { Card } from "@/types";
 import { enqueue, dequeue, getPendingCount, type PrevSnapshot } from "@/utils/reviewAnswerQueue";
-
-type Rating = "again" | "hard" | "good" | "easy";
-type DeckCard = Card & { deckId: string; deckName: string };
-
-function phaseOf(card: DeckCard): string {
-  const reps = card.reps ?? card.cardScore;
-  const stability = card.stability ?? card.reviewInterval ?? 1;
-  if (reps === 0) return "seed";
-  if (stability < 7) return "sprout";
-  if (stability < 90) return "sapling";
-  return "tree";
-}
-
-function projectIntervals(card: DeckCard): { again: string; hard: string; good: string; easy: string } {
-  const reps = card.reps ?? card.cardScore;
-  const stability = Math.max(1, card.stability ?? card.reviewInterval ?? 1);
-  const ease = card.ease ?? card.easeFactor ?? 2.5;
-
-  const fmt = (d: number) =>
-    d < 1 / 24
-      ? `${Math.round(d * 24 * 60)} min`
-      : d < 1
-      ? `${Math.round(d * 24)} h`
-      : d < 30
-      ? `${Math.round(d)} d`
-      : d < 365
-      ? `${(d / 30).toFixed(1)} mo`
-      : `${(d / 365).toFixed(1)} y`;
-
-  if (reps === 0) {
-    return { again: "10 min", hard: "5 min", good: "1 d", easy: "4 d" };
-  }
-  return {
-    again: "10 min",
-    hard: fmt(stability * 1.2),
-    good: fmt(stability * ease),
-    easy: fmt(stability * ease * 1.3),
-  };
-}
-
-function gradePhaseTransition(card: DeckCard, grade: Rating): string | null {
-  if (grade === "again" || grade === "hard") return null;
-  const phase = phaseOf(card);
-  const stability = Math.max(1, card.stability ?? card.reviewInterval ?? 1);
-  const ease = card.ease ?? card.easeFactor ?? 2.5;
-  const mult = grade === "easy" ? ease * 1.3 : ease;
-  const nextStab = stability * mult;
-  if (phase === "seed") return "sprout";
-  if (phase === "sprout" && nextStab >= 7) return "sapling";
-  if (phase === "sapling" && nextStab >= 90) return "tree";
-  return null;
-}
-
-function relativeTime(dateStr: string | null | undefined): string | null {
-  if (!dateStr) return null;
-  const days = Math.round((Date.now() - new Date(dateStr).getTime()) / 86400000);
-  if (days === 0) return "today";
-  if (days === 1) return "1 day ago";
-  return `${days}d ago`;
-}
+import {
+  type Rating,
+  type DeckCard,
+  phaseOf,
+  projectIntervals,
+  gradePhaseTransition,
+  relativeTime,
+} from "@/utils/srs";
 
 function kindDotColor(kind: string | undefined): string {
   switch (kind) {

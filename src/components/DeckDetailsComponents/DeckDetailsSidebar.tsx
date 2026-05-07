@@ -11,6 +11,7 @@ import type { MemoryGoalTier } from "@/types";
 interface Props {
   deckId: string;
   deckName: string;
+  openPublish?: boolean;
 }
 
 function relativeDate(dateStr: string): string {
@@ -44,7 +45,7 @@ function nextReviewLabel(cards: { nextReviewDate?: string | null; cardScore?: nu
   return earliest.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
-export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
+export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName, openPublish }) => {
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
   const { decks } = useContext(DeckContext);
@@ -164,6 +165,7 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName }) => {
         deckName={deckName}
         deckTags={(currentDeck as any)?.deckTags ?? []}
         deckDescription={(currentDeck as any)?.description ?? ""}
+        forceOpen={openPublish}
         initialState={{
           isPublic:              (currentDeck as any)?.isPublic ?? false,
           level:                 (currentDeck as any)?.level ?? "",

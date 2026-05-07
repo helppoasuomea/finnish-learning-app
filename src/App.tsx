@@ -39,6 +39,12 @@ function App() {
       if (!userId && !isAuthRoute && !isPublicRoute) navigate('/')
   }, [navigate, location.pathname])
 
+  // Scroll to top on route change. Skip when the URL carries a #hash so
+  // deep-links to a specific section (e.g. /grammar/foo#suffixes) still work.
+  useEffect(() => {
+      if (!location.hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+  }, [location.pathname, location.hash])
+
   return (
     <UserContextProvider>
       <DeckContextProvider>

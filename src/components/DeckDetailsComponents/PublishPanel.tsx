@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { Globe, Lock, X } from "lucide-react";
+import { Globe, Lock, X, ExternalLink } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "@/contexts/UserContext";
 import { formatLevelLabel } from "@/utils/levelDisplay";
 
@@ -31,6 +32,7 @@ interface Props {
   deckTags?: string[];
   deckDescription?: string;
   initialState?: Partial<PublishState>;
+  forceOpen?: boolean;
 }
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
@@ -69,9 +71,10 @@ function FieldRow({ label, on, onChange, children }: {
 }
 
 export const PublishPanel: React.FC<Props> = ({
-  deckId, deckName, deckTags = [], deckDescription = "", initialState,
+  deckId, deckName, deckTags = [], deckDescription = "", initialState, forceOpen,
 }) => {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [isPublic, setIsPublic] = useState(initialState?.isPublic ?? false);
   const [level, setLevel] = useState(initialState?.level ?? "");
   const [category, setCategory] = useState(initialState?.category ?? "");
@@ -91,8 +94,22 @@ export const PublishPanel: React.FC<Props> = ({
   const [tagInput, setTagInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(!!forceOpen);
+  const [highlighted, setHighlighted] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
   const tagRef = useRef<HTMLInputElement>(null);
+
+  // When navigated here via ?publish=1 — open, scroll into view, flash a highlight ring
+  useEffect(() => {
+    if (!forceOpen) return;
+    setExpanded(true);
+    const t = setTimeout(() => {
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlighted(true);
+      setTimeout(() => setHighlighted(false), 1400);
+    }, 120); // slight delay lets the sidebar finish rendering
+    return () => clearTimeout(t);
+  }, [forceOpen]);
 
   useEffect(() => {
     if (!initialState) return;
@@ -123,6 +140,13 @@ export const PublishPanel: React.FC<Props> = ({
   const removeTag = (t: string) => setPublicTags(prev => prev.filter(x => x !== t));
 
   async function handleSave() {
+    // Warn before removing a deck from the public library
+    if (!isPublic && initialState?.isPublic) {
+      const confirmed = window.confirm(
+        `Remove "${publicDeckName || deckName}" from the public library?\n\nLearners who already saved it keep their copy — this only hides it from Browse.`
+      );
+      if (!confirmed) return;
+    }
     setSaving(true);
     try {
       await axios.put(`/browse/${deckId}/publish`, {
@@ -132,7 +156,7 @@ export const PublishPanel: React.FC<Props> = ({
         publicTags, showPublicTags,
       });
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setTimeout(() => setSaved(false), 2500);
     } finally {
       setSaving(false);
     }

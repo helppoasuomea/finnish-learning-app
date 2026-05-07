@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useContext, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { ChevronRight, Pencil } from "lucide-react";
 import { organizeCardsByScore } from "../composables/SortCard";
@@ -22,6 +22,7 @@ type Tab = "overview" | "terms";
 
 export const DeckDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const { deck, cards, deckName, deckTags, setDeck, setCards } = useFetchDeck(id);
   const { decks, refreshDecks } = useContext(DeckContext);
 
@@ -288,7 +289,7 @@ export const DeckDetailsPage: React.FC = () => {
 
         {/* Aside */}
         <aside>
-          <DeckDetailsSidebar deckId={id!} deckName={deckName} />
+          <DeckDetailsSidebar deckId={id!} deckName={deckName} openPublish={searchParams.get("publish") === "1"} />
         </aside>
       </div>
 
