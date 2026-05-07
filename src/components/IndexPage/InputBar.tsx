@@ -1,5 +1,6 @@
 import { textToSpeech } from "@/chatcompletion/ChatCompletion";
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { Volume2, Loader2, X, ArrowRight } from "lucide-react";
 import { useTranslationHover } from "@/contexts/TranslationHoverContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -206,20 +207,17 @@ export const InputBar: React.FC<InputBarProps> = ({
 
     const getWordTimingsFromAudio = async (audioUrl: string, _originalText: string): Promise<WordTiming[] | null> => {
         try {
-            const response = await fetch(audioUrl);
-            const audioBlob = await response.blob();
-            const audioFile = new File([audioBlob], 'speech.mp3', { type: 'audio/mp3' });
+            const audioResponse = await fetch(audioUrl);
+            const audioBlob = await audioResponse.blob();
             const formData = new FormData();
-            formData.append('file', audioFile);
-            formData.append('model', 'whisper-1');
-            formData.append('response_format', 'verbose_json');
-            formData.append('timestamp_granularities[]', 'word');
-            const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            formData.append('file', new File([audioBlob], 'speech.mp3', { type: 'audio/mp3' }));
+            const base = (axios.defaults.baseURL as string ?? '').replace(/\/$/, '');
+            const whisperResponse = await fetch(`${base}/ai/transcribe`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${import.meta.env.VITE_GPT_KEY}` },
-                body: formData
+                credentials: 'include',
+                body: formData,
             });
-            if (!whisperResponse.ok) throw new Error('Whisper API failed');
+            if (!whisperResponse.ok) throw new Error('Transcription failed');
             const result = await whisperResponse.json();
             return result.words;
         } catch {

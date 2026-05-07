@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "@/contexts/UserContext";
 import { formatLevelLabel } from "@/utils/levelDisplay";
 
-const LEVELS = ["A1", "A2", "B1", "B2"] as const;
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 const CATEGORIES = [
   "Food & Drink", "Travel", "Body & Health", "Nature", "Weather",
@@ -222,10 +222,10 @@ export const PublishPanel: React.FC<Props> = ({
               {/* Level + Category */}
               <div>
                 <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--tk-ink-3)", marginBottom: 6 }}>Level</div>
-                <div style={{ display: "flex", gap: 4 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {(["", ...LEVELS] as string[]).map(l => (
                     <button key={l || "none"} onClick={() => setLevel(l)} style={{
-                      height: 26, padding: "0 10px", borderRadius: 4, fontSize: 11.5, fontWeight: 500, cursor: "pointer",
+                      padding: "4px 10px", borderRadius: 4, fontSize: 11.5, fontWeight: 500, cursor: "pointer",
                       background: level === l ? "var(--tk-ink)" : "var(--tk-card)",
                       color: level === l ? "var(--tk-paper)" : "var(--tk-ink-2)",
                       border: `1px solid ${level === l ? "var(--tk-ink)" : "var(--tk-rule)"}`,

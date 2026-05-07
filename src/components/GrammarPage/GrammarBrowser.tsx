@@ -118,6 +118,7 @@ const RAILS: Rail[] = [
 
 function GrammarMap() {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const allProgress = grammarProgress.read();
 
   const { grouped, other } = useMemo(() => {

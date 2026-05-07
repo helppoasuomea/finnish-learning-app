@@ -22,7 +22,8 @@ import { GrammarTopicPage } from './components/GrammarPage/GrammarTopicPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { PublicDeckPage } from './pages/PublicDeckPage'
 
-axios.defaults.baseURL = 'http://localhost:2323/api/'
+const _apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:2323').replace(/\/$/, '')
+axios.defaults.baseURL = _apiBase.endsWith('/api') ? _apiBase + '/' : _apiBase + '/api/'
 axios.defaults.withCredentials = true
 
 const AUTH_ROUTES = ["/login", "/register"];

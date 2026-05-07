@@ -14,7 +14,7 @@ const SORT_OPTS = [
     { key: "progress", label: "Progress" },
 ];
 
-const LEVELS = ["A1", "A2", "B1", "B2"] as const;
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 type Level = typeof LEVELS[number];
 
 const RETENTION_GOALS = [
@@ -39,7 +39,7 @@ export const AllDecks = () => {
     const [description, setDescription] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState("");
-    const [level, setLevel] = useState<Level>("A1");
+    const [level, setLevel] = useState<Level | "">("");
     const [tier, setTier] = useState<Tier>("sapling");
 
     // Merge state
@@ -446,13 +446,13 @@ export const AllDecks = () => {
                                     {/* Level */}
                                     <div>
                                         <label style={{ ...labelStyle, marginBottom: 10, display: "block" }}>Level</label>
-                                        <div style={{ display: "flex", gap: 8 }}>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                                             {LEVELS.map(l => (
                                                 <button
                                                     key={l} type="button"
                                                     onClick={() => setLevel(l)}
                                                     style={{
-                                                        padding: "6px 16px", borderRadius: 99, fontSize: 13, fontWeight: 500,
+                                                        padding: "6px 14px", borderRadius: 99, fontSize: 12, fontWeight: 500,
                                                         border: "1.5px solid",
                                                         borderColor: level === l ? "var(--tk-ink)" : "var(--tk-rule)",
                                                         background: level === l ? "var(--tk-ink)" : "transparent",

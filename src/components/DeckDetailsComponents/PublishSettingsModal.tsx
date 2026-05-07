@@ -4,7 +4,7 @@ import axios from "axios";
 import { UserContext } from "@/contexts/UserContext";
 import { formatLevelLabel } from "@/utils/levelDisplay";
 
-const LEVELS = ["A1", "A2", "B1", "B2"] as const;
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 const CATEGORIES = [
   "Food & Drink", "Travel", "Body & Health", "Nature", "Weather",
@@ -216,7 +216,7 @@ export const PublishSettingsModal: React.FC<Props> = ({
               {/* Level */}
               <div className="tk-field">
                 <div className="tk-field-label">Level</div>
-                <div style={{ display: "flex", gap: 5 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   {(["", ...LEVELS] as string[]).map(l => (
                     <button
                       key={l || "none"}

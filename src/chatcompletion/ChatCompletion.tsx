@@ -1,7 +1,4 @@
-import OpenAI from "openai"
 import axios from "axios"
-
-const API_KEY = import.meta.env.VITE_GPT_KEY
 
 // SSE streaming types
 export type StreamEvent =
@@ -124,16 +121,16 @@ export const createTest = async (data: any) => {
     }
 }
 
-export const textToSpeech = async (text: string) => {
-    const openai = new OpenAI({apiKey: API_KEY, dangerouslyAllowBrowser: true})
-    const mp3 = await openai.audio.speech.create({
-        model: 'tts-1',
-        voice: 'nova',
-        input: text
+export const textToSpeech = async (text: string): Promise<string> => {
+    const base = (axios.defaults.baseURL as string ?? '').replace(/\/$/, '')
+    const response = await fetch(`${base}/ai/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ text, voice: 'nova' }),
     })
-    const arrayBuffer = await mp3.arrayBuffer();
-    const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
-    const audioUrl = URL.createObjectURL(blob);
-
-    return audioUrl;
+    if (!response.ok) throw new Error(`TTS failed: ${response.status}`)
+    const arrayBuffer = await response.arrayBuffer()
+    const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
+    return URL.createObjectURL(blob)
 }
