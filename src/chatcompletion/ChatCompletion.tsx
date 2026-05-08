@@ -22,6 +22,7 @@ export const chatCompletionStream = async function* (
         response = await fetch(`${base}/translate/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ language, text }),
         });
     } catch (err: any) {

@@ -3,6 +3,7 @@ import { Flame } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { DeckContext } from "@/contexts/DeckContext";
+import { UserContext } from "@/contexts/UserContext";
 import { useFetchAllHistory, HistoryItem } from "@/state/hooks/useLearningHistoryHooks";
 import { MemoryGoalPanel } from "./MemoryGoalPanel";
 import { PublishPanel } from "./PublishPanel";
@@ -46,7 +47,8 @@ function nextReviewLabel(cards: { nextReviewDate?: string | null; cardScore?: nu
 }
 
 export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName, openPublish }) => {
-  const userId = localStorage.getItem("userId");
+  const { user } = useContext(UserContext);
+  const userId = user?._id ?? null;
   const navigate = useNavigate();
   const { decks } = useContext(DeckContext);
   const { history, fetchHistory } = useFetchAllHistory(userId);

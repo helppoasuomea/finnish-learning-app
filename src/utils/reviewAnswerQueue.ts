@@ -1,4 +1,11 @@
+import axios from 'axios';
+
 const QUEUE_KEY = 'lukea:review-queue';
+
+function apiUrl(path: string): string {
+  const base = (axios.defaults.baseURL as string ?? '').replace(/\/$/, '');
+  return `${base}/${path.replace(/^\//, '')}`;
+}
 
 export interface QueuedAnswer {
   id: string;
@@ -40,7 +47,7 @@ async function _doFlush(): Promise<void> {
     const succeeded = new Set<string>();
     for (const item of pending) {
       try {
-        const res = await fetch('/api/review/answer', {
+        const res = await fetch(apiUrl('review/answer'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),

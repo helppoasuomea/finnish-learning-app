@@ -1,16 +1,16 @@
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useContext } from 'react'
 import { AllDecks } from './pages/AllDecksPage'
 import './App.css'
 import { DeckDetailsPage } from './pages/DeckDetailsPage'
 import { IndexPage } from './pages/IndexPage'
 import axios from 'axios'
-import { UserContextProvider } from './contexts/UserContext'
+import { UserContextProvider, UserContext } from './contexts/UserContext'
 import { DeckContextProvider } from './contexts/DeckContext'
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext'
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from './components/Header'
 import { VocabularyPage } from './components/vocabulary-page'
-import { useEffect } from 'react'
 import { SettingsPage } from './components/SettingsPage'
 import { Sidebar } from './components/Sidebar'
 import { SavedSentencesPage } from './components/SavedSentencesPage'
@@ -31,14 +31,6 @@ const PUBLIC_ROUTES = ["/grammar"];
 
 function App() {
   const location = useLocation();
-  const navigate = useNavigate()
-
-  useEffect(() => {
-      const userId = localStorage.getItem('userId')
-      const isAuthRoute = AUTH_ROUTES.includes(location.pathname)
-      const isPublicRoute = PUBLIC_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'))
-      if (!userId && !isAuthRoute && !isPublicRoute) navigate('/')
-  }, [navigate, location.pathname])
 
   // Scroll to top on route change. Skip when the URL carries a #hash so
   // deep-links to a specific section (e.g. /grammar/foo#suffixes) still work.
@@ -61,7 +53,16 @@ function App() {
 
 const AppContent = ({ location }: { location: any }) => {
   const { sidebarWidth } = useSidebar();
+  const { isAuthenticated, isLoading } = useContext(UserContext);
+  const navigate = useNavigate();
   const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
+  const isPublicRoute = PUBLIC_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
+
+  // Guard: wait for session check, then redirect unauthenticated users
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated && !isAuthRoute && !isPublicRoute) navigate('/login');
+  }, [isLoading, isAuthenticated, isAuthRoute, isPublicRoute, navigate, location.pathname]);
 
   if (isAuthRoute) {
     return (

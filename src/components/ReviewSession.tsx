@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import { X, RotateCcw, Volume2, Clock, ArrowRight } from "lucide-react";
 import { Card } from "@/types";
 import { enqueue, dequeue, getPendingCount, type PrevSnapshot } from "@/utils/reviewAnswerQueue";
@@ -136,7 +137,8 @@ export const ReviewSession: React.FC<{
     const last = history[history.length - 1];
     const wasDequeued = dequeue(last.card._id);
     if (!wasDequeued) {
-      fetch(`/api/review/answer/${last.card._id}`, {
+      const base = (axios.defaults.baseURL as string ?? '').replace(/\/$/, '');
+      fetch(`${base}/review/answer/${last.card._id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deckId: last.card.deckId, prevSnapshot: last.prevSnapshot }),

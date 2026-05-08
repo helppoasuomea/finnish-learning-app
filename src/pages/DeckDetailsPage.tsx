@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useContext, useEffect } from "react";
+import { useState, useCallback, useMemo, useContext, useEffect, useRef } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { ChevronRight, Pencil } from "lucide-react";
@@ -16,6 +16,7 @@ import { MoveCardModal } from "../components/DeckDetailsComponents/MoveCardModal
 import { CramLauncher } from "../components/CramComponents/CramLauncher";
 import { DeckContext } from "@/contexts/DeckContext";
 import { useFindDuplicates } from "@/state/hooks/useFindDuplicates";
+import { useUpdateFavorite } from "@/state/hooks/useUpdateFavorite";
 import { Card } from "@/types";
 
 type Tab = "overview" | "terms";
@@ -34,12 +35,38 @@ export const DeckDetailsPage: React.FC = () => {
   const [moveCard, setMoveCard] = useState<Card | null>(null);
   const [cramOpen, setCramOpen] = useState(false);
 
+  // On first load, sort the card array once with favorites at top.
+  // After that, toggling favorite only changes the star color — position never changes until refresh.
+  const initialSortDone = useRef(false);
+  useEffect(() => {
+    if (!initialSortDone.current && cards.length > 0) {
+      initialSortDone.current = true;
+      setCards(prev => [...prev].sort((a, b) => {
+        if (a.favorite === b.favorite) return 0;
+        return a.favorite ? -1 : 1;
+      }));
+    }
+  }, [cards.length]);
+
   const { stillLearning, notStudied, completed } = organizeCardsByScore(cards);
   const percentage = calculateCompletePercentage(cards);
 
   useEffect(() => { refreshDecks(); }, []);
 
   const { duplicates } = useFindDuplicates(cards, decks, id ?? '', deckName);
+  const { updateFavorite } = useUpdateFavorite();
+
+  const handleToggleFavorite = useCallback(async (cardId: string, current: boolean) => {
+    if (!id) return;
+    const newFav = !current;
+    setCards(prev => prev.map(c => c._id === cardId ? { ...c, favorite: newFav } : c));
+    try {
+      await updateFavorite(id, cardId, newFav);
+    } catch {
+      setCards(prev => prev.map(c => c._id === cardId ? { ...c, favorite: current } : c));
+      showToast("Couldn't update favorite");
+    }
+  }, [id, updateFavorite, setCards]);
 
   const existingFi = useMemo(
     () => new Set(cards.map(c => c.userLangCard.toLowerCase())),
@@ -197,7 +224,7 @@ export const DeckDetailsPage: React.FC = () => {
     <div className="tk-page" style={{ maxWidth: 1200 }}>
       {/* Breadcrumb */}
       <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--tk-ink-3)" }}>
-        <Link to="/decks" style={{ color: "var(--tk-ink-3)", textDecoration: "none" }}>Library</Link>
+        <Link to="/view-all-decks" style={{ color: "var(--tk-ink-3)", textDecoration: "none" }}>Library</Link>
         <ChevronRight size={12} />
         <span style={{ color: "var(--tk-ink)" }}>{deckName}</span>
       </div>
@@ -277,6 +304,7 @@ export const DeckDetailsPage: React.FC = () => {
               onPasteImport={() => setPasteOpen(true)}
               onDeleteCard={handleDeleteCard}
               onEditCard={handleEditCard}
+              onToggleFavorite={handleToggleFavorite}
               crossDeckDupes={duplicates}
               onMergeDupes={handleMergeDupes}
               onRemoveDupes={handleRemoveDupes}

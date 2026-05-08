@@ -11,13 +11,37 @@ interface PublicDeck {
   deckName: string;
   publicDeckName: string;
   deckTags: string[];
+  publicTags: string[];
+  showPublicTags: boolean;
   publicDescription: string;
   description: string;
   level: "A1" | "A2" | "B1" | "B2" | "";
   category: string;
   saves: number;
   featured: boolean;
-  cards: { _id: string; engCard: string; userLangCard: string }[];
+  cards: { _id: string; engCard: string; userLangCard: string; favorite?: boolean }[];
+}
+
+function featuredWords(deck: PublicDeck) {
+  const fav = deck.cards.filter(c => c.favorite);
+  const pool = fav.length > 0
+    ? [...fav].sort((a, b) => a.userLangCard.localeCompare(b.userLangCard))
+    : deck.cards;
+  return pool.slice(0, 3);
+}
+
+function DeckTags({ deck }: { deck: PublicDeck }) {
+  const tags = deck.showPublicTags !== false
+    ? (deck.publicTags?.length ? deck.publicTags : deck.deckTags.slice(1))
+    : [];
+  if (!tags.length) return null;
+  return (
+    <div className="br-card-tags">
+      {tags.slice(0, 4).map(t => (
+        <span key={t} className="br-card-tag">#{t}</span>
+      ))}
+    </div>
+  );
 }
 
 type SortKey = "newest" | "alpha" | "largest";
@@ -211,7 +235,7 @@ export const BrowsePage: React.FC = () => {
                 </div>
                 {deck.cards.length > 0 && (
                   <div className="br-feat-words">
-                    {deck.cards.slice(0, 4).map(c => (
+                    {featuredWords(deck).map(c => (
                       <div key={c._id} className="br-feat-word-row">
                         <span className="br-feat-word">{c.userLangCard}</span>
                         <span className="br-feat-trans">{c.engCard}</span>
@@ -280,7 +304,7 @@ export const BrowsePage: React.FC = () => {
               </div>
               {deck.cards.length > 0 && (
                 <div className="br-card-words">
-                  {deck.cards.slice(0, 3).map((c, i) => (
+                  {featuredWords(deck).map((c, i) => (
                     <span key={c._id}>
                       {i > 0 && <span style={{ color: "var(--tk-ink-4)" }}>, </span>}
                       <em>{c.userLangCard}</em>
@@ -290,6 +314,7 @@ export const BrowsePage: React.FC = () => {
                   ))}
                 </div>
               )}
+              <DeckTags deck={deck} />
               <div className="br-card-footer">
                 <MetaRow deck={deck} />
                 <div style={{ marginLeft: "auto" }}>

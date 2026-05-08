@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { X, Globe, Lock, ExternalLink } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "@/contexts/UserContext";
 import { formatLevelLabel } from "@/utils/levelDisplay";
 
@@ -83,6 +84,7 @@ export const PublishSettingsModal: React.FC<Props> = ({
   deckId, deckName, deckTags = [], deckDescription = "", initialState, onClose, onSaved,
 }) => {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [isPublic, setIsPublic] = useState(initialState?.isPublic ?? false);
   const [level, setLevel] = useState(initialState?.level ?? "");
   const [category, setCategory] = useState(initialState?.category ?? "");
@@ -142,10 +144,15 @@ export const PublishSettingsModal: React.FC<Props> = ({
       await axios.put(`/browse/${deckId}/publish`, payload);
       setSaved(true);
       onSaved?.(payload);
-      setTimeout(() => {
-        setSaved(false);
-        onClose();
-      }, 1200);
+      if (!isPublic) {
+        // Deck was unpublished — the public page no longer exists, go to their deck
+        setTimeout(() => navigate(`/view-decks/${deckId}`), 800);
+      } else {
+        setTimeout(() => {
+          setSaved(false);
+          onClose();
+        }, 1200);
+      }
     } finally {
       setSaving(false);
     }

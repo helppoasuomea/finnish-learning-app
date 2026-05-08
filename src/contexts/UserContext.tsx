@@ -1,6 +1,5 @@
 import axios from "axios";
 import { createContext, useEffect, useState } from "react";
-import { hasToken } from "../utils/cookies";
 
 export interface User {
     _id: string;
@@ -34,6 +33,7 @@ interface UserContextType {
     user: User | null;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
     isAuthenticated: boolean;
+    isLoading: boolean;
     refreshUserStats: () => Promise<void>;
 }
 
@@ -41,17 +41,37 @@ export const UserContext = createContext<UserContextType>({
     user: null,
     setUser: () => {},
     isAuthenticated: false,
+    isLoading: true,
     refreshUserStats: async () => {}
 });
+
+const PROFILE_KEYS: (keyof User)[] = [
+    '_id', 'username', 'name', 'avatarUrl', 'authProvider',
+    'currentStreak', 'maxStreak', 'lastReviewDate', 'totalReviews',
+    'flashcardWordForm', 'audioOnCardFlip', 'googleConsents', 'hasCalendarToken',
+    'hasQuickPin', 'quickPinExpiresAt', 'quickPinIsExpired',
+    'nudgeEnabled', 'nudgeTime', 'nudgeChannel', 'nudgeQuietDays', 'nudgeStreakGrace',
+    'email', 'difficultyLabel',
+];
+
+function pickProfile(data: any): User {
+    const out: Partial<User> = {};
+    for (const k of PROFILE_KEYS) {
+        if (k in data) (out as any)[k] = data[k];
+    }
+    out.avatarUrl = out.avatarUrl || "https://github.com/shadcn.png";
+    return out as User;
+}
 
 export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const refreshUserStats = async () => {
         try {
             const { data } = await axios.get('/profile');
-            setUser(prevUser => prevUser ? { ...prevUser, ...data } : data);
+            setUser(prevUser => prevUser ? { ...prevUser, ...pickProfile(data) } : pickProfile(data));
         } catch (error) {
             console.error('Error refreshing user stats: ', error);
         }
@@ -59,24 +79,14 @@ export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     const fetchUserProfile = async () => {
         try {
-            const tokenExists = hasToken();
-            if (tokenExists) {
-                setIsAuthenticated(true);
-                const { data } = await axios.get<User>('/profile');
-                const defaultAvatarUrl = "https://github.com/shadcn.png";
-                data.avatarUrl = data.avatarUrl || defaultAvatarUrl;
-                setUser(data);
-                localStorage.setItem('userId', data._id);
-            } else {
-                setIsAuthenticated(false);
-                setUser(null);
-                localStorage.removeItem('userId');
-            }
-        } catch (error) {
-            console.error('Error fetching user profile:', error);
+            const { data } = await axios.get<User>('/profile');
+            setUser(pickProfile(data));
+            setIsAuthenticated(true);
+        } catch {
             setIsAuthenticated(false);
             setUser(null);
-            localStorage.removeItem('userId');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -87,7 +97,7 @@ export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, []);
 
     return (
-        <UserContext.Provider value={{ user, setUser, isAuthenticated, refreshUserStats }}>
+        <UserContext.Provider value={{ user, setUser, isAuthenticated, isLoading, refreshUserStats }}>
             {children}
         </UserContext.Provider>
     );
