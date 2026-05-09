@@ -521,6 +521,12 @@ const IndexPageContent = () => {
                                                                     <><span style={{ opacity: 0.4 }}>·</span><span>{w.pronunciation}</span></>
                                                                 )}
                                                             </div>
+                                                            {w.en_base && w.en_base !== w.en && (
+                                                                <div className="tx-peek-meta" style={{ marginTop: 2 }}>
+                                                                    <span style={{ letterSpacing: '0.06em' }}>BASE (EN):</span>
+                                                                    <span style={{ color: 'var(--tk-ink-2)', textTransform: 'none', letterSpacing: 0 }}>{w.en_base}</span>
+                                                                </div>
+                                                            )}
                                                             <div className="tx-peek-actions">
                                                                 <PopoverClose asChild>
                                                                     <button

@@ -58,10 +58,11 @@ export interface Card {
     lastSeenAt?: string | null;
     dueAt?: string | null;
     suspended?: boolean;
-    cardKind?: string; // 'word' | 'sentence' | 'cloze' | 'grammar'
-    type?: string;
+    cardKind?: 'word' | 'sentence' | 'cloze' | 'grammar';
+    type?: string;          // part of speech
     pronunciation?: string;
-    comment?: string;
+    comment?: string;       // auto-generated morphology / system metadata
+    note?: string;          // user-authored mnemonic / etymology / context
 }
 
 export type QuestionType =
