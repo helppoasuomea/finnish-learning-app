@@ -103,13 +103,14 @@ export const DeckDetailsPage: React.FC = () => {
     }
   }, [id, setDeck, setCards]);
 
-  const handleSaveDeck = useCallback(async (patch: { deckName: string; description: string; deckTags: string[] }) => {
+  const handleSaveDeck = useCallback(async (patch: { deckName: string; description: string; deckTags: string[]; deckEmoji: string }) => {
     if (!id || !deck) return;
     try {
       const res = await axios.put(`/decks/update/${id}`, {
         deckName: patch.deckName,
         deckTags: patch.deckTags,
         description: patch.description,
+        deckEmoji: patch.deckEmoji,
         deckPercentage: percentage,
         cards,
       });
@@ -243,7 +244,10 @@ export const DeckDetailsPage: React.FC = () => {
                     <span key={t} className="tk-chip" style={{ background: "var(--tk-accent-wash)", borderColor: "var(--tk-accent-soft)", color: "var(--tk-accent-deep)" }}>{t}</span>
                   ))}
                 </div>
-                <h1 className="dd-hero-title">{deckName}</h1>
+                <h1 className="dd-hero-title">
+                  {(deck as any).deckEmoji && <span style={{ marginRight: 10 }}>{(deck as any).deckEmoji}</span>}
+                  {deckName}
+                </h1>
                 <p style={{ color: "var(--tk-ink-3)", fontSize: 14, maxWidth: 480, lineHeight: 1.55 }}>
                   {deck.description || ""}
                 </p>
@@ -360,6 +364,7 @@ export const DeckDetailsPage: React.FC = () => {
           deckName={deckName}
           description={deck.description || ""}
           deckTags={deckTags}
+          deckEmoji={(deck as any).deckEmoji || ""}
           onClose={() => setEditOpen(false)}
           onSave={handleSaveDeck}
         />

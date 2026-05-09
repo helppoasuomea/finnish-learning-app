@@ -19,6 +19,7 @@ interface PublicDeck {
   category: string;
   saves: number;
   featured: boolean;
+  deckEmoji?: string;
   cards: { _id: string; engCard: string; userLangCard: string; favorite?: boolean }[];
 }
 
@@ -63,7 +64,12 @@ function estMinutes(count: number) {
   return Math.max(1, Math.round((count * 36) / 60));
 }
 
-function DeckAvatar({ name, size = 32 }: { name: string; size?: number }) {
+function DeckAvatar({ name, emoji, size = 32 }: { name: string; emoji?: string; size?: number }) {
+  if (emoji) return (
+    <div className="br-avatar" style={{ width: size, height: size, background: "var(--tk-paper-deep)", fontSize: size * 0.55 }}>
+      {emoji}
+    </div>
+  );
   const letter = name.trim()[0]?.toUpperCase() ?? "?";
   return (
     <div className="br-avatar" style={{ width: size, height: size, fontSize: size * 0.4 }}>
@@ -295,7 +301,7 @@ export const BrowsePage: React.FC = () => {
           {nonFeatured.map(deck => (
             <button key={deck._id} className="br-card" onClick={() => openDeck(deck)}>
               <div className="br-card-top">
-                <DeckAvatar name={deck.publicDeckName || deck.deckName} />
+                <DeckAvatar name={deck.publicDeckName || deck.deckName} emoji={deck.deckEmoji} />
                 <LevelBadge level={deck.level} displayMode={user?.difficultyLabel} />
               </div>
               <div>

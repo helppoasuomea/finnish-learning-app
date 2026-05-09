@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "@/contexts/UserContext";
 import { formatLevelLabel } from "@/utils/levelDisplay";
+import { EmojiPicker } from "@/components/EmojiPicker";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
@@ -31,9 +32,10 @@ interface Props {
   deckName: string;
   deckTags?: string[];
   deckDescription?: string;
+  deckEmoji?: string;
   initialState?: Partial<PublishState>;
   onClose: () => void;
-  onSaved?: (updated: Partial<PublishState>) => void;
+  onSaved?: (updated: Partial<PublishState> & { deckEmoji?: string }) => void;
 }
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
@@ -81,11 +83,12 @@ function FieldRow({ label, hint, on, onChange, children }: {
 }
 
 export const PublishSettingsModal: React.FC<Props> = ({
-  deckId, deckName, deckTags = [], deckDescription = "", initialState, onClose, onSaved,
+  deckId, deckName, deckTags = [], deckDescription = "", deckEmoji: initialEmoji = "", initialState, onClose, onSaved,
 }) => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [isPublic, setIsPublic] = useState(initialState?.isPublic ?? false);
+  const [emoji, setEmoji] = useState(initialEmoji);
   const [level, setLevel] = useState(initialState?.level ?? "");
   const [category, setCategory] = useState(initialState?.category ?? "");
   const [publicDeckName, setPublicDeckName] = useState(initialState?.publicDeckName || "");
@@ -141,9 +144,9 @@ export const PublishSettingsModal: React.FC<Props> = ({
         publisherName, showPublisherName,
         publicTags, showPublicTags,
       };
-      await axios.put(`/browse/${deckId}/publish`, payload);
+      await axios.put(`/browse/${deckId}/publish`, { ...payload, deckEmoji: emoji });
       setSaved(true);
-      onSaved?.(payload);
+      onSaved?.({ ...payload, deckEmoji: emoji });
       if (!isPublic) {
         // Deck was unpublished — the public page no longer exists, go to their deck
         setTimeout(() => navigate(`/view-decks/${deckId}`), 800);
@@ -204,6 +207,12 @@ export const PublishSettingsModal: React.FC<Props> = ({
           {isPublic && (
             <>
               <div style={{ borderTop: "1px solid var(--tk-rule-soft)" }} />
+
+              {/* Deck emoji */}
+              <div className="tk-field">
+                <div className="tk-field-label">Deck emoji</div>
+                <EmojiPicker value={emoji} onChange={setEmoji} />
+              </div>
 
               {/* Public name */}
               <div className="tk-field">

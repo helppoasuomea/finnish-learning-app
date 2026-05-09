@@ -52,10 +52,11 @@ export const DockCardLarge: React.FC<{
         cards: any[];
         description?: string;
         level?: string;
+        deckEmoji?: string;
     };
     mergeProps?: { isSelected: boolean; onSelect: () => void };
 }> = ({ deck, mergeProps }) => {
-    const { deckName, deckTags, cards, _id, description, level } = deck;
+    const { deckName, deckTags, cards, _id, description, level, deckEmoji } = deck;
     const { toast } = useToast();
     const { refreshDecks } = useContext(DeckContext);
     const { user } = useContext(UserContext);
@@ -120,7 +121,10 @@ export const DockCardLarge: React.FC<{
                 </div>
             </div>
 
-            <div className="dk-card-title">{deckName}</div>
+            <div className="dk-card-title">
+                {deckEmoji && <span style={{ marginRight: 6, fontSize: "1em" }}>{deckEmoji}</span>}
+                {deckName}
+            </div>
             {description && <div className="dk-card-desc">{description}</div>}
 
             <div className="dk-card-foot">

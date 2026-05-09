@@ -29,6 +29,7 @@ interface PublicDeckData {
   saves: number;
   publisherName: string;
   showPublisherName: boolean;
+  deckEmoji?: string;
   updatedAt: string;
   cards: PublicCard[];
 }
@@ -267,7 +268,7 @@ export const PublicDeckPage: React.FC = () => {
           {/* Hero */}
           <div className="pd-hero">
             <div style={{ position: "relative", display: "inline-block", flexShrink: 0 }}>
-              <div className="pd-avatar">{letter}</div>
+              <div className="pd-avatar">{deck.deckEmoji || letter}</div>
               {deck.level && <span className="pd-level-badge">{formatLevelLabel(deck.level, user?.difficultyLabel)}</span>}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -477,6 +478,7 @@ export const PublicDeckPage: React.FC = () => {
           deckName={deck.deckName}
           deckTags={deck.deckTags}
           deckDescription={deck.description}
+          deckEmoji={deck.deckEmoji}
           initialState={{
             isPublic:              true,
             level:                 deck.level,
@@ -490,8 +492,11 @@ export const PublicDeckPage: React.FC = () => {
             showPublicTags:        deck.showPublicTags,
           }}
           onClose={() => setPublishOpen(false)}
-          onSaved={() => {
+          onSaved={(updated) => {
             setPublishOpen(false);
+            if (updated.deckEmoji !== undefined) {
+              setDeck(prev => prev ? { ...prev, deckEmoji: updated.deckEmoji } : prev);
+            }
             loadDeck();
             showToast("Publish settings saved");
           }}

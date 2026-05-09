@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
+import { EmojiPicker } from "@/components/EmojiPicker";
 
 const LANGUAGES = ["Finnish", "Japanese", "Spanish", "French", "German", "Italian"];
 
@@ -7,17 +8,19 @@ interface Props {
   deckName: string;
   description: string;
   deckTags: string[];
+  deckEmoji?: string;
   onClose: () => void;
-  onSave: (patch: { deckName: string; description: string; deckTags: string[] }) => void;
+  onSave: (patch: { deckName: string; description: string; deckTags: string[]; deckEmoji: string }) => void;
   onDelete?: () => void;
 }
 
-export const EditDetailsModal: React.FC<Props> = ({ deckName, description, deckTags, onClose, onSave, onDelete }) => {
+export const EditDetailsModal: React.FC<Props> = ({ deckName, description, deckTags, deckEmoji: initialEmoji, onClose, onSave, onDelete }) => {
   const [name, setName] = useState(deckName);
   const [desc, setDesc] = useState(description || "");
   const [tags, setTags] = useState([...deckTags]);
   const [tagInput, setTagInput] = useState("");
   const [lang, setLang] = useState(deckTags[0] || "Finnish");
+  const [emoji, setEmoji] = useState(initialEmoji || "");
 
   const addTag = () => {
     const t = tagInput.trim();
@@ -37,6 +40,10 @@ export const EditDetailsModal: React.FC<Props> = ({ deckName, description, deckT
           <button className="tk-icon-btn" onClick={onClose}><X size={15} /></button>
         </div>
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="tk-field">
+            <div className="tk-field-label">Emoji</div>
+            <EmojiPicker value={emoji} onChange={setEmoji} />
+          </div>
           <div className="tk-field">
             <div className="tk-field-label">Name</div>
             <input className="tk-textfield" value={name} onChange={e => setName(e.target.value)} />
@@ -83,7 +90,7 @@ export const EditDetailsModal: React.FC<Props> = ({ deckName, description, deckT
           <div style={{ display: "flex", gap: 8 }}>
             <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={onClose}>Cancel</button>
             <button className="tk-btn tk-btn-accent tk-btn-sm" onClick={() => {
-              onSave({ deckName: name, description: desc, deckTags: [lang, ...tags.filter(t => t !== lang)] });
+              onSave({ deckName: name, description: desc, deckTags: [lang, ...tags.filter(t => t !== lang)], deckEmoji: emoji });
               onClose();
             }}>
               Save changes

@@ -3740,6 +3740,112 @@ textarea.tk-textfield { resize: vertical; line-height: 1.55; }
 
 /* Language chips */
 .au-lang-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ── Emoji Picker ────────────────────────────────────────────────────────── */
+.ep-trigger {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 40px; height: 36px; padding: 0 10px;
+  background: var(--tk-paper-deep); border: 1px solid var(--tk-rule);
+  border-radius: 8px; cursor: pointer; transition: border-color 150ms;
+}
+.ep-trigger:hover { border-color: var(--tk-ink-3); }
+.ep-trigger-emoji { font-size: 20px; line-height: 1; }
+.ep-trigger-placeholder { font-size: 12px; color: var(--tk-ink-4); letter-spacing: .02em; }
+.ep-clear {
+  background: none; border: none; color: var(--tk-ink-4); cursor: pointer;
+  font-size: 16px; padding: 0 2px; line-height: 1;
+}
+.ep-clear:hover { color: var(--tk-ink-2); }
+.ep-popover {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
+  background: var(--tk-card); border: 1px solid var(--tk-rule);
+  border-radius: 12px; padding: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.10);
+  width: 280px;
+}
+.ep-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+}
+.ep-emoji-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; font-size: 18px;
+  background: none; border: none; border-radius: 6px; cursor: pointer;
+  transition: background 100ms;
+}
+.ep-emoji-btn:hover { background: var(--tk-paper-deep); }
+.ep-emoji-btn.is-selected { background: color-mix(in oklab, var(--tk-accent) 15%, var(--tk-card)); }
+
+/* ── Welcome Onboarding ───────────────────────────────────────────────────── */
+.wo-root {
+  position: fixed; inset: 0; background: var(--tk-paper); z-index: 1000;
+  display: flex; flex-direction: column; overflow-y: auto;
+}
+.wo-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 28px; flex-shrink: 0;
+}
+.wo-steps { display: flex; gap: 6px; }
+.wo-step-pip {
+  width: 28px; height: 3px; border-radius: 2px;
+  background: var(--tk-rule); transition: background 300ms;
+}
+.wo-step-pip.is-on { background: var(--tk-accent); }
+.wo-skip {
+  background: transparent; border: none; color: var(--tk-ink-3);
+  font-size: 13px; cursor: pointer; letter-spacing: .04em;
+}
+.wo-skip:hover { color: var(--tk-ink-2); }
+.wo-body {
+  flex: 1; display: grid; place-items: center; padding: 20px 28px 48px;
+}
+.wo-panel { max-width: 720px; width: 100%; }
+.wo-heading {
+  font-family: var(--tk-display); font-size: 36px; margin: 0; text-align: center;
+}
+.wo-sub { color: var(--tk-ink-3); text-align: center; margin-top: 8px; font-size: 15px; }
+
+.wo-lang-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 28px;
+}
+@media (max-width: 600px) { .wo-lang-grid { grid-template-columns: repeat(2, 1fr); } }
+.wo-lang-card {
+  padding: 20px 14px; border: 1px solid var(--tk-rule);
+  background: var(--tk-card); border-radius: 12px;
+  cursor: pointer; text-align: center; transition: all 140ms;
+}
+.wo-lang-card:hover { border-color: var(--tk-ink-3); }
+.wo-lang-card.is-selected {
+  border-color: var(--tk-accent);
+  background: color-mix(in oklab, var(--tk-accent) 10%, var(--tk-card));
+}
+.wo-lang-flag { font-size: 32px; margin-bottom: 8px; }
+.wo-lang-name { font-family: var(--tk-display); font-size: 14px; }
+.wo-other {
+  background: transparent; border: none; color: var(--tk-ink-3);
+  font-size: 13px; cursor: pointer; margin-top: 4px;
+}
+.wo-other:hover { color: var(--tk-ink-2); }
+
+.wo-level-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 28px;
+}
+@media (max-width: 600px) { .wo-level-grid { grid-template-columns: 1fr; } }
+.wo-level-card {
+  padding: 26px 18px; border: 1px solid var(--tk-rule);
+  background: var(--tk-card); border-radius: 12px;
+  cursor: pointer; text-align: left; transition: all 140ms;
+}
+.wo-level-card:hover { border-color: var(--tk-ink-3); }
+.wo-level-card.is-selected {
+  border-color: var(--tk-accent);
+  background: color-mix(in oklab, var(--tk-accent) 10%, var(--tk-card));
+}
+.wo-level-label { font-family: var(--tk-display); font-size: 22px; }
+.wo-level-cefr {
+  font-size: 11px; color: var(--tk-ink-4); font-family: var(--tk-mono);
+  margin-top: 4px; letter-spacing: .06em;
+}
+.wo-level-note { font-size: 13px; color: var(--tk-ink-3); margin-top: 12px; line-height: 1.4; }
 .au-lang-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 12px 7px 10px;
