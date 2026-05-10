@@ -4,11 +4,11 @@ export type DifficultyLabelMode = NonNullable<User["difficultyLabel"]>;
 
 const CEFR_TO_PLAIN: Record<string, string> = {
   A1: "Beginner",
-  A2: "Beginner",
+  A2: "Elementary",
   B1: "Intermediate",
-  B2: "Intermediate",
+  B2: "Upper Intermediate",
   C1: "Advanced",
-  C2: "Advanced",
+  C2: "Proficient",
 };
 
 export function formatLevelLabel(level: string, mode: User["difficultyLabel"]): string {

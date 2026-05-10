@@ -1,6 +1,6 @@
 import { InputBar } from "../components/IndexPage/InputBar";
 import useTranslation from "../state/hooks/useTranslation";
-import { useState, useEffect, useContext, useMemo, useRef } from "react";
+import React, { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { useTranslationHover } from "@/contexts/TranslationHoverContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { TranslationHoverProvider } from "@/contexts/TranslationHoverContext";
@@ -69,6 +69,7 @@ const IndexPageContent = () => {
     const { toast } = useToast();
     const { hoveredFlashcardFi } = useTranslationHover();
     const [createFlashcardsOpen, setCreateFlashcardsOpen] = useState(false);
+    const [dialogStep, setDialogStep] = useState<0 | 'create'>(0);
     const [selectedDeckId, setSelectedDeckId] = useState<string>("");
     const [saving, setSaving] = useState(false);
     const [wordsToSave, setWordsToSave] = useState<any[] | null>(null);
@@ -80,6 +81,7 @@ const IndexPageContent = () => {
     const [onboardingOpen, setOnboardingOpen] = useState(false);
     const [onboardingWord, setOnboardingWord] = useState("");
     const [saveDone, setSaveDone] = useState<{ count: number; deckName: string } | null>(null);
+    const [newDeckDraft, setNewDeckDraft] = useState({ name: '', description: '', level: '' as string, goal: 'sapling', tags: [] as string[], tagInput: '' });
     const needsReloadRef = useRef(false);
     const pendingOnboardingRef = useRef(false);
     const lastAutoSavedSentenceRef = useRef<string | null>(null);
@@ -104,14 +106,20 @@ const IndexPageContent = () => {
         }
     }, [response, inputText, setInputText]);
 
+    const resetDialog = () => {
+        setDialogStep(0);
+        setSelectedDeckId('');
+        setSaveDone(null);
+        setNewDeckDraft({ name: '', description: '', level: '', goal: 'sapling', tags: [], tagInput: '' });
+    };
+
     const closeSaveDialog = () => {
         const reload = needsReloadRef.current;
         const onboard = pendingOnboardingRef.current;
         needsReloadRef.current = false;
         pendingOnboardingRef.current = false;
-        setSaveDone(null);
+        resetDialog();
         setCreateFlashcardsOpen(false);
-        setSelectedDeckId("");
         setWordsToSave(null);
         if (onboard) setOnboardingOpen(true);
         if (reload && !onboard) { setInputText(""); window.location.reload(); }
@@ -152,6 +160,46 @@ const IndexPageContent = () => {
         }
     };
 
+    const handleCreateAndSave = async () => {
+        if (!newDeckDraft.name.trim()) return;
+        const sourceWords = wordsToSave ?? response?.words;
+        setSaving(true);
+        try {
+            const deckTags = [fromLanguage, ...newDeckDraft.tags].filter(Boolean);
+            const deckRes = await axios.post('/decks', {
+                deckName: newDeckDraft.name.trim(),
+                deckTags,
+                description: newDeckDraft.description.trim(),
+                level: newDeckDraft.level || undefined,
+                memoryGoal: { tier: newDeckDraft.goal },
+            });
+            const newDeckId = deckRes.data._id || deckRes.data.deck?._id;
+            if (newDeckId && sourceWords?.length) {
+                const defaultSaveAs = (user?.flashcardWordForm as 'original' | 'base') === 'base' ? 'base' : 'original';
+                const toSave = sourceWords
+                    .map((word: any) => {
+                        const isBase = defaultSaveAs === 'base';
+                        return { engCard: isBase ? (word.en_base || word.en) : word.en, userLangCard: isBase ? word.original_word : word.fi };
+                    })
+                    .filter((w: any) => w.engCard?.trim() && w.userLangCard?.trim());
+                const result = await axios.post(`/decks/${newDeckId}/save-all`, { words: toSave });
+                if (result.data.showOnboarding && toSave[0]?.userLangCard) {
+                    setOnboardingWord(toSave[0].userLangCard);
+                    pendingOnboardingRef.current = true;
+                }
+                sourceWords.forEach((w: any) => { if (w.id) setLocalSavedIds(s => new Set([...s, w.id])); });
+                setSaveDone({ count: result.data.added, deckName: newDeckDraft.name.trim() });
+            } else {
+                setSaveDone({ count: 0, deckName: newDeckDraft.name.trim() });
+            }
+            needsReloadRef.current = true;
+        } catch {
+            toast({ title: "Error", description: "Couldn't create the shelf. Please try again.", variant: "destructive" });
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const openSaveWord = (word: any) => {
         if (!user) {
             setAuthGateWord(word.fi || word.original_word || null);
@@ -169,14 +217,22 @@ const IndexPageContent = () => {
         setCreateFlashcardsOpen(true);
     };
 
-    const filteredDecks = decks.filter(deck =>
+    // Decks matching the current language — used to count already-saved words
+    const langDecks = useMemo(() => decks.filter(deck =>
         deck.deckTags && deck.deckTags.length > 0 &&
         deck.deckTags[0].toLowerCase() === fromLanguage.toLowerCase()
-    );
+    ), [decks, fromLanguage]);
+
+    // All decks available for saving (language-matched ones first, rest below)
+    const filteredDecks = useMemo(() => {
+        const matched = langDecks;
+        const rest = decks.filter(d => !matched.some((m: any) => m._id === d._id));
+        return [...matched, ...rest];
+    }, [langDecks, decks]);
 
     const savedWordDecks = useMemo(() => {
         const map: Record<string, string[]> = {};
-        filteredDecks.forEach((deck: any) => {
+        langDecks.forEach((deck: any) => {
             (deck.cards || []).forEach((card: any) => {
                 if (!card.userLangCard) return;
                 const key = String(card.userLangCard).toLowerCase().trim();
@@ -196,10 +252,12 @@ const IndexPageContent = () => {
         return (fi && savedWordKeys.has(fi)) || (orig && savedWordKeys.has(orig));
     };
 
-    // Auto-save translated sentence
+    // Auto-save translated sentence — only fires once the stream is fully done
+    // so that response.words is fully populated from the enriched event.
     useEffect(() => {
         const autoSave = async () => {
             if (!user || !response?.sentence) return;
+            if (isStreaming) return; // wait for enriched event to land first
             if (lastAutoSavedSentenceRef.current === response.sentence) return;
             const originalText = (response as any)?.originalText?.trim?.() || inputText.trim();
             if (!originalText) return;
@@ -221,7 +279,7 @@ const IndexPageContent = () => {
             }
         };
         autoSave();
-    }, [user, response, inputText, fromLanguage, savedWordKeys]);
+    }, [user, response, inputText, savedWordKeys, isStreaming]); // fromLanguage intentionally excluded
 
     // After login/register, auto-open save dialog for the card the user was trying to save
     useEffect(() => {
@@ -463,6 +521,12 @@ const IndexPageContent = () => {
                                                                     <><span style={{ opacity: 0.4 }}>·</span><span>{w.pronunciation}</span></>
                                                                 )}
                                                             </div>
+                                                            {w.en_base && w.en_base !== w.en && (
+                                                                <div className="tx-peek-meta" style={{ marginTop: 2 }}>
+                                                                    <span style={{ letterSpacing: '0.06em' }}>BASE (EN):</span>
+                                                                    <span style={{ color: 'var(--tk-ink-2)', textTransform: 'none', letterSpacing: 0 }}>{w.en_base}</span>
+                                                                </div>
+                                                            )}
                                                             <div className="tx-peek-actions">
                                                                 <PopoverClose asChild>
                                                                     <button
@@ -692,14 +756,16 @@ const IndexPageContent = () => {
 
             {/* Save dialog */}
             <Dialog open={createFlashcardsOpen} onOpenChange={(open) => { if (!open) closeSaveDialog(); }}>
-                <DialogContent className="p-0 gap-0 overflow-hidden" style={{ maxWidth: 520, borderRadius: 16, border: '1px solid var(--tk-rule)' }}>
+                <DialogContent className="p-0 gap-0 overflow-hidden !max-w-none" style={{ width: dialogStep === 'create' ? 'min(720px, 96vw)' : 'min(520px, 96vw)', borderRadius: 16, border: '1px solid var(--tk-rule)', transition: 'width 0.2s ease' }}>
                     <DialogTitle className="sr-only">Save to a deck</DialogTitle>
 
                     {/* Header */}
                     <div className="sv-modal-head">
                         <div>
                             <div className="sv-modal-eyebrow">Save to a deck</div>
-                            <div className="sv-modal-title">{saveDone ? "Done" : "Pick a shelf"}</div>
+                            <div className="sv-modal-title">
+                                {saveDone ? 'Done' : dialogStep === 'create' ? 'New shelf' : 'Pick a shelf'}
+                            </div>
                         </div>
                         <button className="tx-icon-btn" onClick={closeSaveDialog} aria-label="Close">
                             <X size={15} />
@@ -727,7 +793,7 @@ const IndexPageContent = () => {
                     <div className="sv-stepper">
                         <div className="sv-step" data-active="true">
                             <span className="sv-step-num">1</span>
-                            <span>Deck</span>
+                            <span>{dialogStep === 'create' ? 'New deck' : 'Deck'}</span>
                         </div>
                         <ArrowRight size={12} className="sv-step-arrow" />
                         <div className="sv-step">
@@ -741,23 +807,19 @@ const IndexPageContent = () => {
                         </div>
                     </div>
 
-                    {/* Body */}
-                    <div className="sv-body" style={{ maxHeight: 360, overflowY: 'auto' }}>
-                        {filteredDecks.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                                <p style={{ color: 'var(--tk-ink-3)', marginBottom: 12, fontSize: 14 }}>
-                                    No {fromLanguage} decks yet.
-                                </p>
-                                <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => { setCreateFlashcardsOpen(false); navigate('/view-all-decks'); }}>
-                                    Create a new deck
-                                </button>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="sv-section-label">Recent</div>
-                                {filteredDecks.map((deck: any) => (
+                    {/* Step 0: Deck picker */}
+                    {dialogStep === 0 && (
+                        <div className="sv-body" style={{ maxHeight: 360, overflowY: 'auto' }}>
+                            {langDecks.length > 0 && <div className="sv-section-label">{fromLanguage} decks</div>}
+                            {filteredDecks.length === 0 && (
+                                <p style={{ color: 'var(--tk-ink-3)', fontSize: 14, padding: '8px 0 16px' }}>No decks yet.</p>
+                            )}
+                            {filteredDecks.map((deck: any, i: number) => (
+                                <React.Fragment key={deck._id}>
+                                    {i === langDecks.length && langDecks.length > 0 && filteredDecks.length > langDecks.length && (
+                                        <div className="sv-section-label" style={{ marginTop: 12 }}>Other decks</div>
+                                    )}
                                     <button
-                                        key={deck._id}
                                         className="sv-deck-row"
                                         data-selected={selectedDeckId === deck._id ? 'true' : 'false'}
                                         onClick={() => setSelectedDeckId(deck._id)}
@@ -772,46 +834,195 @@ const IndexPageContent = () => {
                                         </div>
                                         {selectedDeckId === deck._id && <Check size={16} style={{ color: 'var(--tk-accent)', flexShrink: 0 }} />}
                                     </button>
-                                ))}
-                                <div className="sv-section-label" style={{ marginTop: 16 }}>Or create</div>
-                                <button
-                                    className="sv-deck-row"
-                                    style={{ borderStyle: 'dashed', background: 'transparent' }}
-                                    onClick={() => { setCreateFlashcardsOpen(false); navigate('/view-all-decks'); }}
-                                >
-                                    <div style={{ width: 40, height: 40, borderRadius: '50%', border: '1px dashed var(--tk-rule)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tk-ink-4)', flexShrink: 0 }}>
-                                        <Plus size={14} />
+                                </React.Fragment>
+                            ))}
+                            <div className="sv-section-label" style={{ marginTop: 16 }}>Or create</div>
+                            <button
+                                className="sv-deck-row"
+                                style={{ borderStyle: 'dashed', background: 'transparent' }}
+                                onClick={() => { setDialogStep('create'); setSelectedDeckId(''); }}
+                            >
+                                <div style={{ width: 40, height: 40, borderRadius: '50%', border: '1px dashed var(--tk-rule)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tk-ink-4)', flexShrink: 0 }}>
+                                    <Plus size={14} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div className="sv-deck-name" style={{ color: 'var(--tk-ink-2)' }}>New deck…</div>
+                                    <div className="sv-deck-meta">
+                                        Start a fresh shelf for {(wordsToSave ?? response?.words ?? []).length} word{(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''}
                                     </div>
-                                    <div>
-                                        <div className="sv-deck-name" style={{ color: 'var(--tk-ink-2)' }}>New deck…</div>
-                                        <div className="sv-deck-meta">
-                                            Start a fresh shelf for {(wordsToSave ?? response?.words ?? []).length} word{(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''}
+                                </div>
+                                <ArrowRight size={14} style={{ color: 'var(--tk-ink-4)', flexShrink: 0 }} />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Step "create": new deck form */}
+                    {dialogStep === 'create' && (() => {
+                        const wordCount = (wordsToSave ?? response?.words ?? []).length;
+                        const suggestName = wordCount === 1
+                            ? `${((wordsToSave ?? response?.words ?? [])[0]?.fi || 'word')[0].toUpperCase()}${((wordsToSave ?? response?.words ?? [])[0]?.fi || 'word').slice(1)} & friends`
+                            : 'Untitled shelf';
+                        const d = newDeckDraft;
+                        const setD = (patch: Partial<typeof newDeckDraft>) => setNewDeckDraft(prev => ({ ...prev, ...patch }));
+                        const addTag = (raw?: string) => {
+                            const t = (raw ?? d.tagInput).trim().toLowerCase().replace(/^#/, '');
+                            if (!t || d.tags.includes(t) || d.tags.length >= 4) return;
+                            setD({ tags: [...d.tags, t], tagInput: '' });
+                        };
+                        const removeTag = (t: string) => setD({ tags: d.tags.filter(x => x !== t) });
+                        return (
+                            <div className="sv-body sv-create-body">
+                                <div className="sv-create-grid">
+                                    {/* Left column */}
+                                    <div className="sv-create-main">
+                                        <div className="tk-field">
+                                            <div className="tk-field-label">
+                                                <span>Name</span>
+                                                <small>What would you call this shelf?</small>
+                                            </div>
+                                            <input
+                                                className="tk-textfield"
+                                                placeholder={suggestName}
+                                                value={d.name}
+                                                autoFocus
+                                                onChange={e => setD({ name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="tk-field">
+                                            <div className="tk-field-label">
+                                                <span>Description</span>
+                                                <small>Optional · for your future self</small>
+                                            </div>
+                                            <textarea
+                                                className="tk-textfield"
+                                                rows={3}
+                                                style={{ minHeight: 76, fontSize: 14 }}
+                                                placeholder={`A few words from "${((wordsToSave ?? response?.words ?? [])[0]?.fi || 'today').slice(0, 30)}…"`}
+                                                value={d.description}
+                                                onChange={e => setD({ description: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="tk-field">
+                                            <div className="tk-field-label">
+                                                <span>Tags</span>
+                                                <small>Up to 4 · helps you find it later</small>
+                                            </div>
+                                            <div className="sv-tag-row">
+                                                {d.tags.map(t => (
+                                                    <span key={t} className="sv-tag">
+                                                        #{t}
+                                                        <button onClick={() => removeTag(t)} aria-label={`Remove ${t}`}><X size={10} /></button>
+                                                    </span>
+                                                ))}
+                                                {d.tags.length < 4 && (
+                                                    <input
+                                                        className="sv-tag-input"
+                                                        placeholder={d.tags.length ? '+ tag' : '+ tag (e.g. travel)'}
+                                                        value={d.tagInput}
+                                                        onChange={e => setD({ tagInput: e.target.value })}
+                                                        onKeyDown={e => {
+                                                            if ((e.key === 'Enter' || e.key === ',') && d.tagInput.trim()) { e.preventDefault(); addTag(); }
+                                                            if (e.key === 'Backspace' && !d.tagInput && d.tags.length) removeTag(d.tags[d.tags.length - 1]);
+                                                        }}
+                                                        onBlur={() => d.tagInput && addTag()}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </button>
-                            </>
-                        )}
-                    </div>
+
+                                    {/* Right column */}
+                                    <div className="sv-create-side">
+                                        <div className="tk-field">
+                                            <div className="tk-field-label"><span>Level</span><small>Optional</small></div>
+                                            <div className="tk-chips" style={{ flexWrap: 'wrap' }}>
+                                                {(['A1','A2','B1','B2','C1','C2'] as string[]).map(l => (
+                                                    <button key={l} className="tk-chip" data-active={d.level === l}
+                                                        onClick={() => setD({ level: d.level === l ? '' : l })}>
+                                                        {l}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="tk-field">
+                                            <div className="tk-field-label">
+                                                <span>Retention goal</span>
+                                                <small>How long should these stick?</small>
+                                            </div>
+                                            <div className="sv-goal-list">
+                                                {([
+                                                    { id: 'seedling',  label: 'Seedling',  sub: 'A few days · just curious' },
+                                                    { id: 'sapling',   label: 'Sapling',   sub: 'A few weeks · phrasebook' },
+                                                    { id: 'tree',      label: 'Tree',      sub: 'Months · everyday vocabulary' },
+                                                    { id: 'heartwood', label: 'Heartwood', sub: 'Years · core fluency' },
+                                                ] as const).map(g => (
+                                                    <button key={g.id} className="sv-goal-row" data-selected={d.goal === g.id}
+                                                        onClick={() => setD({ goal: g.id })}>
+                                                        <span className="sv-goal-dot" data-goal={g.id} />
+                                                        <span className="sv-goal-text">
+                                                            <span className="sv-goal-label">{g.label}</span>
+                                                            <span className="sv-goal-sub">{g.sub}</span>
+                                                        </span>
+                                                        {d.goal === g.id && <Check size={13} style={{ color: 'var(--tk-accent)', flexShrink: 0 }} />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="sv-create-preview">
+                                            <div className="sv-section-label" style={{ marginBottom: 6 }}>Preview</div>
+                                            <div className="sv-preview-card">
+                                                <DeckProgressRing value={0} />
+                                                <div style={{ minWidth: 0, flex: 1 }}>
+                                                    <div className="sv-preview-name">{d.name.trim() || suggestName}</div>
+                                                    <div className="sv-preview-meta">
+                                                        {wordCount} card{wordCount !== 1 ? 's' : ''}{d.level ? ` · ${d.level}` : ''} · {d.goal}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* Footer */}
                     <div className="sv-footer">
                         <span className="sv-footer-hint">
-                            {selectedDeckId
-                                ? `→ save ${(wordsToSave ?? response?.words ?? []).length} word${(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''}`
-                                : `${(wordsToSave ?? response?.words ?? []).length} word${(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''} ready`}
+                            {dialogStep === 'create'
+                                ? `→ new shelf · ${(wordsToSave ?? response?.words ?? []).length} card${(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''}`
+                                : selectedDeckId
+                                    ? `→ save ${(wordsToSave ?? response?.words ?? []).length} word${(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''}`
+                                    : `${(wordsToSave ?? response?.words ?? []).length} word${(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''} ready`}
                         </span>
                         <div style={{ display: 'flex', gap: 8 }}>
-                            <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => { setCreateFlashcardsOpen(false); setWordsToSave(null); setSelectedDeckId(''); }}>
-                                Cancel
-                            </button>
-                            <button
-                                className="tk-btn tk-btn-primary tk-btn-sm"
-                                onClick={handleSave}
-                                disabled={!selectedDeckId || saving}
-                                style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-                            >
-                                {saving ? 'Saving…' : <>Save <ArrowRight size={13} /></>}
-                            </button>
+                            {dialogStep === 'create' ? (
+                                <>
+                                    <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => setDialogStep(0)}>Back</button>
+                                    <button
+                                        className="tk-btn tk-btn-primary tk-btn-sm"
+                                        onClick={handleCreateAndSave}
+                                        disabled={!newDeckDraft.name.trim() || saving}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                                    >
+                                        {saving ? 'Creating…' : <>Create &amp; save <ArrowRight size={13} /></>}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={() => { setCreateFlashcardsOpen(false); setWordsToSave(null); resetDialog(); }}>
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="tk-btn tk-btn-primary tk-btn-sm"
+                                        onClick={handleSave}
+                                        disabled={!selectedDeckId || saving}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                                    >
+                                        {saving ? 'Saving…' : <>Save <ArrowRight size={13} /></>}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                     </>}

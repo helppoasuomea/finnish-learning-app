@@ -13,6 +13,7 @@ interface Props {
   onPasteImport: () => void;
   onDeleteCard: (cardId: string) => void;
   onEditCard: (card: Card) => void;
+  onToggleFavorite?: (cardId: string, current: boolean) => void;
   crossDeckDupes?: { [cardId: string]: DuplicateInfo[] };
   onMergeDupes?: (card: Card) => void;
   onRemoveDupes?: (card: Card) => void;
@@ -79,10 +80,11 @@ const TagPill: React.FC<{ tone: string; children: React.ReactNode }> = ({ tone, 
   );
 };
 
-export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, completed, onAddCard, onPasteImport, onDeleteCard, onEditCard, crossDeckDupes = {}, onMergeDupes, onRemoveDupes, onAcknowledgeDupe, initialAcknowledged = [], onMoveCard }) => {
+export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, completed, onAddCard, onPasteImport, onDeleteCard, onEditCard, onToggleFavorite, crossDeckDupes = {}, onMergeDupes, onRemoveDupes, onAcknowledgeDupe, initialAcknowledged = [], onMoveCard }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [menuForId, setMenuForId] = useState<string | null>(null);
   const [dupeBannerDismissed, setDupeBannerDismissed] = useState(false);
+
   const [acknowledgedDupeIds, setAcknowledgedDupeIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (initialAcknowledged.length > 0)
@@ -155,8 +157,13 @@ export const TermsList: React.FC<Props> = ({ cards, stillLearning, notStudied, c
         <div className="tl-en">{c.engCard}</div>
         <ScoreDots score={c.cardScore} />
         <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
-          <button className="tk-icon-btn" style={{ width: 28, height: 28 }}>
-            <Star size={13} style={{ color: c.favorite ? "var(--tk-persimmon)" : "var(--tk-ink-4)" }} />
+          <button
+            className="tk-icon-btn"
+            style={{ width: 28, height: 28 }}
+            title={c.favorite ? "Unfavorite" : "Favorite — top 3 shown as public preview"}
+            onClick={e => { e.stopPropagation(); onToggleFavorite?.(c._id, !!c.favorite); }}
+          >
+            <Star size={13} style={{ color: c.favorite ? "var(--tk-persimmon)" : "var(--tk-ink-4)", fill: c.favorite ? "var(--tk-persimmon)" : "none", transition: "color 0.15s, fill 0.15s" }} />
           </button>
           <button className="tk-icon-btn" style={{ width: 28, height: 28 }}><Volume2 size={13} /></button>
           <div className="tl-kebab" style={{ position: "relative" }}>

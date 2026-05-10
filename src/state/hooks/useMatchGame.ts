@@ -71,7 +71,6 @@ export const useMatchGame = (deckId: string) => {
             completed: true
         }
 
-        console.log('Game completed, submitting result:', gameResult)
         await submitMatchGameResult(gameResult)
     }
 

@@ -7,59 +7,17 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import { ReviewSession, ReviewDone } from "@/components/ReviewSession";
 import { flushQueue } from "@/utils/reviewAnswerQueue";
 import { Card } from "@/types";
+import {
+  type DeckCard,
+  type Rating,
+  isDueToday as isDueTodayFn,
+  detectLoadState,
+  dueQueueComparator,
+  MEMORY_SHELVES,
+} from "@/utils/srs";
 import axios from "axios";
 
-type DeckCard  = Card & { deckId: string; deckName: string };
-type Rating    = "again" | "hard" | "good" | "easy";
-type LoadState = "calm" | "full" | "flood" | "backlog" | "seedling" | "zero-clear" | "zero-fresh";
-
 const DAILY_CAP = 25;
-
-// ── FSRS helpers ─────────────────────────────────────────────────────────────
-
-function isDueTodayFn(c: DeckCard, endOfToday: Date): boolean {
-  if (c.suspended) return false;
-  const reps = c.reps ?? 0;
-  if (reps === 0 && !c.dueAt) return true;
-  const due = c.dueAt ?? c.nextReviewDate ?? null;
-  if (!due) return reps === 0;
-  return new Date(due) <= endOfToday;
-}
-
-function phaseOf(c: DeckCard) {
-  const reps = c.reps ?? 0;
-  const stab = c.stability ?? c.reviewInterval ?? 1;
-  if (reps === 0) return "seed";
-  if (stab < 7)  return "sprout";
-  if (stab < 90) return "sapling";
-  return "tree";
-}
-
-// ── Load-state detection ──────────────────────────────────────────────────────
-
-function detectLoadState(awayDays: number, hasDecks: boolean, totalDue: number): LoadState {
-  if (awayDays >= 3)  return "backlog";
-  if (!hasDecks)      return "zero-fresh";
-  if (totalDue === 0) return "zero-clear";
-  if (totalDue <= 8)  return "seedling";
-  if (totalDue <= 25) return "calm";
-  if (totalDue <= 80) return "full";
-  return "flood";
-}
-
-// ── Memory shelves ────────────────────────────────────────────────────────────
-
-const MEMORY_SHELVES = [
-  { id: "unseen", interval: "unseen",  label: "Seed",          phase: "seed",    filter: (c: DeckCard) => (c.reps ?? 0) === 0 },
-  { id: "today",  interval: "today",   label: "Sprout",        phase: "sprout",  filter: (c: DeckCard) => (c.reps ?? 0) > 0 && (c.stability ?? 1) < 1 },
-  { id: "1d",     interval: "1 day",   label: "Sprout · 1d",   phase: "sprout",  filter: (c: DeckCard) => (c.reps ?? 0) > 0 && (c.stability ?? 1) >= 1  && (c.stability ?? 1) < 3 },
-  { id: "3d",     interval: "3 days",  label: "Sprout · 3d",   phase: "sprout",  filter: (c: DeckCard) => (c.reps ?? 0) > 0 && (c.stability ?? 1) >= 3  && (c.stability ?? 1) < 7 },
-  { id: "1w",     interval: "1 week",  label: "Sapling · 1w",  phase: "sapling", filter: (c: DeckCard) => (c.stability ?? 1) >= 7  && (c.stability ?? 1) < 14 },
-  { id: "2w",     interval: "2 weeks", label: "Sapling · 2w",  phase: "sapling", filter: (c: DeckCard) => (c.stability ?? 1) >= 14 && (c.stability ?? 1) < 30 },
-  { id: "1mo",    interval: "1 month", label: "Sapling · 1mo", phase: "sapling", filter: (c: DeckCard) => (c.stability ?? 1) >= 30 && (c.stability ?? 1) < 90 },
-  { id: "3mo",    interval: "3 mo",    label: "Tree · 3mo",    phase: "tree",    filter: (c: DeckCard) => (c.stability ?? 1) >= 90 && (c.stability ?? 1) < 180 },
-  { id: "6mo",    interval: "6 mo+",   label: "Tree · 6mo+",   phase: "tree",    filter: (c: DeckCard) => (c.stability ?? 1) >= 180 },
-];
 
 const SHELF_COLOR: Record<string, string> = {
   seed:    "var(--tk-ink-4)",
@@ -200,15 +158,7 @@ export const ReviewDashboardPage: React.FC = () => {
     [allCards, todayEnd]
   );
 
-  const sortedDue = useMemo(() => [...dueCards].sort((a, b) => {
-    const lA = phaseOf(a) === "sprout" && (a.lapses ?? 0) > 0;
-    const lB = phaseOf(b) === "sprout" && (b.lapses ?? 0) > 0;
-    if (lA !== lB) return lA ? -1 : 1;
-    const stabDiff = (a.stability ?? 1) - (b.stability ?? 1);
-    if (stabDiff !== 0) return stabDiff;
-    return new Date(a.dueAt ?? a.nextReviewDate ?? 0).getTime() -
-           new Date(b.dueAt ?? b.nextReviewDate ?? 0).getTime();
-  }), [dueCards]);
+  const sortedDue = useMemo(() => [...dueCards].sort(dueQueueComparator()), [dueCards]);
 
   const newCount    = useMemo(() => dueCards.filter(c => (c.reps ?? 0) === 0).length, [dueCards]);
   const learnCount  = useMemo(() => dueCards.filter(c => (c.reps ?? 0) > 0 && (c.stability ?? 1) < 1).length, [dueCards]);

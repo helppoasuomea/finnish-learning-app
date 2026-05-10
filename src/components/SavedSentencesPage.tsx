@@ -10,7 +10,7 @@ interface SavedSentence {
   fromLanguage: string;
   toLanguage: string;
   wordsSavedCount: number;
-  responsePayload?: unknown;
+  responsePayload?: { words?: unknown[]; sentence?: string; originalText?: string } | null;
   createdAt: string;
 }
 
@@ -38,8 +38,16 @@ function timeLabel(iso: string): string {
   });
 }
 
+// Whitespace word-count — only used as a fallback for languages without a
+// parsed word breakdown (responsePayload.words).
 function wc(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
+}
+
+function wordCount(s: SavedSentence): number {
+  const n = s.responsePayload?.words?.length;
+  if (typeof n === 'number' && n > 0) return n;
+  return wc(s.originalText);
 }
 
 function timestampLabel(iso: string): string {
@@ -63,7 +71,7 @@ const SentenceDetail = ({
   onDelete: (id: string) => void;
 }) => {
   const navigate  = useNavigate();
-  const words     = wc(s.originalText);
+  const words     = wordCount(s);
   const kept      = s.wordsSavedCount;
   const pct       = words > 0 ? Math.round((kept / words) * 100) : 0;
   const srcFlag   = LANG_FLAGS[s.fromLanguage] ?? "🌐";
@@ -208,7 +216,7 @@ export const SavedSentencesPage = () => {
 
   const active = all.find(s => s._id === activeId) ?? filtered[0] ?? null;
 
-  const totalWords = all.reduce((a, s) => a + wc(s.originalText), 0);
+  const totalWords = all.reduce((a, s) => a + wordCount(s), 0);
   const totalKept  = all.reduce((a, s) => a + s.wordsSavedCount, 0);
 
   const handleDelete = async (id: string) => {
@@ -345,11 +353,11 @@ export const SavedSentencesPage = () => {
                           <span className="ss-row-time">{timeLabel(s.createdAt)}</span>
                           {s.wordsSavedCount > 0 ? (
                             <span className="ss-row-saved">
-                              <span className="ss-mono">{s.wordsSavedCount}</span>/<span className="ss-mono">{wc(s.originalText)}</span>
+                              <span className="ss-mono">{s.wordsSavedCount}</span>/<span className="ss-mono">{wordCount(s)}</span>
                             </span>
                           ) : (
                             <span className="ss-row-unsaved">
-                              <span className="ss-mono">{wc(s.originalText)}</span> w
+                              <span className="ss-mono">{wordCount(s)}</span> w
                             </span>
                           )}
                         </div>

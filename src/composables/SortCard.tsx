@@ -22,15 +22,10 @@ export const organizeCardsByScore = (cards: Card[]): OrganizedCard => {
             stillLearning.push(card);
         }
     })
-    const sortWithFavoritesAtTop = (a: Card, b: Card) => {
-        if (a.favorite === b.favorite) {
-            return a.cardScore - b.cardScore
-        }
-        return a.favorite ? -1 : 1
-    }
-    stillLearning.sort(sortWithFavoritesAtTop)
-    notStudied.sort(sortWithFavoritesAtTop)
-    completed.sort(sortWithFavoritesAtTop)
+    const byScore = (a: Card, b: Card) => a.cardScore - b.cardScore;
+    stillLearning.sort(byScore);
+    notStudied.sort(byScore);
+    completed.sort(byScore);
     
     return { stillLearning, notStudied, completed }
 }

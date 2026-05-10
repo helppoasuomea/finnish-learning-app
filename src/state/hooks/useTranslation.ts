@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { chatCompletionStream, chatCompletion } from "@/chatcompletion/ChatCompletion";
 import { v4 as uuidv4 } from 'uuid'
 import jsonData from '../../../words.json'
@@ -6,7 +6,11 @@ import jsonData from '../../../words.json'
 export type StreamPhase = 'idle' | 'reading' | 'words' | 'enriching' | 'done';
 
 const useTranslation = () => {
-    const [fromLanguage, setFromLanguage] = useState('Finnish')
+    // Use the same key as DeckContext ('lukea:lang') as the primary source of truth,
+    // falling back to the legacy 'fromLanguage' key so nothing breaks for existing users.
+    const [fromLanguage, setFromLanguage] = useState(() =>
+        localStorage.getItem('lukea:lang') || localStorage.getItem('fromLanguage') || 'Finnish'
+    )
     const [inputText, setInputText] = useState('')
     const [ready, setReady] = useState(true)
     const [isStreaming, setIsStreaming] = useState(false)
@@ -38,6 +42,7 @@ const useTranslation = () => {
             setResponse(testResponse);
             localStorage.setItem("response", JSON.stringify(testResponse));
             localStorage.setItem("fromLanguage", fromLanguage);
+            localStorage.setItem("lukea:lang", fromLanguage);
             setReady(true);
             setIsStreaming(false);
             setStreamPhase('done');
@@ -89,6 +94,7 @@ const useTranslation = () => {
                         setResponse(finalResponse);
                         localStorage.setItem('response', JSON.stringify(finalResponse));
                         localStorage.setItem('fromLanguage', fromLanguage);
+                        localStorage.setItem('lukea:lang', fromLanguage);
                         break;
                     }
 
@@ -128,6 +134,7 @@ const useTranslation = () => {
                     setResponse(finalResponse);
                     localStorage.setItem('response', JSON.stringify(finalResponse));
                     localStorage.setItem('fromLanguage', fromLanguage);
+                    localStorage.setItem('lukea:lang', fromLanguage);
                 }
             } catch (fallbackError) {
                 console.error('Fallback translation error:', fallbackError);
@@ -135,10 +142,6 @@ const useTranslation = () => {
         }
     }
 
-    useEffect(() => {
-        const storedFromLanguage = localStorage.getItem('fromLanguage')
-        if (storedFromLanguage) setFromLanguage(storedFromLanguage)
-    }, [])
 
     const refreshResponseFromStorage = () => {
         const storedResponse = localStorage.getItem('response');

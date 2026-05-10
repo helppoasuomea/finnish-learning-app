@@ -8,8 +8,8 @@ interface Props {
 
 const OPTIONS: { v: DifficultyLabel; title: string; examples: string }[] = [
     { v: 'plain', title: 'Plain',  examples: 'Beginner · Intermediate · Advanced' },
-    { v: 'cefr',  title: 'CEFR',   examples: 'A1 · A2 · B1 · B2 · C1 · C2' },
-    { v: 'both',  title: 'Both',   examples: 'Int · B1' },
+    { v: 'cefr',  title: 'CEFR',   examples: 'A1 · B1 · C1' },
+    { v: 'both',  title: 'Both',   examples: 'Beginner · A1' },
 ]
 
 export function DifficultyLabelPicker({ value, onChange, compact = false }: Props) {

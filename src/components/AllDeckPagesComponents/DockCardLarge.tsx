@@ -17,6 +17,8 @@ import { DeckContext } from "@/contexts/DeckContext";
 import { useContext } from "react";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { getTimeStamp } from "@/utils/getTimestamp";
+import { UserContext } from "@/contexts/UserContext";
+import { formatLevelLabel } from "@/utils/levelDisplay";
 
 const TONE: Record<string, string> = {
     Finnish: "var(--tk-tag-moss)",
@@ -49,12 +51,15 @@ export const DockCardLarge: React.FC<{
         deckTags: string[];
         cards: any[];
         description?: string;
+        level?: string;
+        deckEmoji?: string;
     };
     mergeProps?: { isSelected: boolean; onSelect: () => void };
 }> = ({ deck, mergeProps }) => {
-    const { deckName, deckTags, cards, _id, description } = deck;
+    const { deckName, deckTags, cards, _id, description, level, deckEmoji } = deck;
     const { toast } = useToast();
     const { refreshDecks } = useContext(DeckContext);
+    const { user } = useContext(UserContext);
     const navigate = useNavigate();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -94,6 +99,11 @@ export const DockCardLarge: React.FC<{
                             {tag}
                         </span>
                     ))}
+                    {level && (
+                        <span className="dk-tag-pill" style={{ color: "var(--tk-ink-3)", fontStyle: "italic" }}>
+                            {formatLevelLabel(level, user?.difficultyLabel)}
+                        </span>
+                    )}
                 </div>
                 <div style={{ position: "relative" }}>
                     <ProgressRing value={percentage} size={38} stroke={2.5} />
@@ -111,7 +121,10 @@ export const DockCardLarge: React.FC<{
                 </div>
             </div>
 
-            <div className="dk-card-title">{deckName}</div>
+            <div className="dk-card-title">
+                {deckEmoji && <span style={{ marginRight: 6, fontSize: "1em" }}>{deckEmoji}</span>}
+                {deckName}
+            </div>
             {description && <div className="dk-card-desc">{description}</div>}
 
             <div className="dk-card-foot">

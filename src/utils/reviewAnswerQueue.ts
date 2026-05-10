@@ -1,4 +1,11 @@
+import axios from 'axios';
+
 const QUEUE_KEY = 'lukea:review-queue';
+
+function apiUrl(path: string): string {
+  const base = (axios.defaults.baseURL as string ?? '').replace(/\/$/, '');
+  return `${base}/${path.replace(/^\//, '')}`;
+}
 
 export interface QueuedAnswer {
   id: string;
@@ -34,38 +41,43 @@ let activeFlush: Promise<void> | null = null;
 
 async function _doFlush(): Promise<void> {
   if (!navigator.onLine) return;
-  try {
-    while (true) {
-      const pending = load();
-      if (!pending.length) break;
-      const succeeded = new Set<string>();
-      for (const item of pending) {
-        try {
-          const res = await fetch('/api/review/answer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),
-            credentials: 'include',
-          });
-          // 4xx = permanent failure (card/deck not found) — remove, don't retry
-          if (res.ok || (res.status >= 400 && res.status < 500)) succeeded.add(item.id);
-        } catch {
-          // network error — leave in queue for retry
-        }
+  while (true) {
+    const pending = load();
+    if (!pending.length) break;
+    const succeeded = new Set<string>();
+    for (const item of pending) {
+      try {
+        const res = await fetch(apiUrl('review/answer'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardId: item.cardId, deckId: item.deckId, grade: item.grade }),
+          credentials: 'include',
+        });
+        // 4xx = permanent failure (card/deck not found) — remove, don't retry
+        if (res.ok || (res.status >= 400 && res.status < 500)) succeeded.add(item.id);
+      } catch {
+        // network error — leave in queue for retry
       }
-      // Re-read localStorage in case enqueue() added new items during the await
-      persist(load().filter(i => !succeeded.has(i.id)));
-      if (succeeded.size === 0) break;
     }
-  } finally {
-    activeFlush = null;
+    // Re-read localStorage in case enqueue() added new items during the await
+    persist(load().filter(i => !succeeded.has(i.id)));
+    if (succeeded.size === 0) break;
   }
 }
 
-/** Flush the queue. Returns a promise that resolves when the queue is empty or a network error stops progress. */
+/**
+ * Flush the queue. Returns a promise that resolves when the queue is empty
+ * or a network error stops progress.
+ *
+ * activeFlush is cleared via .finally() ON the assigned promise — clearing
+ * inside _doFlush would race with the assignment in this function (the
+ * `activeFlush = _doFlush()` statement evaluates the RHS first, runs any
+ * synchronous early-return / finally inside _doFlush, THEN assigns the
+ * resolved promise to activeFlush — leaving it stuck non-null forever).
+ */
 export function flushQueue(): Promise<void> {
   if (!activeFlush) {
-    activeFlush = _doFlush();
+    activeFlush = _doFlush().finally(() => { activeFlush = null; });
   }
   return activeFlush;
 }

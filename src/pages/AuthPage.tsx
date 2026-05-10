@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Check, X, Delete } from "lucide-react";
 import axios, { AxiosError } from "axios";
 import { DifficultyLabelPicker } from "@/components/DifficultyLabelPicker";
+import { WelcomeOnboarding, type OnboardingResult } from "@/components/WelcomeOnboarding";
 
 // ─── Device ID ───────────────────────────────────────────────────────────────
 function getDeviceId(): string {
@@ -369,7 +370,6 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [username, setUsername] = useState("");
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [learning, setLearning] = useState("fi");
   const [difficultyLabel, setDifficultyLabel] = useState<'plain' | 'cefr' | 'both'>('plain');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -442,26 +442,6 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
       </div>
 
       <div className="au-field">
-        <label className="au-label">I'm learning</label>
-        <div className="au-lang-picker">
-          {[
-            { v: "fi", flag: "🇫🇮", label: "Finnish" },
-            { v: "vi", flag: "🇻🇳", label: "Vietnamese" },
-            { v: "ko", flag: "🇰🇷", label: "Korean" },
-            { v: "ja", flag: "🇯🇵", label: "Japanese" },
-            { v: "et", flag: "🇪🇪", label: "Estonian" },
-            { v: "other", flag: "+", label: "Other" },
-          ].map(l => (
-            <button key={l.v} type="button" className="au-lang-chip"
-              data-active={learning === l.v} onClick={() => setLearning(l.v)}>
-              <span style={{ fontSize: 14 }}>{l.flag}</span>
-              <span>{l.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="au-field">
         <label className="au-label">Difficulty labels</label>
         <DifficultyLabelPicker value={difficultyLabel} onChange={setDifficultyLabel} />
         <div style={{ fontSize: 12, color: 'var(--tk-ink-4)', marginTop: 2 }}>
@@ -493,6 +473,7 @@ export const AuthPage = ({ initialMode = "signin" }: { initialMode?: "signin" | 
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "register" | "pin">(initialMode);
   const [pinUsername, setPinUsername] = useState<string>(() => localStorage.getItem("lukea:lastUsername") ?? "");
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Auto-switch to PIN screen on mount if a PIN is set up for this device
   useEffect(() => {
@@ -510,18 +491,28 @@ export const AuthPage = ({ initialMode = "signin" }: { initialMode?: "signin" | 
       .catch(() => {});
   }, []);
 
-  const handleSuccess = () => { window.location.href = '/'; };
+  const handleSignInSuccess = () => { window.location.href = '/'; };
+  const handleRegisterSuccess = () => setShowOnboarding(true);
+
+  const handleOnboardingComplete = ({ langName }: OnboardingResult) => {
+    localStorage.setItem('lukea:lang', langName);
+    window.location.href = '/';
+  };
 
   const switchMode = (m: "signin" | "register") => {
     setMode(m);
     navigate(m === "signin" ? "/login" : "/register", { replace: true });
   };
 
+  if (showOnboarding) {
+    return <WelcomeOnboarding onComplete={handleOnboardingComplete} />;
+  }
+
   if (mode === "pin") {
     return (
       <PinUnlock
         username={pinUsername}
-        onSuccess={handleSuccess}
+        onSuccess={handleSignInSuccess}
         onUsePassword={() => setMode("signin")}
       />
     );
@@ -556,11 +547,11 @@ export const AuthPage = ({ initialMode = "signin" }: { initialMode?: "signin" | 
           <div className="au-form-body">
             {mode === "signin" ? (
               <SignInForm
-                onSuccess={handleSuccess}
+                onSuccess={handleSignInSuccess}
                 onUsePin={(username) => { setPinUsername(username); setMode("pin"); }}
               />
             ) : (
-              <RegisterForm onSuccess={handleSuccess} />
+              <RegisterForm onSuccess={handleRegisterSuccess} />
             )}
           </div>
 

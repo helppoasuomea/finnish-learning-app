@@ -84,9 +84,23 @@ export const grammarProgress = {
   async syncFromServer(): Promise<void> {
     try {
       const { data } = await axios.get<Record<string, TopicProgress>>('/grammar-progress');
-      // Merge: server wins on any topic it has data for
+      // Merge: server wins on any topic it has data for.
+      // Whitelist known TopicProgress keys to prevent prototype pollution.
+      const PROGRESS_KEYS: (keyof TopicProgress)[] = [
+        'topicId', 'masteryPct', 'attemptsTotal', 'attemptsCorrect',
+        'bySection', 'status', 'lastStudiedAt',
+      ];
+      const safe: Record<string, TopicProgress> = {};
+      for (const [topicId, raw] of Object.entries(data)) {
+        if (topicId === '__proto__' || topicId === 'constructor' || topicId === 'prototype') continue;
+        const entry: Partial<TopicProgress> = {};
+        for (const k of PROGRESS_KEYS) {
+          if (k in raw) (entry as any)[k] = (raw as any)[k];
+        }
+        safe[topicId] = entry as TopicProgress;
+      }
       const local = this.read();
-      this.write({ ...local, ...data });
+      this.write({ ...local, ...safe });
     } catch {
       // offline or unauthenticated — keep local data as-is
     }
