@@ -256,7 +256,7 @@ const TOPIC_CONSONANT_GRADATION: GrammarTopic = {
       commonPitfalls: [
         'The nominative singular is always strong grade.',
         'The partitive singular is also strong grade (taloa, kauppaa, tyttöä).',
-        'The plural nominative (-t) is strong grade: kaupat, tytöt.',
+        'The plural nominative (-t) is weak grade — the -t closes the syllable just like the genitive -n: kaupat, tytöt.',
       ],
     },
     {
@@ -1159,7 +1159,7 @@ const TOPIC_PLURAL_FORMS: GrammarTopic = {
   overview: {
     theme: 'Finnish plurals are formed differently depending on the case. The nominative plural uses -t; all other (oblique) cases insert -i- into the stem; the partitive plural has its own set of endings. Vowel changes occur before -i- and must be memorised.',
     grammarFocus: [
-      'Nominative plural: strong-grade stem + -t',
+      'Nominative plural: weak-grade stem + -t (the -t closes the syllable, triggering weak grade)',
       'Oblique plural stem: weak-grade stem + -i- (inserted vowel)',
       'Vowel changes before -i-: a → o (or drop), ä → ö (or drop), final -e stays',
       'Partitive plural endings: -ja/-jä, -ia/-iä, -oita/-öitä, -eja/-ejä',
@@ -1172,18 +1172,18 @@ const TOPIC_PLURAL_FORMS: GrammarTopic = {
   sections: [
     {
       id: 'plu-nominative',
-      title: 'Nominative plural: strong grade + -t',
+      title: 'Nominative plural: weak grade + -t',
       question: 'Miten nominatiivin monikko muodostetaan?',
       questionEn: 'How is the nominative plural formed?',
       grammarPattern:
-        'The nominative plural is formed by adding -t to the strong-grade stem. This is the only plural form that uses the strong grade — all other plural cases use the weak-grade oblique stem.',
+        'The nominative plural is formed by adding -t to the weak-grade stem. The -t ending closes the final syllable, so weak grade appears — exactly like the genitive singular -n. All other plural cases also use the weak-grade stem. See the stem-types section below for non-trivial nouns like sukupolvi → sukupolvet.',
       caseMarker: '-t',
       morphology: {
         stem: 'talo',
         ending: '-t',
         surface: 'talot',
         breakdown: [
-          { token: 'talo', role: 'stem', note: 'strong-grade stem of talo (house)' },
+          { token: 'talo', role: 'stem', note: 'stem of talo (house) — no gradation here' },
           { token: 't', role: 'ending', note: 'nominative plural marker' },
         ],
       },
@@ -1191,13 +1191,45 @@ const TOPIC_PLURAL_FORMS: GrammarTopic = {
         { fi: 'talo → talot', en: 'house → houses' },
         { fi: 'kirja → kirjat', en: 'book → books' },
         { fi: 'koira → koirat', en: 'dog → dogs' },
-        { fi: 'kauppa → kaupat', en: 'shop → shops (pp → p: strong grade nom.pl)' },
-        { fi: 'tyttö → tytöt', en: 'girl → girls (tt → t: strong grade)' },
-        { fi: 'pöytä → pöydät', en: 'table → tables (strong grade pöytä; t stays since nom.pl is strong)' },
+        { fi: 'kauppa → kaupat', en: 'shop → shops (pp → p: weak grade — -t closes syllable)' },
+        { fi: 'tyttö → tytöt', en: 'girl → girls (tt → t: weak grade)' },
+        { fi: 'pöytä → pöydät', en: 'table → tables (t → d: weak grade)' },
       ],
       commonPitfalls: [
-        'The nominative plural uses the STRONG grade — unlike the genitive singular which uses the weak grade.',
+        'Both genitive singular (-n) and nominative plural (-t) use the WEAK grade — both endings close the final syllable. The difference is only the final consonant: kaupan (gen.sg) vs kaupat (nom.pl).',
         'Do not confuse talot (nom.pl) with talon (gen.sg): -t marks plural nominative, -n marks genitive singular.',
+      ],
+    },
+    {
+      id: 'plu-nominative-stem-types',
+      title: 'Nominative plural by stem type',
+      question: 'Miksi sukupolvi → sukupolvet, ei *sukupolvit?',
+      questionEn: 'Why is the plural sukupolvet, not sukupolvit?',
+      grammarPattern:
+        "The nominative plural -t attaches to the noun's inflectional stem, not its dictionary form. Many Finnish nouns hide a stem that differs from the citation form — most often an -e- instead of -i, or a fuller form like -kse-, -ude-, -ise-. The plural -t reveals these hidden stems. Always learn a noun together with its genitive singular, which exposes the true stem.",
+      formula: 'inflectional stem + -t (NOT dictionary form + -t)',
+      examples: [
+        { fi: 'sukupolvi → sukupolvet', en: 'generation → generations (i-stem with hidden -e-: inflectional stem sukupolve-)' },
+        { fi: 'kieli → kielet', en: 'language → languages (same pattern: stem kiele-)' },
+        { fi: 'ovi → ovet', en: 'door → doors (stem ove-)' },
+        { fi: 'vesi → vedet', en: 'water → waters (stem vede-, t → d weak grade)' },
+        { fi: 'meri → meret', en: 'sea → seas (old i-stem: -i is part of the stem)' },
+        { fi: 'nainen → naiset', en: 'woman → women (-nen → -set: the -nen suffix is replaced)' },
+        { fi: 'suomalainen → suomalaiset', en: 'Finnish (person) → (plural) (same -nen → -set pattern)' },
+        { fi: 'vastaus → vastaukset', en: 'answer → answers (-us: stem extends to -ukse-)' },
+        { fi: 'tutkimus → tutkimukset', en: 'research → researches (same -us → -ukse- pattern)' },
+        { fi: 'vapaus → vapaudet', en: 'freedom → freedoms (-uus: stem extends to -uude-)' },
+        { fi: 'mahdollisuus → mahdollisuudet', en: 'possibility → possibilities (same -uus → -uude-)' },
+        { fi: 'huone → huoneet', en: 'room → rooms (-e doubles to -ee- before -t)' },
+        { fi: 'perhe → perheet', en: 'family → families (same -e → -ee-)' },
+        { fi: 'kaunis → kauniit', en: 'beautiful → (plural) (-is adjective: -i lengthens to -ii-)' },
+        { fi: 'kuningas → kuninkaat', en: 'king → kings (consonant stem: dictionary -as, stem kuninka-)' },
+      ],
+      commonPitfalls: [
+        'Always learn a noun together with its genitive singular — the genitive reveals the inflectional stem. sukupolvi → sukupolven → stem sukupolve- → plural sukupolvet.',
+        '-i in the dictionary form is often misleading: most i-stems ending in -vi, -li, -si are really e-stems (sukupolvi → sukupolve-).',
+        '-us and -uus look similar but inflect very differently: vastaus → vastaukset, vapaus → vapaudet.',
+        'To form the plural of -us/-uus nouns, find the genitive first: vastaus → vastauksen → stem vastaukse- → drop -n → vastaukse- → add -t → vastaukset.',
       ],
     },
     {
@@ -1298,7 +1330,8 @@ const TOPIC_PLURAL_FORMS: GrammarTopic = {
   ],
 
   grammarIndex: [
-    { pattern: 'strong-grade stem + -t', use: 'Nominative plural', examples: ['talot', 'kirjat', 'kaupat', 'tytöt'], sectionRef: 'plu-nominative' },
+    { pattern: 'weak-grade stem + -t', use: 'Nominative plural (weak grade like genitive sg)', examples: ['talot', 'kirjat', 'kaupat', 'tytöt'], sectionRef: 'plu-nominative' },
+    { pattern: 'inflectional stem + -t', use: 'Nominative plural for non-trivial stem types (-i/-e, -nen, -us, -uus, -e)', examples: ['sukupolvet', 'kielet', 'naiset', 'vastaukset', 'huoneet'], sectionRef: 'plu-nominative-stem-types' },
     { pattern: 'weak-grade stem + -i- + case', use: 'Oblique plural (all non-nominative cases)', examples: ['taloissa', 'kirjoilla', 'kaupat → kaupoissa'], sectionRef: 'plu-oblique-stem' },
     { pattern: 'stem + -ja/-jä', use: 'Partitive plural (most nouns)', examples: ['taloja', 'tyttöjä', 'kirjoja'], sectionRef: 'plu-partitive' },
     { pattern: 'stem + -ia/-iä', use: 'Partitive plural (i-stem and some others)', examples: ['koiria', 'kieliä'], sectionRef: 'plu-partitive' },
@@ -1379,6 +1412,279 @@ const TOPIC_PLURAL_FORMS: GrammarTopic = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// DERIVATION VERBS — VERBS FROM VERBS
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_DERIVATION_VERBS: GrammarTopic = {
+  id: 'derivation-verbs',
+  version: '1.0.0',
+  title: 'Word formation — verbs from verbs',
+  subtitle: 'Causatives (-ttaa), reflexives (-utua), frequentatives (-skella), momentaneous (-ahtaa).',
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 18,
+  prerequisites: ['verb-types'],
+  tags: ['morphology'],
+  overview: {
+    theme: "Finnish productively derives new verbs from existing verbs using a set of suffixes. The four most important are: causative (-ttaa/-ttää: to make someone do), reflexive/inchoative (-utua/-ytyä: to become, to get oneself into a state), frequentative (-skella/-skellä: to do repeatedly/casually), and momentaneous (-ahtaa/-ähtää: to do suddenly/briefly).",
+    grammarFocus: [
+      'Causative -ttaa/-ttää: teettää (have made), juottaa (make drink), opettaa (to teach)',
+      'Reflexive/Inchoative -utua/-ytyä: väsytyä (become tired), kaunistua (become beautiful)',
+      'Frequentative -skella/-skellä: istuskella (sit around), käyskellä (wander)',
+      'Momentaneous -ahtaa/-ähtää: puhkahtaa (burst out), naurahtaa (give a short laugh)',
+    ],
+    whyItMatters: "Understanding these patterns lets you decode and create hundreds of Finnish verbs. When you see 'juottaa' you know it means 'to make someone drink'; 'naureskella' means 'to keep chuckling'. This unlocks reading comprehension and active vocabulary building.",
+  },
+  sections: [
+    {
+      id: 'deriv-causative',
+      title: 'Causative verbs: -ttaa/-ttää',
+      question: 'Mitä kausatiivinen johdin -ttaa/-ttää tarkoittaa?',
+      questionEn: 'What does the causative suffix -ttaa/-ttää mean?',
+      grammarPattern:
+        "The causative suffix -ttaa/-ttää is added to the verb stem to create a new verb meaning 'to cause/make someone do X' or 'to have X done'. The new verb is Type 1 (-ttaa/-ttää → drop -a/-ä for stem).",
+      formula: 'verb stem + -ttaa (back) / -ttää (front)',
+      examples: [
+        { fi: 'tehdä (to do) → teettää (to have done, to commission)', en: 'Teetin auton korjata. (I had the car repaired.)' },
+        { fi: 'juoda (to drink) → juottaa (to make drink, to water)', en: 'Juotin hevosen. (I watered the horse.)' },
+        { fi: 'oppia (to learn) → opettaa (to teach = to make learn)', en: 'Hän opettaa matematiikkaa.' },
+        { fi: 'nukkua (to sleep) → nukuttaa (to make sleepy)', en: 'Minua nukuttaa. (I feel sleepy — lit. it makes me sleep.)' },
+        { fi: 'nauraa (to laugh) → naurattaa (to make laugh)', en: 'Se naurattaa minua. (It makes me laugh.)' },
+        { fi: 'kirjoittaa (to write) → kirjoituttaa (to have written)', en: 'Kirjoitutin kirjeen sihteerillä. (I had the letter written by the secretary.)' },
+      ],
+      commonPitfalls: [
+        'Many common verbs are historically causative: opettaa (teach = make learn), syöttää (feed = make eat), juottaa (water = make drink).',
+        'The causative of some verbs uses -uttaa/-yttää when the base ends in -ut-/-yt-: muuttaa (to move/change), but not always predictable.',
+      ],
+    },
+    {
+      id: 'deriv-reflexive',
+      title: 'Reflexive/Inchoative verbs: -utua/-ytyä',
+      question: 'Mitä refleksiivinen johdin -utua/-ytyä tarkoittaa?',
+      questionEn: 'What does the reflexive/inchoative suffix -utua/-ytyä mean?',
+      grammarPattern:
+        "The suffix -utua/-ytyä (also seen as -ua/-yä on some stems) creates verbs meaning 'to become X' or 'to get oneself into state X'. These are intransitive — they cannot take a direct object.",
+      formula: 'adjective/noun/verb stem + -utua (back) / -ytyä (front)',
+      examples: [
+        { fi: 'kaunis (beautiful) → kaunistua (to become beautiful)', en: 'Luonto kaunistuu keväällä. (Nature becomes beautiful in spring.)' },
+        { fi: 'väsymys (fatigue) → väsytyä (to become tired)', en: 'Väsytyin pitkästä matkasta. (I got tired from the long journey.)' },
+        { fi: 'ilmestyä (to appear, to emerge)', en: 'Kirja ilmestyi eilen. (The book appeared/was published yesterday.)' },
+        { fi: 'muuttua (to change, to transform)', en: 'Tilanne muuttui nopeasti. (The situation changed quickly.)' },
+        { fi: 'yllättyä (to be surprised)', en: 'Yllätyin hänen vastauksestaan. (I was surprised at his/her answer.)' },
+        { fi: 'kiinnostuа (to become interested)', en: 'Kiinnostuin aiheesta. (I became interested in the topic.)' },
+      ],
+      commonPitfalls: [
+        '-utua/-ytyä verbs are intransitive — they cannot have an accusative object. Compare: väsyttää (transitive causative: it tires me) vs. väsytyä (intransitive: I become tired).',
+      ],
+    },
+    {
+      id: 'deriv-frequentative',
+      title: 'Frequentative verbs: -skella/-skellä',
+      question: 'Mitä frekventatiivinen johdin -skella/-skellä tarkoittaa?',
+      questionEn: 'What does the frequentative suffix -skella/-skellä mean?',
+      grammarPattern:
+        "The frequentative suffix -skella/-skellä creates verbs meaning 'to do X repeatedly', 'to keep doing X', or 'to do X casually/aimlessly'. Often implies a leisurely, habitual, or aimless quality.",
+      formula: 'verb stem + -skella (back) / -skellä (front)',
+      examples: [
+        { fi: 'istua (to sit) → istuskella (to sit around, lounge)', en: 'Istuskelimme puistossa. (We sat around in the park.)' },
+        { fi: 'käydä (to go) → käyskellä (to wander, to roam)', en: 'Hän käyskeli kaupungilla. (He wandered around town.)' },
+        { fi: 'nauraa (to laugh) → naureskella (to keep chuckling)', en: 'He naureskelivat koko illan. (They kept chuckling all evening.)' },
+        { fi: 'katsoa (to look) → katskella / katella (to browse, to keep looking)', en: 'Katselimme tähtiä. (We were watching the stars.)' },
+        { fi: 'puhua (to speak) → puheleskella (to chat leisurely)', en: 'Puheleskelimme kauan. (We chatted for a long time.)' },
+      ],
+      commonPitfalls: [
+        'Frequentative verbs imply repetition or casualness — they are not just a stylistic variant of the base verb. Naureskella (keep chuckling) ≠ nauraa (laugh once).',
+      ],
+    },
+    {
+      id: 'deriv-momentaneous',
+      title: 'Momentaneous verbs: -ahtaa/-ähtää',
+      question: 'Mitä momentaaninen johdin -ahtaa/-ähtää tarkoittaa?',
+      questionEn: 'What does the momentaneous suffix -ahtaa/-ähtää mean?',
+      grammarPattern:
+        "The momentaneous suffix -ahtaa/-ähtää creates verbs meaning 'to do X suddenly', 'to do X briefly/once'. Often expresses a quick, involuntary, or spontaneous action.",
+      formula: 'verb stem + -ahtaa (back) / -ähtää (front)',
+      examples: [
+        { fi: 'nauraa (to laugh) → naurahtaa (to give a brief laugh)', en: 'Hän naurahtaa hiljaa. (She gave a quiet laugh.)' },
+        { fi: 'huutaa (to shout) → huudahtaa (to exclaim, to cry out)', en: 'Hän huudahti kipuun. (He cried out in pain.)' },
+        { fi: 'sanoa (to say) → sanahtaa (to blurt out, to snap)', en: 'Hän sanahahti jotain rumaa. (She blurted out something rude.)' },
+        { fi: 'hypätä (to jump) → hypähtää (to give a start, to jump up briefly)', en: 'Hän hypähti ylös tuolilta. (He jumped up from the chair.)' },
+        { fi: 'puhkea (to burst) → puhkahtaa (to burst out)', en: 'Puhkahdin nauruun. (I burst out laughing.)' },
+      ],
+      commonPitfalls: [
+        'Momentaneous verbs express a single brief event — contrast with frequentatives. naurahtaa (one brief laugh) vs. naureskella (keep chuckling).',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'stem + -ttaa/-ttää', use: 'Causative: to make/have someone do', examples: ['teettää', 'juottaa', 'naurattaa'], sectionRef: 'deriv-causative' },
+    { pattern: 'stem + -utua/-ytyä', use: 'Reflexive/Inchoative: to become, to get into state', examples: ['kaunistua', 'muuttua', 'yllättyä'], sectionRef: 'deriv-reflexive' },
+    { pattern: 'stem + -skella/-skellä', use: 'Frequentative: to do repeatedly/casually', examples: ['istuskella', 'naureskella', 'käyskellä'], sectionRef: 'deriv-frequentative' },
+    { pattern: 'stem + -ahtaa/-ähtää', use: 'Momentaneous: to do suddenly/briefly', examples: ['naurahtaa', 'huudahtaa', 'hypähtää'], sectionRef: 'deriv-momentaneous' },
+  ],
+  drills: [
+    { id: 'dv-d1', kind: 'mc', sectionId: 'deriv-causative',
+      data: { prompt: 'What does "juottaa" mean?',
+        options: ['to drink', 'to make someone drink / to water', 'to drink repeatedly', 'to almost drink'], correctIndex: 1,
+        explanation: 'juoda (drink) + causative -ttaa = juottaa: to make someone drink, to water (an animal).' } },
+    { id: 'dv-d2', kind: 'mc', sectionId: 'deriv-frequentative',
+      data: { prompt: 'What does "istuskella" mean?',
+        options: ['to sit down', 'to sit around / to lounge', 'to cause to sit', 'to jump up'], correctIndex: 1,
+        explanation: 'istua (sit) + frequentative -skella = istuskella: to sit around leisurely.' } },
+    { id: 'dv-d3', kind: 'mc', sectionId: 'deriv-momentaneous',
+      data: { prompt: 'What does "naurahtaa" mean?',
+        options: ['to laugh a lot', 'to make someone laugh', 'to give a brief laugh', 'to keep laughing'], correctIndex: 2,
+        explanation: 'nauraa + momentaneous -ahtaa = naurahtaa: a single brief laugh.' } },
+    { id: 'dv-d4', kind: 'mc', sectionId: 'deriv-reflexive',
+      data: { prompt: 'What does "muuttua" mean?',
+        options: ['to move (change location)', 'to change (intransitive — become different)', 'to make someone change', 'to keep changing'], correctIndex: 1,
+        explanation: 'muuttua = reflexive/inchoative: to change, to become different (intransitive).' } },
+    { id: 'dv-d5', kind: 'spot-error', sectionId: 'deriv-reflexive',
+      data: { sentence: 'Tilanne muuttui nopeasti häntä.', errorWord: 'häntä', correctForm: '(remove häntä)',
+        explanation: '-utua/-ytyä verbs are intransitive. muuttua cannot take a direct object (häntä). Remove it.' } },
+    { id: 'dv-d6', kind: 'translate', sectionId: 'deriv-causative',
+      data: { prompt: 'It makes me laugh.', target: 'Se naurattaa minua', acceptAlso: ['Se naurattaa minua.'] } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Verb derivation', url: 'https://uusikielemme.fi/finnish-grammar/word-formation/verb-derivation' },
+    { label: 'VISK § 309 — Verbinjohdokset', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=309' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPOUND WORDS
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_COMPOUND_WORDS: GrammarTopic = {
+  id: 'compound-words',
+  version: '1.0.0',
+  title: 'Compound words',
+  subtitle: 'Yhdyssanat — when to compound, nominal vs. genitive first element.',
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 14,
+  prerequisites: ['genitive', 'nominative'],
+  tags: ['morphology'],
+  overview: {
+    theme: "Finnish is a heavily compounding language. New nouns are formed by combining two or more words into one. The first element is usually in the nominative (its dictionary form) or the genitive (-n), and the rule determines whether the compound is a pure compound (kirjakauppa) or a genitive compound (Suomenlahti). Stress always falls on the first syllable of the whole compound.",
+    grammarFocus: [
+      'Nominative first element (most compounds): kirja + kauppa = kirjakauppa (bookshop)',
+      'Genitive first element: Suomi + lahti → Suomen + lahti = Suomenlahti (Gulf of Finland)',
+      'When to use genitive: proper nouns, semantic specificity, measurement/unit words',
+      'Stress: first syllable of the whole compound (KIR-ja-kaup-pa)',
+      'Spelling: one word (not two, not hyphenated) is the rule',
+    ],
+    whyItMatters: "Finnish uses compounds where English uses separate words or prepositional phrases. 'Sairauskertomus' (medical record), 'hallitusohjelma' (government programme), 'opiskelutoveri' (fellow student) — once you understand the pattern, you can decode and construct these without a dictionary.",
+  },
+  sections: [
+    {
+      id: 'comp-nominative',
+      title: 'Nominative first element — most compounds',
+      question: 'Milloin yhdyssanan ensimmäinen osa on nominatiivissa?',
+      questionEn: 'When is the first element in the nominative?',
+      grammarPattern:
+        'The vast majority of Finnish compounds use the nominative (dictionary) form of the first element. The result is one word, written solid (no space, no hyphen).',
+      formula: 'noun (nom.) + noun (nom.) = compound (one word)',
+      examples: [
+        { fi: 'kirja + kauppa = kirjakauppa', en: 'book + shop = bookshop' },
+        { fi: 'auto + talli = autotalli', en: 'car + stable/garage = garage' },
+        { fi: 'koulu + kirja = koulukirja', en: 'school + book = schoolbook' },
+        { fi: 'työ + paikka = työpaikka', en: 'work + place = workplace' },
+        { fi: 'maa + ilma = maailma', en: 'earth + air = world' },
+        { fi: 'terveys + keskus = terveyskeskus', en: 'health + centre = health centre' },
+      ],
+      commonPitfalls: [
+        'Write compounds as ONE word: kirjakauppa, not *kirja kauppa or *kirja-kauppa (unless the compound is new/long and the hyphen aids readability).',
+        'The final element takes case endings: kirjakaupassa (in the bookshop), kirjakauppaan (into the bookshop).',
+      ],
+    },
+    {
+      id: 'comp-genitive',
+      title: 'Genitive first element — when the relation is "of"',
+      question: 'Milloin yhdyssanan ensimmäinen osa on genetiivissä?',
+      questionEn: 'When is the first element in the genitive?',
+      grammarPattern:
+        'The genitive first element (-n) is used when: (1) the first element is a proper noun, (2) the compound expresses a unique institutional or official relationship, (3) measurement or unit words. The -n of the genitive is part of the written compound.',
+      formula: 'noun (gen. -n) + noun = genitive compound',
+      examples: [
+        { fi: 'Suomi + lahti → Suomenlahti', en: 'Finland + gulf = Gulf of Finland (proper noun first)' },
+        { fi: 'Pohjoinen + napа → Pohjoisnapa (nom.) but: Pohjoisen navан → Pohjoisnavan (gen. in inflected)', en: 'Most direction + point = pole — nominative first element' },
+        { fi: 'hallitus + ohjelma → hallitusohjelma (nom.) vs. hallitusohjelman (gen.)', en: 'government programme — the compound uses nominative, gen. only in inflected form' },
+        { fi: 'mies + parka → miesparka (nom.) or miehenparka (gen.)', en: 'poor man — both forms exist; genitive is more idiomatic' },
+        { fi: 'päivä + lehti → päivälehti OR päivänlehti', en: 'daily paper — nominative more common' },
+      ],
+      commonPitfalls: [
+        'The rule is not fully regular: many compounds can appear with either nominative or genitive first element, and usage varies. When in doubt, the nominative first element is always safe for new compounds.',
+        'Geographic and institutional proper nouns almost always use the genitive: Suomenlahti, Helsingin kaupunki (city of Helsinki).',
+      ],
+    },
+    {
+      id: 'comp-spelling',
+      title: 'Spelling rules and boundaries',
+      question: 'Milloin yhdyssana kirjoitetaan yhteen, milloin erikseen?',
+      questionEn: 'When is a compound written solid, and when are words kept separate?',
+      grammarPattern:
+        "Finnish is strict: if two nouns together form a new unified concept, write them as one word. If they remain syntactically separate (determiner + head), keep them apart. The test: does the first word modify the second as an attribute (→ compound) or does the second word take a case form independently (→ separate)?",
+      examples: [
+        { fi: 'iso talo (big house) — NOT *isotalo', en: 'adjective + noun: always two words' },
+        { fi: 'talonmies (caretaker) — one concept, one word', en: 'talo + mies = one semantic unit' },
+        { fi: 'uusi kirja (a new book) vs. uuskirja (a specific document type)', en: 'two words = descriptive; one word = established concept' },
+        { fi: 'bussiasema (bus station) — one word (established concept)', en: 'bussi + asema = compound' },
+        { fi: 'bussin asema (the bus\'s position) — two words (genitive phrase)', en: 'this is a genitive phrase, not a compound' },
+      ],
+      commonPitfalls: [
+        'When a noun phrase describes a property of something, it is two words: iso koira (big dog). When it names a thing-type, it is one: koiranäyttely (dog show).',
+        'Foreign loanword compounds follow the same rule: internet + yhteys = internetyhteys (internet connection) — one word.',
+      ],
+    },
+    {
+      id: 'comp-stress',
+      title: 'Stress in compounds',
+      question: 'Missä on paino yhdyssanoissa?',
+      questionEn: 'Where does stress fall in compound words?',
+      grammarPattern:
+        'Main stress falls on the first syllable of the entire compound, exactly as for simple words. The second element may have a secondary stress on its first syllable. This is predictable and consistent.',
+      examples: [
+        { fi: "KIR-ja-kaup-pa (kirjakauppa)", en: 'BOOKshop — stress on kir-' },
+        { fi: "TER-veys-kes-kus (terveyskeskus)", en: 'HEAlth centre — stress on ter-' },
+        { fi: "SUO-men-lah-ti (Suomenlahti)", en: 'Gulf of Finland — stress on suo-' },
+        { fi: "TYÖ-pai-kka (työpaikka)", en: 'WORKplace — stress on työ-' },
+      ],
+      commonPitfalls: [
+        'Compound stress is on the first syllable of the WHOLE compound, not the second element. This distinguishes compounds from phrases: KIR-ja-kaup-pa vs. kir-JA-sta KAUP-pa-an (case-inflected phrase).',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'nom + nom = compound', use: 'Most Finnish compounds (nominative first element)', examples: ['kirjakauppa', 'autotalli', 'terveyskeskus'], sectionRef: 'comp-nominative' },
+    { pattern: 'gen(-n) + nom = compound', use: 'Genitive first element (proper nouns, institutional)', examples: ['Suomenlahti', 'miehenparka'], sectionRef: 'comp-genitive' },
+    { pattern: 'stress on 1st syllable', use: 'Compound stress always on initial syllable', examples: ['KIRjakauppa', 'TERveyskeskus'], sectionRef: 'comp-stress' },
+  ],
+  drills: [
+    { id: 'cw-d1', kind: 'mc', sectionId: 'comp-nominative',
+      data: { prompt: 'How do you write "bookshop" in Finnish?',
+        options: ['kirja kauppa', 'kirjakauppa', 'kirjan kauppa', 'Kirjakauppa'], correctIndex: 1,
+        explanation: 'Nominative first element, written as one word: kirja + kauppa = kirjakauppa.' } },
+    { id: 'cw-d2', kind: 'mc', sectionId: 'comp-spelling',
+      data: { prompt: 'Which is a compound word (one concept)?',
+        options: ['iso koira (big dog)', 'bussiasema (bus station)', 'punainen auto (red car)', 'vanha kirja (old book)'], correctIndex: 1,
+        explanation: 'bussiasema is an established compound. The others are adjective + noun phrases.' } },
+    { id: 'cw-d3', kind: 'fill', sectionId: 'comp-nominative',
+      data: { sentence: 'työ + paikka = _____ (compound)', answer: 'työpaikka', hint: 'Nominative first element, write as one word', baseForm: 'työ + paikka' } },
+    { id: 'cw-d4', kind: 'mc', sectionId: 'comp-genitive',
+      data: { prompt: 'The name "Suomenlahti" (Gulf of Finland) uses…',
+        options: ['nominative first element (Suomi)', 'genitive first element (Suomen)', 'partitive first element', 'inessive first element'], correctIndex: 1,
+        explanation: 'Proper-noun + geographic term compounds typically use the genitive: Suomen + lahti = Suomenlahti.' } },
+    { id: 'cw-d5', kind: 'translate', sectionId: 'comp-nominative',
+      data: { prompt: 'How do you say "health centre" in Finnish?', target: 'terveyskeskus', acceptAlso: ['Terveyskeskus'] } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Compound words', url: 'https://uusikielemme.fi/finnish-grammar/word-formation/compound-words-in-finnish' },
+    { label: 'VISK § 398 — Yhdyssanat', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=398' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // EXPORT
 // ─────────────────────────────────────────────────────────────────────────────
 export const MORPHOLOGY_TOPICS: GrammarTopic[] = [
@@ -1388,4 +1694,6 @@ export const MORPHOLOGY_TOPICS: GrammarTopic[] = [
   TOPIC_CLITICS,
   TOPIC_DERIVATION_NOUNS,
   TOPIC_PLURAL_FORMS,
+  TOPIC_DERIVATION_VERBS,
+  TOPIC_COMPOUND_WORDS,
 ];

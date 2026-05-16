@@ -89,27 +89,29 @@ export const TOPIC_NOMINATIVE: GrammarTopic = {
       question: 'Miksi "kauppa" → "kaupat"?',
       questionEn: 'Why does the stem change in the plural?',
       grammarPattern:
-        'Consonant gradation (KPT alternation) affects the stem used before the plural -t. The strong grade appears in the nominative plural. Compare the singular (strong) with the genitive (weak).',
-      formula: 'Strong-grade stem + -t',
+        'Consonant gradation (KPT alternation) affects the stem used before the plural -t. Like the genitive singular, the -t ending closes the final syllable, so the weak grade appears in the nominative plural. Compare: kauppa (nom.sg, strong) → kaupan (gen.sg, weak) → kaupat (nom.pl, weak).',
+      formula: 'Weak-grade stem + -t',
       morphology: {
         stem: 'kauppa',
-        gradation: 'pp → p (strong grade in nom.pl)',
+        gradation: 'pp → p (weak grade — -t closes the syllable)',
         ending: '-t',
         surface: 'kaupat',
         breakdown: [
-          { token: 'kaupa', role: 'stem', note: 'stem of kauppa — the pp simplifies to p in the nominative plural' },
+          { token: 'kaupa', role: 'stem', note: 'weak-grade stem of kauppa (pp → p because -t closes the syllable)' },
           { token: 't', role: 'ending', note: 'plural nominative -t' },
         ],
       },
       examples: [
-        { fi: 'kauppa → kaupat', en: 'shop → shops' },
-        { fi: 'pankki → pankit', en: 'bank → banks' },
-        { fi: 'tyttö → tytöt', en: 'girl → girls (tt → t)' },
-        { fi: 'hattu → hatut', en: 'hat → hats (tt → t)' },
-        { fi: 'kampa → kammat', en: 'comb → combs (mp → mm — reverse gradation)' },
+        { fi: 'kauppa → kaupat', en: 'shop → shops (pp → p: weak grade)' },
+        { fi: 'pankki → pankit', en: 'bank → banks (kk → k: weak grade)' },
+        { fi: 'tyttö → tytöt', en: 'girl → girls (tt → t: weak grade)' },
+        { fi: 'hattu → hatut', en: 'hat → hats (tt → t: weak grade)' },
+        { fi: 'kampa → kammat', en: 'comb → combs (mp → mm: regular weak grade for nasal+stop clusters)' },
+        { fi: 'ranta → rannat', en: 'shore → shores (nt → nn: weak grade)' },
+        { fi: 'silta → sillat', en: 'bridge → bridges (lt → ll: weak grade)' },
       ],
       commonPitfalls: [
-        'The strong grade is used in the nominative plural (kaupat), but the weak grade in the genitive singular (kaupan).',
+        'Both genitive singular AND nominative plural use the weak grade — because both -n and -t close the final syllable. The difference is only the final consonant: kaupan (gen.sg) vs kaupat (nom.pl).',
         'Not all words have gradation. Words like "koira" simply become "koirat".',
       ],
     },
@@ -137,7 +139,7 @@ export const TOPIC_NOMINATIVE: GrammarTopic = {
   grammarIndex: [
     { pattern: '(bare stem)', use: 'Singular nominative — subject, dictionary form', examples: ['talo', 'koira', 'kirja'], sectionRef: 'nom-singular' },
     { pattern: 'stem + -t', use: 'Plural nominative — plural subject', examples: ['talot', 'koirat', 'kirjat'], sectionRef: 'nom-plural' },
-    { pattern: 'strong grade + -t', use: 'Plural nominative with consonant gradation', examples: ['kaupat', 'pankit', 'tytöt'], sectionRef: 'nom-gradation' },
+    { pattern: 'weak grade + -t', use: 'Plural nominative with consonant gradation (weak grade, like genitive)', examples: ['kaupat', 'pankit', 'tytöt'], sectionRef: 'nom-gradation' },
   ],
 
   drills: [
@@ -276,8 +278,41 @@ export const TOPIC_GENITIVE: GrammarTopic = {
         { fi: 'tyttö → tytön', en: 'girl → of the girl (tt → t)' },
       ],
       commonPitfalls: [
-        'The weak grade is used in the genitive singular — opposite of the strong grade used in the nominative plural.',
+        'Genitive singular and nominative plural both use the weak grade — both endings (-n and -t) close the final syllable. The difference is only the final consonant: kaupan ("of the shop") vs kaupat ("the shops").',
         'Long words ending in -nen lose the -nen and add -sen: nainen → naisen.',
+      ],
+    },
+    {
+      id: 'gen-by-stem-type',
+      title: 'Genitive by stem type',
+      question: 'Miten genetiivi muodostetaan eri vartalotyypeistä?',
+      questionEn: 'How is the genitive formed for different stem types?',
+      grammarPattern:
+        "The genitive -n attaches to the noun's inflectional stem, which often differs from the dictionary form. The genitive is the single most useful form to learn for any noun because it reveals the inflectional stem used in ALL other cases (and the nominative plural). Once you know the genitive, drop the -n to get the stem, then add any other case ending.",
+      formula: 'inflectional stem + -n',
+      examples: [
+        { fi: 'talo → talon', en: 'house → of the house (vowel stem — no change)' },
+        { fi: 'kauppa → kaupan', en: 'shop → of the shop (pp → p: weak grade)' },
+        { fi: 'sukupolvi → sukupolven', en: 'generation → of a generation (i → e: hidden e-stem)' },
+        { fi: 'kieli → kielen', en: 'language → of the language (i → e: stem kiele-)' },
+        { fi: 'ovi → oven', en: 'door → of the door (stem ove-)' },
+        { fi: 'vesi → veden', en: 'water → of the water (stem vede-, t → d)' },
+        { fi: 'meri → meren', en: 'sea → of the sea (old i-stem: stem mere-)' },
+        { fi: 'nainen → naisen', en: 'woman → of the woman (-nen → -sen)' },
+        { fi: 'suomalainen → suomalaisen', en: 'Finnish (person) → (genitive) (same -nen → -sen)' },
+        { fi: 'vastaus → vastauksen', en: 'answer → of the answer (-us: stem extends to -ukse-)' },
+        { fi: 'kysymys → kysymyksen', en: 'question → of the question (same -ys → -ykse-)' },
+        { fi: 'vapaus → vapauden', en: 'freedom → of freedom (-uus: stem extends to -uude-)' },
+        { fi: 'mahdollisuus → mahdollisuuden', en: 'possibility → of the possibility (same -uus → -uude-)' },
+        { fi: 'huone → huoneen', en: 'room → of the room (-e doubles to -ee-)' },
+        { fi: 'perhe → perheen', en: 'family → of the family (same -e → -ee-)' },
+        { fi: 'kaunis → kauniin', en: 'beautiful → (genitive) (-is adjective: -i lengthens to -ii-)' },
+        { fi: 'kuningas → kuninkaan', en: 'king → of the king (consonant stem: dictionary -as, stem kuninka-)' },
+      ],
+      commonPitfalls: [
+        'The genitive reveals the inflectional stem. To form any other case: drop the -n from genitive, then add the case ending. Example: vastauksen → stem vastaukse- → vastaukset (nom.pl), vastauksessa (inessive), etc.',
+        '-us (vastaus) and -uus (vapaus) look alike but have completely different stems: vastaukse- vs uude-.',
+        'i-stem nouns ending in -vi, -li, -si are almost always really e-stems: sukupolvi → sukupolven (not *sukupolvin).',
       ],
     },
     {
@@ -343,6 +378,7 @@ export const TOPIC_GENITIVE: GrammarTopic = {
   grammarIndex: [
     { pattern: 'stem + -n', use: 'Genitive singular — possession, total object', examples: ['talon', 'koiran', 'kirjan'], sectionRef: 'gen-formation' },
     { pattern: 'weak grade + -n', use: 'Genitive with consonant gradation', examples: ['kaupan', 'pankin', 'tytön'], sectionRef: 'gen-formation' },
+    { pattern: 'inflectional stem + -n', use: 'Genitive for non-trivial stem types (-i/-e, -nen, -us, -uus, -e)', examples: ['sukupolven', 'naisen', 'vastauksen', 'vapauden', 'huoneen'], sectionRef: 'gen-by-stem-type' },
     { pattern: 'gen + postposition', use: 'Location/direction with postpositions', examples: ['talon takana', 'pöydän alla'], sectionRef: 'gen-postpositions' },
   ],
 

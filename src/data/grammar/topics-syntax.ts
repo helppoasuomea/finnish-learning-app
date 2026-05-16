@@ -843,7 +843,7 @@ const TOPIC_RELATIVE_CLAUSES: GrammarTopic = {
       grammarPattern:
         '"Mikä" is used when the antecedent is an indefinite pronoun (kaikki, jotain, se), a superlative noun phrase, or an entire clause.',
       examples: [
-        { fi: 'Kaikki, mikä glitistää, ei ole kultaa.', en: 'All that glitters is not gold.' },
+        { fi: 'Kaikki, mikä kiiltää, ei ole kultaa.', en: 'All that glitters is not gold.' },
         { fi: 'Se, mikä ei tapa, vahvistaa.', en: 'That which does not kill makes stronger.' },
         { fi: 'Hän teki sen, mistä olin varoittanut.', en: 'He did the thing I had warned about.' },
         { fi: 'Paras asia, mitä voin tehdä, on auttaa.', en: 'The best thing I can do is help.' },
@@ -897,7 +897,7 @@ const TOPIC_RELATIVE_CLAUSES: GrammarTopic = {
     { pattern: 'jota (part. sg.)', use: 'Relative pronoun, partitive object', examples: ['nainen, jota rakastan'], sectionRef: 'rel-case' },
     { pattern: 'jossa/josta/johon', use: 'Relative pronoun, local cases', examples: ['talo, jossa asun'], sectionRef: 'rel-case' },
     { pattern: 'jotka (nom. pl.)', use: 'Relative pronoun, plural antecedent', examples: ['ihmiset, jotka tulevat'], sectionRef: 'rel-plural' },
-    { pattern: 'mikä / mitä / mistä', use: 'Relative pronoun for indefinite/clausal antecedent', examples: ['kaikki, mikä glitistää'], sectionRef: 'rel-mika' },
+    { pattern: 'mikä / mitä / mistä', use: 'Relative pronoun for indefinite/clausal antecedent', examples: ['kaikki, mikä kiiltää'], sectionRef: 'rel-mika' },
   ],
 
   drills: [
@@ -920,7 +920,7 @@ const TOPIC_RELATIVE_CLAUSES: GrammarTopic = {
     {
       id: 'rel-d3', kind: 'mc', sectionId: 'rel-mika',
       data: {
-        prompt: 'Complete: "Kaikki, _____ glitistää, ei ole kultaa."',
+        prompt: 'Complete: "Kaikki, _____ kiiltää, ei ole kultaa."',
         options: ['joka', 'mikä', 'jotka', 'mitä'],
         correctIndex: 1,
         explanation: '"Kaikki" is an indefinite pronoun → use mikä, not joka.',
@@ -1818,6 +1818,406 @@ const TOPIC_PARTICIPLE_CLAUSES: GrammarTopic = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// INDIRECT SPEECH
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_INDIRECT_SPEECH: GrammarTopic = {
+  id: 'indirect-speech',
+  version: '1.0.0',
+  title: 'Indirect speech',
+  subtitle: "Reporting what someone said — että-clauses and the referative shortcut.",
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 14,
+  prerequisites: ['subordinate-clauses', 'referative-construction'],
+  tags: ['syntax'],
+  overview: {
+    theme: "Finnish reports speech in two main ways: (1) the että-clause, where the reported speech is a full finite clause (Hän sanoi, että tulee. — He said that he would come.); (2) the referative construction, a participial shortcut used in formal/written language. Crucially, Finnish does NOT shift tenses in indirect speech the way English does.",
+    grammarFocus: [
+      'että-clause: Hän sanoi, että tulee. (He said that he is coming / he would come.)',
+      'No tense shift: present tense stays present even in past indirect speech',
+      'Referative shortcut: Hän sanoi tulevansa. (He said he was coming.)',
+      'Verbs of saying: sanoa, kertoa, väittää, ajatella, uskoa, luulla',
+      'Questions in indirect speech: Hän kysyi, tuleeko hän. (She asked whether he was coming.)',
+    ],
+    whyItMatters: "Any time you report what someone said, thought, or asked, you need indirect speech. Finnish is simpler than English in one key way: no tense backshifting. But it uses two very different structures (että vs. referative) that need to be learned.",
+  },
+  sections: [
+    {
+      id: 'indspeech-etta',
+      title: 'että-clause for indirect speech',
+      question: 'Miten epäsuora esitys muodostetaan että-lauseella?',
+      questionEn: 'How is indirect speech expressed with an että-clause?',
+      grammarPattern:
+        "Verb of saying/thinking + että + full finite clause. The reported clause keeps its own tense. Finnish does NOT backshift tenses — a present tense in the original stays present in the report.",
+      formula: 'verb of saying + että + clause (tense unchanged)',
+      examples: [
+        { fi: 'Hän sanoi, että hän tulee huomenna.', en: 'He said (that) he is coming tomorrow. (present stays present)' },
+        { fi: 'Hän sanoi, että hän tuli eilen.', en: 'He said (that) he came yesterday. (past stays past)' },
+        { fi: 'Ajattelen, että tämä on oikein.', en: 'I think (that) this is correct.' },
+        { fi: 'Hän kertoi, että talvi oli kylmä.', en: 'She said that the winter was cold.' },
+        { fi: 'Luulin, että hän on kotona.', en: 'I thought that he is at home. (Finnish: is, not *was)' },
+      ],
+      commonPitfalls: [
+        'NO tense backshifting in Finnish. Where English says "I thought he WAS at home", Finnish says "Luulin, että hän ON kotona" — present tense in the that-clause.',
+        'The comma before että is obligatory in written Finnish.',
+      ],
+    },
+    {
+      id: 'indspeech-referative',
+      title: 'Referative construction as indirect speech shortcut',
+      question: 'Miten referatiivirakenne korvaa että-lauseen?',
+      questionEn: 'How does the referative replace the että-clause?',
+      grammarPattern:
+        'In formal/written Finnish, the referative construction replaces the että-clause. The verb of the reported clause becomes a present or past active participle + possessive suffix (if subjects differ). This is shorter and more elegant in writing.',
+      formula: 'verb + inf.stem + -van/-vän (pres.) or -neen (past) + possessive suffix',
+      examples: [
+        { fi: 'Hän sanoi tulevansa. (= sanoi, että tulee)', en: 'He said he is/was coming. (referative = että shortcut)' },
+        { fi: 'Hän sanoi tulleensa. (= sanoi, että tuli)', en: 'He said he had come / came. (past referative)' },
+        { fi: 'Ajattelen olevani oikeassa. (= ajattelen, että olen oikeassa)', en: 'I think I am right.' },
+        { fi: 'Hän uskoo hänen tulevan. (different subjects: genitive + tulevan)', en: 'She believes he is coming. (genitive pronoun + referative)' },
+      ],
+      commonPitfalls: [
+        'When the subjects of the main verb and reported verb are the SAME, use a possessive suffix without genitive pronoun: sanoin tulevani (I said I was coming).',
+        'When subjects DIFFER, use genitive pronoun + participial form: sanoin hänen tulevan (I said he was coming).',
+      ],
+    },
+    {
+      id: 'indspeech-questions',
+      title: 'Indirect questions',
+      question: 'Miten epäsuora kysymys muodostetaan?',
+      questionEn: 'How are indirect questions formed?',
+      grammarPattern:
+        'Yes/no indirect questions use -ko/-kö on the verb of the reported clause. Wh-questions retain the question word. Both retain the finite clause structure with no tense shift.',
+      examples: [
+        { fi: 'Hän kysyi, tuleeko hän. (yes/no)', en: 'She asked whether he is coming. (-ko preserved)' },
+        { fi: 'Hän kysyi, onko hän kotona.', en: 'He asked whether she is at home.' },
+        { fi: 'Hän kysyi, missä asun. (wh-question)', en: 'She asked where I live.' },
+        { fi: 'En tiedä, kuka hän on.', en: "I don't know who he/she is." },
+        { fi: 'Hän halusi tietää, mitä syöt.', en: 'He wanted to know what you are eating.' },
+      ],
+      commonPitfalls: [
+        'In indirect yes/no questions, -ko/-kö stays on the verb: Hän kysyi, tuleeko hän (not *Hän kysyi, tulee hän).',
+        'No inversion of word order in indirect questions — the word order is the same as in a declarative clause.',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'sanoi, että + clause', use: 'Indirect speech with että (no tense shift)', examples: ['Hän sanoi, että tulee.', 'Luulin, että hän on kotona.'], sectionRef: 'indspeech-etta' },
+    { pattern: 'sanoi + -van/-neen + poss.suf.', use: 'Referative shortcut for indirect speech', examples: ['Hän sanoi tulevansa.', 'sanoin tulleeni'], sectionRef: 'indspeech-referative' },
+    { pattern: 'kysyi, + verb + -ko/-kö', use: 'Indirect yes/no question', examples: ['Hän kysyi, tuleeko hän.'], sectionRef: 'indspeech-questions' },
+  ],
+  drills: [
+    { id: 'is-d1', kind: 'fill', sectionId: 'indspeech-etta',
+      data: { sentence: 'Hän sanoi, _____ hän _____ (tulla) huomenna.', answer: 'että / tulee', hint: 'että + present (no tense shift)', baseForm: 'tulla' } },
+    { id: 'is-d2', kind: 'transform', sectionId: 'indspeech-referative',
+      data: { base: 'Hän sanoi, että hän tulee.', instruction: '→ referative construction', answer: 'Hän sanoi tulevansa.' } },
+    { id: 'is-d3', kind: 'mc', sectionId: 'indspeech-etta',
+      data: { prompt: '"I thought he WAS at home" in Finnish?',
+        options: ['Luulin, että hän oli kotona.', 'Luulin, että hän on kotona.', 'Luulin, hänen olevan kotona.', 'Luulin, että hän olisi kotona.'], correctIndex: 1,
+        explanation: 'No tense backshift in Finnish: present stays present — Luulin, että hän ON kotona.' } },
+    { id: 'is-d4', kind: 'fill', sectionId: 'indspeech-questions',
+      data: { sentence: 'Hän kysyi, _____ hän _____ (tulla).', answer: 'tuleeko', hint: 'Indirect yes/no question: verb + -ko/-kö', baseForm: 'tulla' } },
+    { id: 'is-d5', kind: 'translate', sectionId: 'indspeech-etta',
+      data: { prompt: 'She said the winter was cold.', target: 'Hän sanoi, että talvi oli kylmä', acceptAlso: ['Hän sanoi, että talvi oli kylmä.'] } },
+    { id: 'is-d6', kind: 'spot-error', sectionId: 'indspeech-etta',
+      data: { sentence: 'Luulin, että hän oli kotona. (correct Finnish?)', errorWord: 'oli', correctForm: 'on',
+        explanation: 'Finnish does not backshift tenses in indirect speech. "I thought he was home" = Luulin, että hän ON kotona (present, not past).' } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Indirect speech', url: 'https://uusikielemme.fi/finnish-grammar/sentence-structure/indirect-speech' },
+    { label: 'VISK § 1476 — Epäsuora esitys', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=1476' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONCESSIVE & CONDITIONAL CLAUSES
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_CONCESSIVE_CLAUSES: GrammarTopic = {
+  id: 'concessive-clauses',
+  version: '1.0.0',
+  title: 'Concessive & conditional clauses',
+  subtitle: "Vaikka, jos, ellei, mikäli — although, if, unless, provided that.",
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 16,
+  prerequisites: ['subordinate-clauses', 'conditional'],
+  tags: ['syntax'],
+  overview: {
+    theme: "Finnish has a rich set of subordinating conjunctions for concession (vaikka — although), condition (jos — if), negative condition (ellei — unless), and formal condition (mikäli — provided that / in case that). The mood of the verb in these clauses — indicative vs. conditional — carries significant meaning.",
+    grammarFocus: [
+      'vaikka + indicative: although (factual concession)',
+      'vaikka + conditional: even if (hypothetical)',
+      'jos + indicative: if (open/real condition)',
+      'jos + conditional: if (hypothetical/counterfactual)',
+      'ellei/elleivät: unless (negative conditional)',
+      'mikäli: provided that, in case that (formal)',
+    ],
+    whyItMatters: "These conjunctions are essential for complex argumentation, storytelling, and expressing nuance. 'Vaikka sataa, menen ulos' (Even though it is raining, I'll go out) vs. 'Vaikka sataisi, menisin ulos' (Even if it were raining, I'd go out) — the mood difference is not optional.",
+  },
+  sections: [
+    {
+      id: 'conc-vaikka',
+      title: 'vaikka — although / even if',
+      question: 'Miten vaikka-lauseet muodostetaan?',
+      questionEn: 'How are vaikka-clauses formed?',
+      grammarPattern:
+        'vaikka + indicative = factual concession (although — the subordinate clause is true). vaikka + conditional = hypothetical concession (even if — the subordinate clause is not necessarily true).',
+      examples: [
+        { fi: 'Vaikka sataa, menen ulos. (indicative)', en: 'Although it is raining, I will go out. (it really is raining)' },
+        { fi: 'Vaikka sataisi, menisin ulos. (conditional)', en: 'Even if it were raining, I would go out. (hypothetical)' },
+        { fi: 'Hän jatkoi, vaikka oli väsynyt.', en: 'She continued, although she was tired.' },
+        { fi: 'Tekisin sen, vaikka se olisikin vaikea.', en: 'I would do it, even if it were hard. (-kin adds emphasis)' },
+        { fi: 'Vaikka kuinka yrittäisin, en onnistu.', en: 'However hard I try, I do not succeed.' },
+      ],
+      commonPitfalls: [
+        'vaikka + indicative = "although" (fact). vaikka + conditional = "even if" (hypothesis). The English translations look similar but the Finnish mood changes the meaning.',
+        '-kin can be added: vaikka olisikin (even if it were) — adds emphasis to the hypothetical.',
+      ],
+    },
+    {
+      id: 'conc-jos',
+      title: 'jos — if (open and hypothetical)',
+      question: 'Miten jos-lauseet muodostetaan?',
+      questionEn: 'How are jos if-clauses formed?',
+      grammarPattern:
+        'jos + indicative = open/real condition (if — the condition might actually happen). jos + conditional = hypothetical condition (if — unlikely or counterfactual). Both clauses use the same mood.',
+      examples: [
+        { fi: 'Jos tulet, soita minulle. (indicative — real possibility)', en: "If you come, call me. (it's possible you will come)" },
+        { fi: 'Jos tulisit, soittaisin sinulle. (conditional — hypothetical)', en: 'If you came, I would call you. (less likely, hypothetical)' },
+        { fi: 'Jos olisin rikkaampi, ostaisin talon. (cond. perfect / conditional)', en: 'If I were richer, I would buy a house.' },
+        { fi: 'Jos sataa, ota sateenvarjo.', en: 'If it rains, take an umbrella. (real condition, present)' },
+      ],
+      commonPitfalls: [
+        'In Finnish hypothetical if-clauses, BOTH clauses use the conditional — unlike English which sometimes uses past in the if-clause and conditional in the main clause.',
+        'Do not mix indicative and conditional in the same hypothetical: Jos tulisit + soittaisin (not *soitan).',
+      ],
+    },
+    {
+      id: 'conc-ellei',
+      title: 'ellei / elleivät — unless',
+      question: 'Miten muodostetaan ellei-lause?',
+      questionEn: 'How is an "unless" clause formed?',
+      grammarPattern:
+        'ellei (sg) / elleivät (pl) = unless = if not. Formed from jos + negation (jos + ei → ellei). The verb in the ellei-clause is in a special negative conditional form. Alternatively: jos + ei (standard) can be used instead.',
+      formula: 'ellei + verb / jos + ei + verb',
+      examples: [
+        { fi: 'Ellei sada, menemme ulos.', en: 'Unless it rains, we will go out.' },
+        { fi: 'Ellei hän tule, aloitamme ilman häntä.', en: 'Unless he comes, we will start without him.' },
+        { fi: 'En mene, ellei sinäkin tule.', en: "I won't go unless you come too." },
+        { fi: 'Ellei pysähdy, kaatuu.', en: 'Unless he stops, he will fall.' },
+      ],
+      commonPitfalls: [
+        'ellei agrees with the subject: ellei (3sg), elleivät (3pl), ellet (2sg), ellen (1sg), emme (1pl), ellette (2pl).',
+        "Alternative: Jos ei sada, menemme ulos — same meaning as ellei sada. The ellei-form is slightly more formal.",
+      ],
+    },
+    {
+      id: 'conc-mikali',
+      title: 'mikäli — provided that / in case that (formal)',
+      question: 'Mitä mikäli tarkoittaa?',
+      questionEn: 'What does mikäli mean?',
+      grammarPattern:
+        'mikäli is a formal conjunction meaning "provided that", "in case that", "if and only if". It implies a more specific condition than jos — the consequence strictly depends on the condition being met.',
+      examples: [
+        { fi: 'Tulen, mikäli saan luvan.', en: 'I will come, provided (that) I get permission.' },
+        { fi: 'Mikäli tarvitset apua, ota yhteyttä.', en: 'In case you need help, get in touch.' },
+        { fi: 'Sopimus solmitaan, mikäli ehdot täyttyvät.', en: 'The contract will be signed, provided that the conditions are met.' },
+      ],
+      commonPitfalls: [
+        'mikäli is formal/written. In everyday speech, jos is always used instead.',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'vaikka + indicative', use: '"Although" — factual concession', examples: ['Vaikka sataa, menen ulos.'], sectionRef: 'conc-vaikka' },
+    { pattern: 'vaikka + conditional', use: '"Even if" — hypothetical concession', examples: ['Vaikka sataisi, menisin ulos.'], sectionRef: 'conc-vaikka' },
+    { pattern: 'jos + indicative', use: '"If" — open/real condition', examples: ['Jos tulet, soita.'], sectionRef: 'conc-jos' },
+    { pattern: 'jos + conditional', use: '"If" — hypothetical condition', examples: ['Jos tulisit, soittaisin.'], sectionRef: 'conc-jos' },
+    { pattern: 'ellei + verb', use: '"Unless" (negative conditional)', examples: ['Ellei sada, menemme ulos.'], sectionRef: 'conc-ellei' },
+    { pattern: 'mikäli + indicative', use: '"Provided that" (formal)', examples: ['Tulen, mikäli saan luvan.'], sectionRef: 'conc-mikali' },
+  ],
+  drills: [
+    { id: 'cc-d1', kind: 'mc', sectionId: 'conc-vaikka',
+      data: { prompt: '"Although it is raining, I will go out" — which form of vaikka?',
+        options: ['vaikka + conditional', 'vaikka + indicative', 'vaikka + imperative', 'vaikka + past participle'], correctIndex: 1,
+        explanation: 'Factual concession (it really is raining) → vaikka + indicative.' } },
+    { id: 'cc-d2', kind: 'mc', sectionId: 'conc-vaikka',
+      data: { prompt: '"Even if it were raining, I would go out" — which form?',
+        options: ['vaikka + conditional', 'vaikka + indicative', 'jos + conditional', 'ellei'], correctIndex: 0,
+        explanation: 'Hypothetical concession → vaikka + conditional: Vaikka sataisi, menisin ulos.' } },
+    { id: 'cc-d3', kind: 'fill', sectionId: 'conc-jos',
+      data: { sentence: 'Jos _____ (sataa, real condition), ota sateenvarjo.', answer: 'sataa', hint: 'Real/open condition: jos + indicative present', baseForm: 'sataa' } },
+    { id: 'cc-d4', kind: 'transform', sectionId: 'conc-ellei',
+      data: { base: 'Jos ei sada, menemme ulos.', instruction: '→ rewrite with ellei', answer: 'Ellei sada, menemme ulos.' } },
+    { id: 'cc-d5', kind: 'translate', sectionId: 'conc-jos',
+      data: { prompt: 'If you came, I would call you.', target: 'Jos tulisit, soittaisin sinulle', acceptAlso: ['Jos tulisit, soittaisin sinulle.'] } },
+    { id: 'cc-d6', kind: 'spot-error', sectionId: 'conc-jos',
+      data: { sentence: 'Jos tulisit, soitan sinulle.', errorWord: 'soitan', correctForm: 'soittaisin',
+        explanation: 'Hypothetical condition: both clauses must use conditional. Jos tulisit → soittaisin (not soitan).' } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Concessive clauses', url: 'https://uusikielemme.fi/finnish-grammar/sentence-structure/concessive-clauses' },
+    { label: 'VISK § 1139 — Konditionaalilause', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=1139' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMAL VS. COLLOQUIAL REGISTER
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_REGISTER: GrammarTopic = {
+  id: 'register-formal-colloquial',
+  version: '1.0.0',
+  title: 'Formal vs. colloquial register',
+  subtitle: "Kirjakieli vs. puhekieli — me ollaan, mä, sä, contracted endings.",
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 18,
+  prerequisites: ['pronouns', 'passive'],
+  tags: ['syntax'],
+  overview: {
+    theme: "Written Finnish (kirjakieli) and spoken Finnish (puhekieli) are substantially different. Native speakers use colloquial forms constantly in everyday speech, but schools, media, and official writing use the standard language. To understand Finnish conversations, podcasts, and social media, you must know the colloquial patterns.",
+    grammarFocus: [
+      'Pronouns: minä/sinä → mä/sä; tämä → tää; nämä → nää; hän → se (colloquial)',
+      'Possessives: minulla → mulla; sinulle → sulle; meillä → meillä (unchanged)',
+      'Passive as we-form: me ollaan → me olemme; me mennään → me menemme',
+      'Verb contractions: olen → oon; menet → meet; oletko → ooksä/oletko',
+      'Dropped syllables: nyt → ny; sitten → sit; totta kai → tokkai',
+    ],
+    whyItMatters: "Without knowing colloquial Finnish, you cannot follow a normal conversation between Finns. 'Me ollaan väsyneitä' sounds completely natural to a native speaker — but learners who only know kirjakieli hear 'me olemme väsyneitä' and are confused. This is the most practical topic at B2 level.",
+  },
+  sections: [
+    {
+      id: 'reg-pronouns',
+      title: 'Colloquial pronouns',
+      question: 'Mitä pronomineja käytetään puhekielessä?',
+      questionEn: 'What pronouns are used in colloquial Finnish?',
+      grammarPattern:
+        'Personal pronouns are shortened. The demonstrative tämä becomes tää. Third person hän (literary) is replaced by se (colloquial) for people as well as things. The plural nämä becomes nää, ne.',
+      examples: [
+        { fi: 'minä → mä  /  sinä → sä', en: 'I → mä  /  you → sä' },
+        { fi: 'hän (literary) → se (colloquial, for people too)', en: 'he/she → se' },
+        { fi: 'me, te, he (literary) → me, te, ne (colloquial)', en: 'we/you/they — ne replaces he in speech' },
+        { fi: 'tämä → tää  /  nämä → nää  /  tuo → toi', en: 'this → tää  /  these → nää  /  that → toi' },
+        { fi: 'Mä oon väsynyt. (= Minä olen väsynyt.)', en: 'I am tired.' },
+        { fi: 'Se on opettaja. (referring to a person)', en: 'He/She is a teacher. (colloquial use of se)' },
+      ],
+      commonPitfalls: [
+        'Using se for people is colloquial — in formal writing, always use hän.',
+        'The colloquial mä and sä are not abbreviated minä/sinä — they are completely different forms. Do not write them in formal Finnish.',
+      ],
+    },
+    {
+      id: 'reg-passive-we',
+      title: 'Passive as the we-form',
+      question: 'Miten "me" ilmaistaan puhekielessä?',
+      questionEn: 'How is "we" expressed in colloquial speech?',
+      grammarPattern:
+        "Colloquial Finnish uses the passive voice (present passive + me) instead of the 1st person plural form. This is extremely common — most spoken Finnish uses it. It sounds natural to Finns but looks unusual on paper.",
+      examples: [
+        { fi: 'Me olemme väsyneitä. (kirjakieli)', en: 'We are tired. (formal/literary)' },
+        { fi: 'Me ollaan väsyneitä. (puhekieli)', en: 'We are tired. (colloquial — passive as we-form)' },
+        { fi: 'Me menemme kauppaan. → Me mennään kauppaan.', en: "We're going to the shop." },
+        { fi: 'Me söimme yhdessä. → Me syötiin yhdessä.', en: 'We ate together. (past passive as we-past)' },
+        { fi: 'Me otamme / Me otetaan kahvia.', en: "We'll have coffee." },
+      ],
+      commonPitfalls: [
+        'The colloquial we-form uses me + passive present (or past). Never use me + 1pl form in spontaneous speech — it sounds bookish.',
+        'This is only "we" in practice. Grammatically it is a passive, but pragmatically it is exclusively the 1pl.',
+      ],
+    },
+    {
+      id: 'reg-contractions',
+      title: 'Verb contractions and short forms',
+      question: 'Miten verbejä lyhennetään puhekielessä?',
+      questionEn: 'How are verbs shortened in colloquial Finnish?',
+      grammarPattern:
+        "Several verbs have contracted colloquial forms. The most common: olen → oon, olet → oot, on → on (unchanged), olemme → ollaan (passive), menet → meet, tulet → tuut, tuleeko → tuuko.",
+      examples: [
+        { fi: 'olen → oon  /  olet → oot  /  olemme → ollaan', en: 'I am → oon  /  you are → oot  /  we are → ollaan' },
+        { fi: 'menet → meet  /  tulet → tuut  /  teet → teet (unchanged)', en: "you go → meet  /  you come → tuut" },
+        { fi: 'ei ole → ei oo', en: "is not → ei oo" },
+        { fi: 'oletko → ooksä / ootko', en: 'are you → ooksä (very colloquial) / ootko' },
+        { fi: 'menenkö → meenkö', en: 'shall I go? → meenkö?' },
+      ],
+      commonPitfalls: [
+        'These contracted forms are heard in speech but generally not written except in dialogue, social media, and informal texts.',
+        'oon (1sg of olla) is completely standard in speech — using olen in conversation sounds formal or emphatic.',
+      ],
+    },
+    {
+      id: 'reg-adverbs',
+      title: 'Colloquial particles and adverbs',
+      question: 'Mitä puhekielen partikkeleita on?',
+      questionEn: 'What colloquial particles and adverbs are common?',
+      grammarPattern:
+        "Many common adverbs and particles have shortened or fused colloquial forms. Knowing them is essential for understanding native speakers.",
+      examples: [
+        { fi: 'nyt → ny  /  sitten → sit  /  totta kai → tokkai', en: "now → ny  /  then → sit  /  of course → tokkai" },
+        { fi: 'kyllä → kyl  /  ei niin → no  /  joo (= juu = yes)', en: 'yes → kyl / no yeah → no / yeah → joo' },
+        { fi: 'että → et (in speech)  /  kun → ku', en: 'that → et (linking) / when/because → ku' },
+        { fi: 'Mä oon ku väsynyt. (= Olen kuin väsynyt.)', en: "I'm like tired. (ku as 'like/as')" },
+        { fi: "Mä en tiiä. (= En tiedä.)", en: "I don't know. (tiiä = contracted tiedä)" },
+      ],
+      commonPitfalls: [
+        'En tiiä (not tiedä) is one of the most common colloquial phrases. You will hear it constantly.',
+        'ku functions as both kun (when), koska (because), and kuin (as/like) in colloquial speech — context disambiguates.',
+      ],
+    },
+    {
+      id: 'reg-possessives',
+      title: 'Colloquial possessive forms',
+      question: 'Miten omistusmuodot muuttuvat puhekielessä?',
+      questionEn: 'How do possessive and adessive forms change in colloquial speech?',
+      grammarPattern:
+        "Adessive and allative/ablative pronoun forms are contracted. The -lla/-llä adessive forms of minä, sinä merge with the adessive ending.",
+      examples: [
+        { fi: 'minulla → mulla  /  sinulla → sulla  /  hänellä → sillä', en: 'I have (on me) → mulla / you have → sulla / he/she has → sillä' },
+        { fi: 'minulle → mulle  /  sinulle → sulle  /  hänelle → sille', en: 'to me → mulle / to you → sulle / to him/her → sille' },
+        { fi: 'minulta → multa  /  sinulta → sulta', en: 'from me → multa / from you → sulta' },
+        { fi: 'Mulle tuli viesti. (= Minulle tuli viesti.)', en: 'I got a message.' },
+        { fi: 'Sillä on auto. (= Hänellä on auto.)', en: 'He/she has a car.' },
+      ],
+      commonPitfalls: [
+        'meillä/teillä/heillä do not contract — only the 1sg and 2sg change: mulla, sulla.',
+        'sillä on (he/she has) and sillä (adessive of se = with it/by means of it) are formally identical — context determines.',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'minä → mä, sinä → sä', use: 'Colloquial 1sg/2sg pronouns', examples: ['Mä oon täällä.', 'Sä teet sen.'], sectionRef: 'reg-pronouns' },
+    { pattern: 'hän → se (people)', use: 'Colloquial 3sg for people', examples: ['Se on opettaja.'], sectionRef: 'reg-pronouns' },
+    { pattern: 'me + passive', use: 'Colloquial we-form', examples: ['me ollaan', 'me mennään', 'me syötiin'], sectionRef: 'reg-passive-we' },
+    { pattern: 'olen → oon, olet → oot', use: 'Contracted olla forms', examples: ['Mä oon väsynyt.', 'Ooksä kotona?'], sectionRef: 'reg-contractions' },
+    { pattern: 'minulla → mulla, sinulle → sulle', use: 'Contracted adessive/allative pronouns', examples: ['Mulle tuli viesti.', 'Sillä on auto.'], sectionRef: 'reg-possessives' },
+  ],
+  drills: [
+    { id: 'reg-d1', kind: 'transform', sectionId: 'reg-passive-we',
+      data: { base: 'Me olemme väsyneitä.', instruction: '→ colloquial puhekieli form', answer: 'Me ollaan väsyneitä.' } },
+    { id: 'reg-d2', kind: 'transform', sectionId: 'reg-pronouns',
+      data: { base: 'Minä olen kotona.', instruction: '→ colloquial form', answer: 'Mä oon kotona.' } },
+    { id: 'reg-d3', kind: 'mc', sectionId: 'reg-passive-we',
+      data: { prompt: 'The colloquial equivalent of "Me menemme kauppaan" is…',
+        options: ['Me mennään kauppaan.', 'Me menkää kauppaan.', 'Me mene kauppaan.', 'Me menimme kauppaan.'], correctIndex: 0,
+        explanation: 'Colloquial we-form = me + passive present: me mennään.' } },
+    { id: 'reg-d4', kind: 'fill', sectionId: 'reg-possessives',
+      data: { sentence: 'Minulla on koira. → _____ on koira. (colloquial)', answer: 'Mulla', hint: 'minulla → mulla in colloquial speech', baseForm: 'minulla' } },
+    { id: 'reg-d5', kind: 'mc', sectionId: 'reg-contractions',
+      data: { prompt: 'Colloquial form of "olen"?',
+        options: ['oon', 'on', 'ole', 'olen'], correctIndex: 0,
+        explanation: 'olen → oon in colloquial speech (1sg of olla).' } },
+    { id: 'reg-d6', kind: 'translate', sectionId: 'reg-pronouns',
+      data: { prompt: 'In colloquial Finnish: "She is a teacher" (use se)', target: 'Se on opettaja', acceptAlso: ['Se on opettaja.'] } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Colloquial Finnish', url: 'https://uusikielemme.fi/spoken-language-features' },
+    { label: 'VISK § 1251 — Puhuttu kieli', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=1251' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // EXPORT
 // ─────────────────────────────────────────────────────────────────────────────
 export const SYNTAX_TOPICS: GrammarTopic[] = [
@@ -1830,4 +2230,7 @@ export const SYNTAX_TOPICS: GrammarTopic[] = [
   TOPIC_PRONOUNS,
   TOPIC_POSSESSIVE_SUFFIXES,
   TOPIC_PARTICIPLE_CLAUSES,
+  TOPIC_INDIRECT_SPEECH,
+  TOPIC_CONCESSIVE_CLAUSES,
+  TOPIC_REGISTER,
 ];

@@ -80,7 +80,7 @@ export const TOPIC_VERB_TYPES: GrammarTopic = {
       ],
       commonPitfalls: [
         'In 3rd person singular, no personal ending is added — the stem stands alone: hän syö, hän juo.',
-        'tehdä is irregular: present stem is teke- for most forms, but tee- in 3sg (tekee).',
+        'tehdä is irregular: present stem is tee- for most forms (teen, teet, teemme, teette), but teke- in 3sg and 3pl (tekee, tekevät).',
       ],
     },
     {
@@ -109,7 +109,7 @@ export const TOPIC_VERB_TYPES: GrammarTopic = {
       ],
       commonPitfalls: [
         'olla is irregular in the present: olen, olet, on, olemme, olette, ovat — the 3sg is on, not *olee.',
-        'The infinitive of Type 3 verbs can end in -lla, -nnä, -rrä, -sta, -nta, -rta — all map to the -e- stem pattern.',
+        'The infinitive of Type 3 verbs can end in -lla/-llä, -nna/-nnä, -rra/-rrä, -sta/-stä — all map to the -e- stem pattern.',
       ],
     },
     {
@@ -2330,6 +2330,716 @@ export const TOPIC_NECESSIVE: GrammarTopic = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 20. PASSIVE PAST TENSES
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_PASSIVE_PAST: GrammarTopic = {
+  id: 'passive-past',
+  version: '1.0.0',
+  title: 'Passive past tenses',
+  subtitle: 'Tehtiin, on tehty, oli tehty — imperfect, perfect, pluperfect.',
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 18,
+  prerequisites: ['passive', 'perfect'],
+  tags: ['verbs'],
+  overview: {
+    theme: "Finnish passive extends across all tenses just like the active voice. The three key forms are: past passive imperfect (tehtiin), passive perfect (on tehty), and passive pluperfect (oli tehty). All are built from the passive past participle (-ttu/-tty), which is also widely used as an adjective.",
+    grammarFocus: [
+      'Passive past participle: -ttu/-tty (from -taan → -ttu, -daan → -tu)',
+      'Past passive (imperfect): puhuttiin, syötiin, tehtiin — replace -taan/-tään with -ttiin',
+      'Passive perfect: on puhuttu, on tehty — on + passive past participle',
+      'Passive pluperfect: oli puhuttu, oli tehty — oli + passive past participle',
+      'Passive participle as adjective: tehty päätös (a decision made), kirjoitettu kirje',
+    ],
+    whyItMatters: "Passive past forms saturate Finnish news, bureaucratic writing, and formal speech. 'Laki on säädetty' (the law has been enacted), 'asia oli sovittu' (the matter had been agreed) — you cannot read a Finnish newspaper without these.",
+  },
+  sections: [
+    {
+      id: 'pass-past-participle',
+      title: 'Passive past participle (-ttu/-tty)',
+      question: 'Miten muodostetaan passiivin partisiippi II?',
+      questionEn: 'How is the passive past participle formed?',
+      grammarPattern:
+        'Start from the present passive. Replace -taan/-tään with -ttu/-tty; replace -daan/-dään with -tu/-ty. The result is uninflected — it does not agree in person or number with a subject.',
+      formula: '-taan → -ttu / -tään → -tty | -daan → -tu / -dään → -ty',
+      morphology: {
+        surface: 'puhuttu',
+        stem: 'puhu',
+        ending: '-ttu',
+        breakdown: [
+          { token: 'puhu', role: 'stem', note: 'present stem of puhua' },
+          { token: 'ttu',  role: 'ending', note: 'passive past participle suffix (back vowel, double-t)' },
+        ],
+      },
+      examples: [
+        { fi: 'puhutaan → puhuttu', en: 'speak (passive present) → spoken (passive participle)' },
+        { fi: 'syödään → syöty', en: 'eat → eaten (-dään → -ty)' },
+        { fi: 'tehdään → tehty', en: 'do → done (-dään → -ty)' },
+        { fi: 'tullaan → tultu', en: 'come → come (past part.) (-llaan → -ltu)' },
+        { fi: 'mennään → menty', en: 'go → gone (-nnään → -nty)' },
+        { fi: 'sanotaan → sanottu', en: 'say → said' },
+        { fi: 'kirjoitetaan → kirjoitettu', en: 'write → written' },
+        { fi: 'rakennetaan → rakennettu', en: 'build → built' },
+      ],
+      commonPitfalls: [
+        'Verbs with -daan/-dään in present passive (Type 2: syödään, tehdään, juodaan) use a single -t in the participle: syöty, tehty, juotu — not *syötty, *tehtty.',
+        'The passive past participle is uninflected in the predicate: Se on tehty (it has been done), Ne on tehty (they have been done) — no plural agreement.',
+      ],
+    },
+    {
+      id: 'pass-imperfect',
+      title: 'Past passive imperfect (-ttiin / -tiin)',
+      question: 'Miten muodostetaan passiivin imperfekti?',
+      questionEn: 'How is the past passive formed?',
+      grammarPattern:
+        'Replace -taan/-tään with -ttiin; replace -daan/-dään with -tiin. There is only one past passive form — it does not conjugate for person.',
+      formula: '-taan → -ttiin / -tään → -ttiin | -daan → -tiin / -dään → -tiin',
+      morphology: {
+        surface: 'puhuttiin',
+        stem: 'puhu',
+        ending: '-ttiin',
+        breakdown: [
+          { token: 'puhu', role: 'stem', note: 'present stem of puhua' },
+          { token: 'ttiin', role: 'ending', note: 'past passive ending' },
+        ],
+      },
+      examples: [
+        { fi: 'puhutaan → puhuttiin', en: 'is spoken → was spoken / people spoke' },
+        { fi: 'syödään → syötiin', en: 'is eaten → was eaten / people ate (-dään → -tiin)' },
+        { fi: 'tehdään → tehtiin', en: 'is done → was done (-dään → -tiin)' },
+        { fi: 'tullaan → tultiin', en: 'come (pass.) → came (pass.)' },
+        { fi: 'Eilen kokouksessa puhuttiin paljon.', en: 'Yesterday a lot was discussed at the meeting.' },
+        { fi: 'Suomessa rakennettiin paljon 1960-luvulla.', en: 'A lot was built in Finland in the 1960s.' },
+        { fi: 'Laki säädettiin vuonna 2010.', en: 'The law was enacted in 2010.' },
+      ],
+      commonPitfalls: [
+        'There is no pronoun agreement — past passive is one invariant form: puhuttiin, not *he puhuttivat (that would be the active plural imperfect).',
+        '-daan/-dään → -tiin (single t): syötiin, tehtiin, juotiin. The -d- becomes -t- and no doubling occurs.',
+      ],
+    },
+    {
+      id: 'pass-perfect',
+      title: 'Passive perfect — on tehty',
+      question: 'Miten muodostetaan passiivin perfekti?',
+      questionEn: 'How is the passive perfect formed?',
+      grammarPattern:
+        'on + passive past participle (-ttu/-tty or -tu/-ty). Used for a completed event whose result is still relevant — often equivalent to the English passive perfect "has been done" or even just "is done".',
+      formula: 'on + passive past participle',
+      examples: [
+        { fi: 'Se on tehty. (tehdä)', en: 'It has been done. / It is done.' },
+        { fi: 'Kirje on lähetetty.', en: 'The letter has been sent.' },
+        { fi: 'Kaikki on sanottu.', en: 'Everything has been said.' },
+        { fi: 'Asia on päätetty.', en: 'The matter has been decided.' },
+        { fi: 'Talo on rakennettu 1920-luvulla.', en: 'The house was built (has been built) in the 1920s.' },
+        { fi: 'Onko siivottu? — On siivottu.', en: 'Has it been cleaned? — It has been cleaned.' },
+      ],
+      commonPitfalls: [
+        'The passive perfect uses on (3sg of olla) for all subjects — no agreement: Se on tehty, Ne on tehty, Asia on tehty.',
+        'The passive past participle acts as the predicate complement — it is uninflected.',
+      ],
+    },
+    {
+      id: 'pass-pluperfect',
+      title: 'Passive pluperfect — oli tehty',
+      question: 'Miten muodostetaan passiivin pluskvamperfekti?',
+      questionEn: 'How is the passive pluperfect formed?',
+      grammarPattern:
+        'oli + passive past participle. The auxiliary shifts from on to oli (imperfect of olla). Used for an event that was completed before another past event.',
+      formula: 'oli + passive past participle',
+      examples: [
+        { fi: 'Asia oli jo sovittu ennen kokousta.', en: 'The matter had already been agreed before the meeting.' },
+        { fi: 'Ovi oli lukittu, kun tulin.', en: 'The door had been locked when I arrived.' },
+        { fi: 'Oli päätetty, että hän jäisi.', en: 'It had been decided that he would stay.' },
+        { fi: 'Kaikki oli valmisteltu etukäteen.', en: 'Everything had been prepared in advance.' },
+      ],
+      commonPitfalls: [
+        'oli (imperfect) vs. on (present perfect): oli tehty = had been done; on tehty = has been done.',
+      ],
+    },
+    {
+      id: 'pass-participle-adjective',
+      title: 'Passive participle as adjective',
+      question: 'Miten passiivin partisiippia käytetään adjektiivina?',
+      questionEn: 'How is the passive past participle used as an adjective?',
+      grammarPattern:
+        'The passive past participle (-ttu/-tty) can modify a noun as an attributive adjective. When used attributively, it inflects in case and number like a regular adjective.',
+      formula: 'passive past participle + noun (agrees in case)',
+      examples: [
+        { fi: 'tehty päätös (nominative)', en: 'a decision (that has been) made' },
+        { fi: 'tehdyn päätöksen (genitive)', en: 'of the made decision' },
+        { fi: 'kirjoitettu kirje → kirjoitetun kirjeen', en: 'written letter → of the written letter' },
+        { fi: 'avattu pullo → avatusta pullosta', en: 'opened bottle → from the opened bottle (elative)' },
+        { fi: 'Hän söi loput jääkaapissa ollut[ta] ruokaa.', en: 'She ate the rest of the food that had been in the fridge.' },
+      ],
+      commonPitfalls: [
+        'When attributive (before a noun), the passive participle inflects: tehty päätös → tehtyä päätöstä (partitive). When predicative (after olla), it is uninflected: päätös on tehty.',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: '-taan → -ttu/-tty', use: 'Passive past participle (-taan verbs)', examples: ['puhuttu', 'kirjoitettu', 'rakennettu'], sectionRef: 'pass-past-participle' },
+    { pattern: '-daan → -tu/-ty', use: 'Passive past participle (-daan verbs)', examples: ['tehty', 'syöty', 'tultu', 'menty'], sectionRef: 'pass-past-participle' },
+    { pattern: '-taan → -ttiin', use: 'Past passive imperfect', examples: ['puhuttiin', 'sanottiin', 'rakennettiin'], sectionRef: 'pass-imperfect' },
+    { pattern: '-daan → -tiin', use: 'Past passive imperfect (-daan verbs)', examples: ['tehtiin', 'syötiin', 'tultiin'], sectionRef: 'pass-imperfect' },
+    { pattern: 'on + -ttu/-tty', use: 'Passive perfect', examples: ['on tehty', 'on sanottu', 'on päätetty'], sectionRef: 'pass-perfect' },
+    { pattern: 'oli + -ttu/-tty', use: 'Passive pluperfect', examples: ['oli tehty', 'oli sovittu'], sectionRef: 'pass-pluperfect' },
+  ],
+  drills: [
+    { id: 'pasp-d1', kind: 'transform', sectionId: 'pass-past-participle',
+      data: { base: 'puhutaan', instruction: '→ passive past participle', answer: 'puhuttu' } },
+    { id: 'pasp-d2', kind: 'transform', sectionId: 'pass-past-participle',
+      data: { base: 'tehdään', instruction: '→ passive past participle', answer: 'tehty' } },
+    { id: 'pasp-d3', kind: 'transform', sectionId: 'pass-imperfect',
+      data: { base: 'puhutaan', instruction: '→ past passive (imperfect)', answer: 'puhuttiin' } },
+    { id: 'pasp-d4', kind: 'transform', sectionId: 'pass-imperfect',
+      data: { base: 'tehdään', instruction: '→ past passive (imperfect)', answer: 'tehtiin' } },
+    { id: 'pasp-d5', kind: 'fill', sectionId: 'pass-perfect',
+      data: { sentence: 'Asia _____ _____ (päättää, passive perfect).', answer: 'on päätetty', hint: 'on + passive past participle of päättää', baseForm: 'päättää' } },
+    { id: 'pasp-d6', kind: 'fill', sectionId: 'pass-pluperfect',
+      data: { sentence: 'Ovi _____ _____ (lukita), kun tulin.', answer: 'oli lukittu', hint: 'oli + passive past participle of lukita', baseForm: 'lukita' } },
+    { id: 'pasp-d7', kind: 'mc', sectionId: 'pass-imperfect',
+      data: { prompt: 'Past passive of "syödään"?', options: ['syötiin', 'syöttiin', 'syödittiin', 'syöttään'], correctIndex: 0,
+        explanation: '-dään → -tiin (single t): syötiin.' } },
+    { id: 'pasp-d8', kind: 'table', sectionId: 'pass-past-participle',
+      data: {
+        headers: ['Present passive', 'Past passive', 'Passive participle'],
+        rows: [
+          { label: 'puhutaan',    cells: [{ value: 'puhutaan',    blank: false }, { value: 'puhuttiin',    blank: true }, { value: 'puhuttu',    blank: true }] },
+          { label: 'tehdään',     cells: [{ value: 'tehdään',     blank: false }, { value: 'tehtiin',      blank: true }, { value: 'tehty',      blank: true }] },
+          { label: 'tullaan',     cells: [{ value: 'tullaan',     blank: false }, { value: 'tultiin',      blank: true }, { value: 'tultu',      blank: true }] },
+          { label: 'kirjoitetaan', cells: [{ value: 'kirjoitetaan', blank: false }, { value: 'kirjoitettiin', blank: true }, { value: 'kirjoitettu', blank: true }] },
+        ],
+      } },
+    { id: 'pasp-d9', kind: 'translate', sectionId: 'pass-perfect',
+      data: { prompt: 'The letter has been sent.', target: 'Kirje on lähetetty', acceptAlso: ['Kirje on lähetetty.'] } },
+    { id: 'pasp-d10', kind: 'spot-error', sectionId: 'pass-imperfect',
+      data: { sentence: 'Syödään → syöttiin eilen paljon.', errorWord: 'syöttiin', correctForm: 'syötiin',
+        explanation: '-dään verbs use single -t in past passive: syötiin (not *syöttiin).' } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Passive past participle', url: 'https://uusikielemme.fi/finnish-grammar/verbs/the-passive-past-participle' },
+    { label: 'VISK § 1315 — Passiivin partisiippi', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=1315' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 21. PASSIVE CONDITIONAL & IMPERATIVE
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_PASSIVE_CONDITIONAL: GrammarTopic = {
+  id: 'passive-conditional',
+  version: '1.0.0',
+  title: 'Passive conditional & imperative',
+  subtitle: "Tehtäisiin, tehtäköön — 'one would do', 'let it be done'.",
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 14,
+  prerequisites: ['passive', 'conditional'],
+  tags: ['verbs'],
+  overview: {
+    theme: "Finnish passive has conditional and imperative forms just like the active voice. The passive conditional (tehtäisiin — 'it would be done / one would do') is common in formal proposals. The passive imperative (tehtäköön — 'let it be done') appears in resolutions, decisions, and set phrases.",
+    grammarFocus: [
+      'Passive conditional: passive stem + -isiin (→ tehtäisiin, puhuttaisiin)',
+      'Passive imperative (3rd): passive stem + -koon/-köön (→ tehtäköön, puhuttakoon)',
+      'Negative passive conditional: ei tehtäisi',
+      'Usage: formal proposals, legislative language, polite suggestions',
+    ],
+    whyItMatters: "Once you can read Finnish news or official documents, these forms appear constantly: 'asia hoidettaisiin' (the matter would be handled), 'olkoon niin' (so be it), 'tehtäköön päätös' (let a decision be made).",
+  },
+  sections: [
+    {
+      id: 'pass-cond-form',
+      title: 'Passive conditional (-isiin)',
+      question: 'Miten passiivin konditionaali muodostetaan?',
+      questionEn: 'How is the passive conditional formed?',
+      grammarPattern:
+        'Replace -taan/-tään with -ttaisiin/-ttäisiin; replace -daan/-dään with -taisiin/-täisiin. Alternatively: take the passive stem (present passive minus -an/-ään) and add -isiin.',
+      formula: '-taan → -ttaisiin / -tään → -ttäisiin | -daan → -taisiin / -dään → -täisiin',
+      morphology: {
+        surface: 'puhuttaisiin',
+        stem: 'puhu',
+        ending: '-ttaisiin',
+        breakdown: [
+          { token: 'puhu',    role: 'stem',     note: 'present stem of puhua' },
+          { token: 'ttaisiin', role: 'ending',  note: 'passive conditional ending (back vowel)' },
+        ],
+      },
+      examples: [
+        { fi: 'puhutaan → puhuttaisiin', en: 'is spoken → would be spoken / one would speak' },
+        { fi: 'tehdään → tehtäisiin', en: 'is done → would be done (-dään → -täisiin)' },
+        { fi: 'syödään → syötäisiin', en: 'is eaten → would be eaten' },
+        { fi: 'Asia hoidettaisiin yhdessä.', en: 'The matter would be handled together.' },
+        { fi: 'Tämä tehtäisiin ennen kokousta.', en: 'This would be done before the meeting.' },
+        { fi: 'Jos säässä olisi, mentäisiin ulos.', en: 'If the weather were good, we would go out.' },
+      ],
+      commonPitfalls: [
+        'The passive conditional is invariant — there is no person agreement: it would be puhuttaisiin for all subjects.',
+        '-daan/-dään verbs: tehdään → tehtäisiin (d → t, single t in the conditional marker position, not double).',
+      ],
+    },
+    {
+      id: 'pass-cond-negative',
+      title: 'Negative passive conditional',
+      question: 'Miten kielletään passiivin konditionaali?',
+      questionEn: 'How is the passive conditional negated?',
+      grammarPattern:
+        'ei + passive conditional base (without -isiin). The negative form removes the -isiin and uses ei.',
+      formula: 'ei + passive conditional stem (minus -isiin)',
+      examples: [
+        { fi: 'puhuttaisiin → ei puhuttaisi', en: 'would be spoken → would not be spoken' },
+        { fi: 'tehtäisiin → ei tehtäisi', en: 'would be done → would not be done' },
+        { fi: 'Asiaa ei hoidettaisi näin.', en: 'The matter would not be handled this way.' },
+        { fi: 'Sitä ei tehtäisi ilman lupaa.', en: 'It would not be done without permission.' },
+      ],
+      commonPitfalls: [
+        'The negative passive conditional ends in -i (ei puhuttaisi), not -isiin (that is the affirmative).',
+      ],
+    },
+    {
+      id: 'pass-imperative',
+      title: 'Passive imperative (-koon/-köön): let it be done',
+      question: 'Miten muodostetaan passiivin imperatiivi?',
+      questionEn: 'How is the passive imperative formed?',
+      grammarPattern:
+        'Replace -taan/-tään with -ttakoon/-ttäköön; replace -daan/-dään with -takoon/-täköön. The passive imperative corresponds to English "let it be done" or "may it be done".',
+      formula: '-taan → -ttakoon / -tään → -ttäköön | -daan → -takoon / -dään → -täköön',
+      examples: [
+        { fi: 'puhutaan → puhuttakoon', en: 'let it be spoken / let them speak' },
+        { fi: 'tehdään → tehtäköön', en: 'let it be done / so be it' },
+        { fi: 'Tehtäköön päätös tänään.', en: 'Let a decision be made today.' },
+        { fi: 'Olkoon niin.', en: 'So be it. / Let it be so.' },
+        { fi: 'Annettakoon heille aikaa.', en: 'Let them be given time.' },
+        { fi: 'Päätettäköön asia kokouksessa.', en: 'Let the matter be decided at the meeting.' },
+      ],
+      commonPitfalls: [
+        'The passive imperative is formal and appears mainly in official language, resolutions, and set phrases.',
+        'olkoon is the passive imperative of olla — "olkoon niin" (so be it) is a fossilised phrase.',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: '-taan → -ttaisiin', use: 'Passive conditional (affirmative)', examples: ['puhuttaisiin', 'sanottaisiin'], sectionRef: 'pass-cond-form' },
+    { pattern: '-daan → -taisiin/-täisiin', use: 'Passive conditional (-daan verbs)', examples: ['tehtäisiin', 'syötäisiin'], sectionRef: 'pass-cond-form' },
+    { pattern: 'ei + -ttaisi', use: 'Negative passive conditional', examples: ['ei puhuttaisi', 'ei tehtäisi'], sectionRef: 'pass-cond-negative' },
+    { pattern: '-taan → -ttakoon', use: 'Passive imperative ("let it be done")', examples: ['puhuttakoon', 'tehtäköön', 'annettakoon'], sectionRef: 'pass-imperative' },
+  ],
+  drills: [
+    { id: 'pasc-d1', kind: 'transform', sectionId: 'pass-cond-form',
+      data: { base: 'puhutaan', instruction: '→ passive conditional', answer: 'puhuttaisiin' } },
+    { id: 'pasc-d2', kind: 'transform', sectionId: 'pass-cond-form',
+      data: { base: 'tehdään', instruction: '→ passive conditional', answer: 'tehtäisiin' } },
+    { id: 'pasc-d3', kind: 'transform', sectionId: 'pass-imperative',
+      data: { base: 'tehdään', instruction: '→ passive imperative (let it be done)', answer: 'tehtäköön' } },
+    { id: 'pasc-d4', kind: 'mc', sectionId: 'pass-cond-negative',
+      data: { prompt: 'Negative passive conditional of "tehdään"?',
+        options: ['ei tehtäisi', 'ei tehtäisiin', 'ei tehdä', 'ei tehtäköön'], correctIndex: 0,
+        explanation: 'Negative passive conditional: ei + base without -isiin → ei tehtäisi.' } },
+    { id: 'pasc-d5', kind: 'translate', sectionId: 'pass-imperative',
+      data: { prompt: 'Let a decision be made today.', target: 'Tehtäköön päätös tänään', acceptAlso: ['Tehtäköön päätös tänään.'] } },
+    { id: 'pasc-d6', kind: 'fill', sectionId: 'pass-cond-form',
+      data: { sentence: 'Jos aikaa olisi, asia _____ (hoitaa, passive conditional) yhdessä.', answer: 'hoidettaisiin', hint: 'passive conditional of hoitaa: hoidetaan → hoidettaisiin', baseForm: 'hoitaa' } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Passive conditional', url: 'https://uusikielemme.fi/finnish-grammar/verbs/the-passive-voice' },
+    { label: 'VISK § 1317 — Passiivin konditionaali', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=1317' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 22. CONDITIONAL PERFECT
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_CONDITIONAL_PERFECT: GrammarTopic = {
+  id: 'conditional-perfect',
+  version: '1.0.0',
+  title: 'Conditional perfect',
+  subtitle: "Olisin tehnyt — 'I would have done.' Regret, counterfactuals.",
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 14,
+  prerequisites: ['conditional', 'perfect'],
+  tags: ['verbs'],
+  overview: {
+    theme: "The conditional perfect (olisin + past participle) expresses what would have happened but didn't — regret, counterfactual reasoning, and unfulfilled conditions in the past. It pairs with jos-clauses using olisi + past participle to form the complete 'if I had … I would have …' pattern.",
+    grammarFocus: [
+      'Form: olisin/olisit/olisi/olisimme/olisitte/olisivat + past participle (-nut/-nyt sg, -neet pl)',
+      'Regret: Olisin puhunut hänelle. (I would have spoken to him.)',
+      'Counterfactual: Jos olisin tiennyt… (If I had known…)',
+      'Contrast: puhuisin (I would speak) vs. olisin puhunut (I would have spoken)',
+      'Passive conditional perfect: olisi tehty (it would have been done)',
+    ],
+    whyItMatters: "Counterfactual thinking about the past — 'I wish I had…', 'If only…', 'It would have been better if…' — is one of the most emotionally rich areas of any language. Finnish compresses it into a single elegant construction.",
+  },
+  sections: [
+    {
+      id: 'condperf-form',
+      title: 'Forming the conditional perfect',
+      question: 'Miten konditionaalin perfekti muodostetaan?',
+      questionEn: 'How is the conditional perfect formed?',
+      grammarPattern:
+        'Conditional of olla (olisin/olisit/olisi/olisimme/olisitte/olisivat) + past participle. Singular: -nut/-nyt. Plural: -neet.',
+      formula: 'olisin/olisi + -nut/-nyt (sg) / -neet (pl)',
+      morphology: {
+        surface: 'olisin puhunut',
+        stem: 'puhu',
+        ending: '-nut',
+        breakdown: [
+          { token: 'olisin', role: 'other',  note: '1sg conditional of olla' },
+          { token: 'puhu',   role: 'stem',   note: 'stem of puhua' },
+          { token: 'nut',    role: 'ending', note: 'past participle (-nut, back vowel)' },
+        ],
+      },
+      examples: [
+        { fi: 'olisin puhunut / olisit puhunut / olisi puhunut', en: 'I would have spoken / you would have / she would have' },
+        { fi: 'olisimme puhuneet / olisivat puhuneet', en: 'we would have spoken / they would have spoken' },
+        { fi: 'Olisin tullut, mutta minulla oli kiire.', en: 'I would have come, but I was in a hurry.' },
+        { fi: 'Hän olisi syönyt enemmän.', en: 'She would have eaten more.' },
+        { fi: 'Olisimme voineet auttaa.', en: 'We could have helped.' },
+      ],
+      commonPitfalls: [
+        'Singular subject → -nut/-nyt; plural subject → -neet. This is the same pattern as the plain perfect.',
+        'Do not confuse the conditional (puhuisin — I would speak) with the conditional perfect (olisin puhunut — I would have spoken).',
+      ],
+    },
+    {
+      id: 'condperf-regret',
+      title: 'Expressing regret and missed opportunity',
+      question: 'Miten ilmaistaan katumusta konditionaalin perfektillä?',
+      questionEn: 'How is regret expressed with the conditional perfect?',
+      grammarPattern:
+        'Use the conditional perfect for things you wish you had (or had not) done. Often combined with mutta (but), kuitenkin (nevertheless), tai (or), jos vain (if only).',
+      examples: [
+        { fi: 'Olisin pitänyt suomen tunneilla enemmän. (regret)', en: 'I would have paid more attention in Finnish class.' },
+        { fi: 'En olisi sanonut niin. (regret about what was said)', en: 'I would not have said that.' },
+        { fi: 'Hän olisi voinut soittaa. (missed opportunity)', en: 'He could have called.' },
+        { fi: 'Olisi ollut parempi odottaa.', en: 'It would have been better to wait.' },
+        { fi: 'Jos vain olisin tiennyt!', en: 'If only I had known!' },
+      ],
+      commonPitfalls: [
+        "Finnish does not shift tenses in indirect speech the way English does — but in direct counterfactual thinking, both the condition and consequence use past forms.",
+      ],
+    },
+    {
+      id: 'condperf-jos',
+      title: 'Jos olisi… olisi… — counterfactual if-clauses',
+      question: 'Miten muodostetaan konditionaalin perfektin jos-lause?',
+      questionEn: 'How are past counterfactual if-clauses formed?',
+      grammarPattern:
+        'Both clauses use the conditional perfect: Jos + olisi + past participle, main clause + olisi + past participle. This is the past-counterfactual pattern equivalent to English "If I had done X, I would have done Y."',
+      formula: 'Jos + olisi + past participle, … olisi + past participle',
+      examples: [
+        { fi: 'Jos olisin tiennyt, olisin tullut.', en: 'If I had known, I would have come.' },
+        { fi: 'Jos hän olisi syönyt enemmän, ei olisi ollut nälkäinen.', en: "If she had eaten more, she wouldn't have been hungry." },
+        { fi: 'Jos olisimme lähteneet ajoissa, emme olisi myöhästyneet.', en: 'If we had left on time, we would not have been late.' },
+        { fi: 'Mitä olisit tehnyt, jos olisit voittanut lotossa?', en: 'What would you have done if you had won the lottery?' },
+      ],
+      commonPitfalls: [
+        'Both the jos-clause and the main clause use conditional perfect (olisi + past participle) — unlike English which splits into "had done" and "would have done".',
+        'Finnish does not have a pluperfect subjunctive — the conditional perfect covers all these cases.',
+      ],
+    },
+    {
+      id: 'condperf-passive',
+      title: 'Passive conditional perfect — olisi tehty',
+      question: 'Miten muodostetaan passiivin konditionaalin perfekti?',
+      questionEn: 'How is the passive conditional perfect formed?',
+      grammarPattern:
+        'olisi + passive past participle (-ttu/-tty or -tu/-ty). Means "it would have been done". Invariant — no person agreement.',
+      formula: 'olisi + passive past participle',
+      examples: [
+        { fi: 'Asia olisi hoidettu paremmin.', en: 'The matter would have been handled better.' },
+        { fi: 'Se olisi tehty eilen, mutta aikaa ei ollut.', en: 'It would have been done yesterday, but there was no time.' },
+        { fi: 'Olisi puhuttu enemmän.', en: 'There would have been more talking.' },
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'olisin + -nut/-nyt', use: 'Conditional perfect sg', examples: ['olisin puhunut', 'olisi tullut'], sectionRef: 'condperf-form' },
+    { pattern: 'olisimme + -neet', use: 'Conditional perfect pl', examples: ['olisimme puhuneet', 'olisivat syöneet'], sectionRef: 'condperf-form' },
+    { pattern: 'en olisi + -nut', use: 'Negative conditional perfect', examples: ['en olisi sanonut', 'ei olisi tullut'], sectionRef: 'condperf-regret' },
+    { pattern: 'olisi + passive part.', use: 'Passive conditional perfect', examples: ['olisi tehty', 'olisi hoidettu'], sectionRef: 'condperf-passive' },
+  ],
+  drills: [
+    { id: 'cp-d1', kind: 'transform', sectionId: 'condperf-form',
+      data: { base: 'puhua (minä, cond. perfect)', instruction: '→ conditional perfect 1sg', answer: 'olisin puhunut' } },
+    { id: 'cp-d2', kind: 'transform', sectionId: 'condperf-form',
+      data: { base: 'tulla (he, cond. perfect)', instruction: '→ conditional perfect 3pl', answer: 'olisivat tulleet' } },
+    { id: 'cp-d3', kind: 'fill', sectionId: 'condperf-jos',
+      data: { sentence: 'Jos _____ (tietää, 1sg cond. perf.) sen, _____ (tulla) ajoissa.', answer: 'olisin tiennyt / olisin tullut', hint: 'olisin + past participle in both clauses', baseForm: 'tietää' } },
+    { id: 'cp-d4', kind: 'translate', sectionId: 'condperf-regret',
+      data: { prompt: 'I would have come, but I was in a hurry.', target: 'Olisin tullut, mutta minulla oli kiire', acceptAlso: ['Olisin tullut, mutta minulla oli kiire.'] } },
+    { id: 'cp-d5', kind: 'mc', sectionId: 'condperf-form',
+      data: { prompt: '"She would have eaten" in Finnish?',
+        options: ['hän olisi syönyt', 'hän söisi', 'hän on syönyt', 'hän olisi syöny'], correctIndex: 0,
+        explanation: 'Conditional perfect: olisi + past participle syönyt.' } },
+    { id: 'cp-d6', kind: 'spot-error', sectionId: 'condperf-jos',
+      data: { sentence: 'Jos olisin tiennyt, tulisin.', errorWord: 'tulisin', correctForm: 'olisin tullut',
+        explanation: 'Past counterfactual: both clauses need conditional perfect (olisi + past participle). tulisin is simple conditional (present).' } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Conditional perfect', url: 'https://uusikielemme.fi/finnish-grammar/verbs/conditional-perfect' },
+    { label: 'VISK § 1593 — Konditionaalin perfekti', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=1593' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 23. FOURTH INFINITIVE (-MINEN)
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_INFINITIVE_4: GrammarTopic = {
+  id: 'infinitive-4',
+  version: '1.0.0',
+  title: 'Fourth infinitive (-minen)',
+  subtitle: 'Tekeminen, lukeminen — the verbal noun. Heavily used in writing.',
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 16,
+  prerequisites: ['infinitive-1', 'nominative'],
+  tags: ['verbs'],
+  overview: {
+    theme: "The fourth infinitive (also called the verbal noun or -minen noun) turns any verb into a noun meaning 'the act of doing X'. It inflects fully as a regular noun in all 15 cases. This is one of the most productive and frequent patterns in written Finnish — the equivalent of English '-ing' nouns.",
+    grammarFocus: [
+      'Formation: present stem + -minen (back: -minen; front: -minen — same suffix, vowel harmony applies inside)',
+      'Genitive sg: -misen (tekeminen → tekemisen)',
+      'Partitive sg: -mista/-mistä (tekemistä)',
+      'Illative: -miseen (tekemiseen)',
+      'As subject, object, or complement in formal/written Finnish',
+      'With genitive agent: Äidin tekeminen (mother\'s doing it)',
+    ],
+    whyItMatters: "Open any Finnish newspaper or academic text and -minen forms appear on every page. 'Päätöksen tekeminen' (the making of a decision), 'opiskeleminen on tärkeää' (studying is important) — these structures are essential for B2 reading and writing.",
+  },
+  sections: [
+    {
+      id: 'inf4-form',
+      title: 'Forming the -minen noun',
+      question: 'Miten -minen-substantiivi muodostetaan?',
+      questionEn: 'How is the -minen verbal noun formed?',
+      grammarPattern:
+        'Present stem + -minen (back vowel) or -minen (front vowel, same spelling — vowel harmony affects the case endings, not the suffix itself). The stem is the same as for the third infinitive (MA-infinitive).',
+      formula: 'present stem + -minen',
+      morphology: {
+        surface: 'teke-minen',
+        stem: 'teke',
+        ending: '-minen',
+        breakdown: [
+          { token: 'teke', role: 'stem',   note: 'present stem of tehdä' },
+          { token: 'minen', role: 'ending', note: 'verbal noun suffix' },
+        ],
+      },
+      examples: [
+        { fi: 'tehdä → tekeminen', en: 'to do → doing, the doing' },
+        { fi: 'puhua → puhuminen', en: 'to speak → speaking' },
+        { fi: 'tulla → tuleminen', en: 'to come → coming' },
+        { fi: 'opiskella → opiskeleminen', en: 'to study → studying' },
+        { fi: 'lukea → lukeminen', en: 'to read → reading' },
+        { fi: 'nukkua → nukkuminen', en: 'to sleep → sleeping' },
+        { fi: 'kysyä → kysyminen', en: 'to ask → asking (front vowel)' },
+        { fi: 'syödä → syöminen', en: 'to eat → eating' },
+      ],
+      commonPitfalls: [
+        'The verbal noun takes the same stem as the third infinitive (-ma-/-mä-). If you know tekemässä, the noun is tekeminen — just replace -ssä with -nen.',
+        'Do not confuse tekeminen (the act) with tekijä (the doer, agent noun) — different suffixes, different meanings.',
+      ],
+    },
+    {
+      id: 'inf4-inflection',
+      title: 'Inflecting the -minen noun',
+      question: 'Miten -minen-substantiivi taipuu?',
+      questionEn: 'How does the -minen noun inflect?',
+      grammarPattern:
+        'The -minen noun inflects like other -nen nouns: the -nen becomes -se- in oblique cases. So tekeminen → tekemisen (genitive), tekemistä (partitive), tekemiseen (illative), tekemisellä (adessive), etc.',
+      formula: 'tekeminen → tekemise- (oblique stem)',
+      examples: [
+        { fi: 'tekeminen (nom.sg)', en: 'doing (subject, dictionary form)' },
+        { fi: 'tekemisen (gen.sg)', en: "of doing (possessor, after postpositions)" },
+        { fi: 'tekemistä (part.sg)', en: 'doing (partial/ongoing, partitive object)' },
+        { fi: 'tekemiseen (illative)', en: 'into doing (tekemiseen ryhtyä = to start doing)' },
+        { fi: 'tekemisellä (adessive)', en: 'by doing' },
+        { fi: 'tekemisestä (elative)', en: 'about doing, from doing' },
+        { fi: 'tekemisiä (part.pl)', en: 'doings (plural partitive)' },
+      ],
+      commonPitfalls: [
+        '-minen in nominative, -misen in genitive: puhuminen → puhumisen (not *puhuminen\'s).',
+        'In partitive the ending is -mista/-mistä (not *-misenä): puhua → puhumista (I like speaking = pidän puhumisesta).',
+      ],
+    },
+    {
+      id: 'inf4-uses',
+      title: 'Uses of the -minen noun',
+      question: 'Missä tilanteissa käytetään -minen-substantiivia?',
+      questionEn: 'When and how is the -minen noun used?',
+      grammarPattern:
+        "The -minen noun can fill any slot a regular noun can: subject, object (in any case), after postpositions, etc. It is especially common as a formal alternative to infinitive constructions.",
+      examples: [
+        { fi: 'Opiskeleminen on tärkeää. (subject)', en: 'Studying is important.' },
+        { fi: 'Pidän lukemisesta. (object of pitää — elative)', en: 'I like reading.' },
+        { fi: 'Hän lopetti tupakoimisen. (total object — genitive/accusative)', en: 'He stopped smoking.' },
+        { fi: 'Päätöksen tekeminen vie aikaa. (gen. + -minen as subject)', en: 'Making a decision takes time.' },
+        { fi: 'Ennen nukkumista pese hampaat.', en: 'Before sleeping, brush your teeth.' },
+        { fi: 'Kirjoittaminen on helppoa vs. Kirjoittaa on helppoa.', en: 'Writing is easy. (formal vs. colloquial)' },
+      ],
+      commonPitfalls: [
+        'In formal writing, prefer -minen constructions; in spoken language, infinitives with olla or modal verbs are more natural.',
+        'After lopettaa (stop), aloittaa (start), harrastaa (do as a hobby): always -minen in a case (often -misen or -mista): lopetin tupakoimisen (stop smoking, accusative object).',
+      ],
+    },
+    {
+      id: 'inf4-genitive-agent',
+      title: 'With genitive agent',
+      question: 'Miten genetiiviä käytetään -minen-substantiivin yhteydessä?',
+      questionEn: 'How does a genitive agent work with -minen?',
+      grammarPattern:
+        'A genitive noun or pronoun before the -minen noun marks the agent (doer): Äidin lukeminen (mother\'s reading). Pronoun genitives: minun, sinun, hänen, meidän, teidän, heidän.',
+      formula: 'genitive noun/pronoun + -minen noun',
+      examples: [
+        { fi: 'Äidin lukeminen on hitaampaa kuin minun.', en: "Mother's reading is slower than mine." },
+        { fi: 'Hänen puhumisensa on selvää.', en: 'His/her speaking is clear.' },
+        { fi: 'Lasten leikkiminen ilostuttaa.', en: "Children's playing brings joy." },
+        { fi: 'Minun nukkumiseni on parempi nyt.', en: 'My sleeping is better now.' },
+      ],
+      commonPitfalls: [
+        'When a pronoun is the agent, the -minen noun also takes a possessive suffix: minun nukkumiseni, sinun lukemisesi, hänen tekemisensä.',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'stem + -minen', use: 'Verbal noun (nominative)', examples: ['tekeminen', 'puhuminen', 'opiskeleminen'], sectionRef: 'inf4-form' },
+    { pattern: 'stem + -misen', use: 'Verbal noun genitive', examples: ['tekemisen', 'puhumisen'], sectionRef: 'inf4-inflection' },
+    { pattern: 'stem + -mistä', use: 'Verbal noun partitive (object, after pitää)', examples: ['tekemistä', 'puhumista'], sectionRef: 'inf4-inflection' },
+    { pattern: 'stem + -miseen', use: 'Verbal noun illative', examples: ['tekemiseen', 'puhumiseen'], sectionRef: 'inf4-inflection' },
+  ],
+  drills: [
+    { id: 'inf4-d1', kind: 'transform', sectionId: 'inf4-form',
+      data: { base: 'puhua', instruction: '→ verbal noun (-minen)', answer: 'puhuminen' } },
+    { id: 'inf4-d2', kind: 'transform', sectionId: 'inf4-form',
+      data: { base: 'tehdä', instruction: '→ verbal noun (-minen)', answer: 'tekeminen' } },
+    { id: 'inf4-d3', kind: 'transform', sectionId: 'inf4-inflection',
+      data: { base: 'opiskeleminen', instruction: '→ partitive sg', answer: 'opiskelemista' } },
+    { id: 'inf4-d4', kind: 'fill', sectionId: 'inf4-uses',
+      data: { sentence: 'Pidän _____ (lukea, -minen elative).', answer: 'lukemisesta', hint: 'lukeminen → elative: lukemisesta', baseForm: 'lukea' } },
+    { id: 'inf4-d5', kind: 'translate', sectionId: 'inf4-uses',
+      data: { prompt: 'Studying is important.', target: 'Opiskeleminen on tärkeää', acceptAlso: ['Opiskeleminen on tärkeää.'] } },
+    { id: 'inf4-d6', kind: 'mc', sectionId: 'inf4-inflection',
+      data: { prompt: 'Genitive of "puhuminen"?',
+        options: ['puhumisesta', 'puhumisen', 'puhumista', 'puhumiseen'], correctIndex: 1,
+        explanation: '-minen → oblique stem -mise-: genitive = puhumisen.' } },
+    { id: 'inf4-d7', kind: 'table', sectionId: 'inf4-inflection',
+      data: {
+        headers: ['Case', 'Form of tekeminen'],
+        rows: [
+          { label: 'Nominative', cells: [{ value: 'Nominative', blank: false }, { value: 'tekeminen', blank: true }] },
+          { label: 'Genitive',   cells: [{ value: 'Genitive',   blank: false }, { value: 'tekemisen',  blank: true }] },
+          { label: 'Partitive',  cells: [{ value: 'Partitive',  blank: false }, { value: 'tekemistä',  blank: true }] },
+          { label: 'Illative',   cells: [{ value: 'Illative',   blank: false }, { value: 'tekemiseen', blank: true }] },
+          { label: 'Elative',    cells: [{ value: 'Elative',    blank: false }, { value: 'tekemisestä', blank: true }] },
+        ],
+      } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — The -minen noun', url: 'https://uusikielemme.fi/finnish-grammar/verbs/the-fourth-infinitive' },
+    { label: 'VISK § 218 — Teonnimi', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=218' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 24. FIFTH INFINITIVE (-MAISILLAAN)
+// ─────────────────────────────────────────────────────────────────────────────
+export const TOPIC_INFINITIVE_5: GrammarTopic = {
+  id: 'infinitive-5',
+  version: '1.0.0',
+  title: 'Fifth infinitive (-maisillaan)',
+  subtitle: "Tekemäisilläni — 'on the verge of doing'. Rare but vivid.",
+  language: 'fi',
+  targetLanguage: 'en',
+  level: 'B2',
+  estimatedMin: 10,
+  prerequisites: ['infinitive-3', 'possessive-suffixes'],
+  tags: ['verbs'],
+  overview: {
+    theme: "The fifth infinitive expresses that someone is on the verge of doing something, almost did it, or is about to do it. It is formed with the MA-infinitive stem + -isillA + possessive suffix. While rare in everyday spoken Finnish, it appears in literature and adds precision.",
+    grammarFocus: [
+      'Form: MA-stem + -isilla/-isillä + possessive suffix',
+      'Meaning: on the verge of / about to / almost',
+      'Always with a possessive suffix matching the subject',
+      'Olla + fifth infinitive: olin tekemäisilläni (I was about to do it)',
+    ],
+    whyItMatters: "The fifth infinitive is rare enough that you can read Finnish for years without noticing it, but vivid enough that you should recognise it when it appears. It also illustrates the logic of Finnish infinite forms elegantly.",
+  },
+  sections: [
+    {
+      id: 'inf5-form',
+      title: 'Forming the fifth infinitive',
+      question: 'Miten viides infinitiivi muodostetaan?',
+      questionEn: 'How is the fifth infinitive formed?',
+      grammarPattern:
+        'Take the MA-stem (same as third infinitive: present stem + -ma-/-mä-), add -isilla/-isillä (adessive of a frozen -is- form), then add a possessive suffix matching the subject. The result is always used with olla.',
+      formula: 'MA-stem + -isilla/-isillä + possessive suffix',
+      morphology: {
+        surface: 'teke-mä-isillä-ni',
+        stem: 'teke',
+        ending: '-mäisilläni',
+        breakdown: [
+          { token: 'teke',     role: 'stem',     note: 'present stem of tehdä' },
+          { token: 'mä',       role: 'gradation', note: 'MA-infinitive suffix (front vowel)' },
+          { token: 'isillä',   role: 'ending',    note: 'adessive of the -is- form' },
+          { token: 'ni',       role: 'ending',    note: 'possessive suffix 1sg' },
+        ],
+      },
+      examples: [
+        { fi: 'olin tekemäisilläni (1sg)', en: 'I was on the verge of doing it' },
+        { fi: 'olit tekemäisilläsi (2sg)', en: 'you were about to do it' },
+        { fi: 'oli tekemäisillään (3sg)', en: 'he/she was about to do it' },
+        { fi: 'olimme tekemäisillämme (1pl)', en: 'we were about to do it' },
+        { fi: 'Olin sanomaisillani sen ääneen.', en: 'I was on the verge of saying it aloud.' },
+        { fi: 'Hän oli itkemäisillään.', en: 'She was on the verge of crying.' },
+        { fi: 'Olin hukkumaisillani.', en: 'I was about to drown / I nearly drowned.' },
+      ],
+      commonPitfalls: [
+        'The fifth infinitive always requires a possessive suffix — omitting it is ungrammatical.',
+        'Always used with olla in the appropriate tense: olin (past), olen (present, rare), olisit (conditional).',
+      ],
+    },
+    {
+      id: 'inf5-meaning',
+      title: 'Meaning and usage',
+      question: 'Mitä viides infinitiivi tarkoittaa?',
+      questionEn: 'What does the fifth infinitive mean and when is it used?',
+      grammarPattern:
+        "The fifth infinitive expresses three related meanings: (1) on the verge of — action is imminent; (2) almost — action nearly happened; (3) about to — action is at the brink. Context and tense determine which reading.",
+      examples: [
+        { fi: 'Olin itkemäisilläni. (almost/on verge)', en: 'I was almost in tears / about to cry.' },
+        { fi: 'Auto oli jo kaatumaisillaan. (almost happened)', en: 'The car was on the verge of tipping over.' },
+        { fi: 'Hän on tekemäisillään ison päätöksen. (imminent)', en: 'He is about to make a big decision.' },
+        { fi: 'Olet sanomaisillasi jotain. (about to)', en: 'You are about to say something.' },
+      ],
+      commonPitfalls: [
+        'In everyday speech, Finns prefer: olin melkein itkemässä (I was almost crying) or olin juuri tekemässä (I was just about to do). The fifth infinitive is more literary.',
+      ],
+    },
+  ],
+  grammarIndex: [
+    { pattern: 'MA-stem + -isillA + poss.suf', use: 'On the verge of doing (5th infinitive)', examples: ['tekemäisilläni', 'itkemäisillään', 'sanomaisillasi'], sectionRef: 'inf5-form' },
+  ],
+  drills: [
+    { id: 'inf5-d1', kind: 'transform', sectionId: 'inf5-form',
+      data: { base: 'itkea (3sg, on verge of crying)', instruction: '→ 5th infinitive 3sg', answer: 'itkemäisillään' } },
+    { id: 'inf5-d2', kind: 'fill', sectionId: 'inf5-form',
+      data: { sentence: 'Olin _____ (sanoa, 5th inf. 1sg) sen.', answer: 'sanomaisillani', hint: 'MA-stem of sanoa = sanoma- + isillani', baseForm: 'sanoa' } },
+    { id: 'inf5-d3', kind: 'mc', sectionId: 'inf5-meaning',
+      data: { prompt: '"Olin hukkumaisillani" means…',
+        options: ['I was swimming', 'I was almost drowning / about to drown', 'I had drowned', 'I would have drowned'], correctIndex: 1,
+        explanation: '5th infinitive: on the verge of / almost. Hukkua = to drown → hukkumaisillani = I was about to drown.' } },
+    { id: 'inf5-d4', kind: 'translate', sectionId: 'inf5-meaning',
+      data: { prompt: 'She was on the verge of crying.', target: 'Hän oli itkemäisillään', acceptAlso: ['Hän oli itkemäisillään.'] } },
+  ],
+  sources: [
+    { label: 'Uusi kielemme — Fifth infinitive', url: 'https://uusikielemme.fi/finnish-grammar/verbs/the-fifth-infinitive' },
+    { label: 'VISK § 495 — Viides infinitiivi', url: 'http://scripta.kotus.fi/visk/sisallys.php?p=495' },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // EXPORT ARRAY
 // ─────────────────────────────────────────────────────────────────────────────
 export const VERB_TOPICS: GrammarTopic[] = [
@@ -2338,4 +3048,6 @@ export const VERB_TOPICS: GrammarTopic[] = [
   TOPIC_PASSIVE, TOPIC_INFINITIVE_1, TOPIC_PAST_PARTICIPLE, TOPIC_INFINITIVE_2,
   TOPIC_INFINITIVE_3, TOPIC_AGENT_PARTICIPLE, TOPIC_ACTIVE_PRESENT_PARTICIPLE,
   TOPIC_REFERATIVE, TOPIC_TEMPORAL, TOPIC_MODAL_VERBS, TOPIC_NECESSIVE,
+  TOPIC_PASSIVE_PAST, TOPIC_PASSIVE_CONDITIONAL, TOPIC_CONDITIONAL_PERFECT,
+  TOPIC_INFINITIVE_4, TOPIC_INFINITIVE_5,
 ];
