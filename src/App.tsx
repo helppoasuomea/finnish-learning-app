@@ -21,6 +21,7 @@ import { GrammarIndex } from './components/GrammarPage/GrammarBrowser'
 import { GrammarTopicPage } from './components/GrammarPage/GrammarTopicPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { PublicDeckPage } from './pages/PublicDeckPage'
+import { SharedDeckPage } from './pages/SharedDeckPage'
 
 const _apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:2323').replace(/\/$/, '')
 axios.defaults.baseURL = _apiBase.endsWith('/api') ? _apiBase + '/' : _apiBase + '/api/'
@@ -28,6 +29,7 @@ axios.defaults.withCredentials = true
 
 const AUTH_ROUTES = ["/login", "/register"];
 const PUBLIC_ROUTES = ["/grammar"];
+const SHARE_ROUTES = ["/s"];
 
 function App() {
   const location = useLocation();
@@ -57,12 +59,13 @@ const AppContent = ({ location }: { location: any }) => {
   const navigate = useNavigate();
   const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
   const isPublicRoute = PUBLIC_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
+  const isShareRoute = SHARE_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
 
   // Guard: wait for session check, then redirect unauthenticated users
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated && !isAuthRoute && !isPublicRoute) navigate('/login');
-  }, [isLoading, isAuthenticated, isAuthRoute, isPublicRoute, navigate, location.pathname]);
+    if (!isAuthenticated && !isAuthRoute && !isPublicRoute && !isShareRoute) navigate('/login');
+  }, [isLoading, isAuthenticated, isAuthRoute, isPublicRoute, isShareRoute, navigate, location.pathname]);
 
   if (isAuthRoute) {
     return (
@@ -70,6 +73,17 @@ const AppContent = ({ location }: { location: any }) => {
         <Routes>
           <Route path="/login" element={<AuthPage initialMode="signin" />} />
           <Route path="/register" element={<AuthPage initialMode="register" />} />
+        </Routes>
+        <Toaster />
+      </>
+    );
+  }
+
+  if (isShareRoute) {
+    return (
+      <>
+        <Routes>
+          <Route path="/s/:slug" element={<SharedDeckPage />} />
         </Routes>
         <Toaster />
       </>

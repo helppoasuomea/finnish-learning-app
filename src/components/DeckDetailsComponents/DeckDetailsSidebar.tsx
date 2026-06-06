@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Flame } from "lucide-react";
+import { Flame, Share2 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { DeckContext } from "@/contexts/DeckContext";
@@ -7,11 +7,14 @@ import { UserContext } from "@/contexts/UserContext";
 import { useFetchAllHistory, HistoryItem } from "@/state/hooks/useLearningHistoryHooks";
 import { MemoryGoalPanel } from "./MemoryGoalPanel";
 import { PublishPanel } from "./PublishPanel";
+import { ShareModal } from "./ShareModal";
 import type { MemoryGoalTier } from "@/types";
 
 interface Props {
   deckId: string;
   deckName: string;
+  deckEmoji?: string;
+  cardCount?: number;
   openPublish?: boolean;
 }
 
@@ -46,7 +49,7 @@ function nextReviewLabel(cards: { nextReviewDate?: string | null; cardScore?: nu
   return earliest.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
-export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName, openPublish }) => {
+export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName, deckEmoji, cardCount = 0, openPublish }) => {
   const { user } = useContext(UserContext);
   const userId = user?._id ?? null;
   const navigate = useNavigate();
@@ -55,6 +58,7 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName, openPubl
   const currentDeck = decks.find((d: any) => d._id === deckId);
   const memoryTier: MemoryGoalTier = currentDeck?.memoryGoal?.tier ?? 'sapling';
   const [streak, setStreak] = useState<number>(0);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     fetchHistory();
@@ -162,6 +166,23 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName, openPubl
 
       <MemoryGoalPanel deckId={deckId} currentTier={memoryTier} />
 
+      {/* Share button */}
+      <div className="tx-aside-card" style={{ padding: "14px 20px" }}>
+        <button
+          onClick={() => setShareOpen(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            background: "none", border: "none", cursor: "pointer", width: "100%", textAlign: "left", padding: 0,
+          }}
+        >
+          <Share2 size={14} style={{ color: "var(--tk-accent)", flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--tk-ink)" }}>Share deck</div>
+            <div style={{ fontSize: 11.5, color: "var(--tk-ink-3)", marginTop: 1 }}>Send a copy to a friend</div>
+          </div>
+        </button>
+      </div>
+
       <PublishPanel
         deckId={deckId}
         deckName={deckName}
@@ -193,6 +214,16 @@ export const DeckDetailsSidebar: React.FC<Props> = ({ deckId, deckName, openPubl
           </div>
         </div>
       </div>
+
+      {shareOpen && (
+        <ShareModal
+          deckId={deckId}
+          deckName={deckName}
+          deckEmoji={deckEmoji}
+          cardCount={cardCount}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </>
   );
 };

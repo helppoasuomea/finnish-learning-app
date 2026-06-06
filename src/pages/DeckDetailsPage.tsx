@@ -353,7 +353,13 @@ export const DeckDetailsPage: React.FC = () => {
 
         {/* Aside */}
         <aside>
-          <DeckDetailsSidebar deckId={id!} deckName={deckName} openPublish={searchParams.get("publish") === "1"} />
+          <DeckDetailsSidebar
+            deckId={id!}
+            deckName={deckName}
+            deckEmoji={(deck as any).deckEmoji || ""}
+            cardCount={cards.length}
+            openPublish={searchParams.get("publish") === "1"}
+          />
         </aside>
       </div>
 
