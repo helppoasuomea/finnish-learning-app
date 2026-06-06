@@ -1,22 +1,46 @@
 import { DeckContext } from "@/contexts/DeckContext"
-import { useContext, useEffect, useMemo, useState } from "react"
+import { useContext, useMemo, useState } from "react"
 import { Deck, ChangeEvent } from "@/types"
 import { useDebounce } from "@uidotdev/usehooks"
 import { Search } from "lucide-react"
+import { MEMORY_SHELVES } from "@/utils/srs"
 
-function ScoreDots({ score }: { score: number }) {
+// ── Stage badge ───────────────────────────────────────────────────────────────
+
+const PHASE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+    seed:    { color: "var(--tk-ink-3)",              bg: "var(--tk-paper-deep)",                          border: "var(--tk-rule)" },
+    sprout:  { color: "oklch(48% 0.13 128)",          bg: "oklch(96% 0.04 128)",                           border: "oklch(88% 0.07 128)" },
+    sapling: { color: "oklch(42% 0.14 150)",          bg: "oklch(96% 0.04 150)",                           border: "oklch(87% 0.07 150)" },
+    tree:    { color: "oklch(36% 0.13 168)",          bg: "oklch(95% 0.04 168)",                           border: "oklch(86% 0.07 168)" },
+}
+
+function StageLabel({ reps, stability }: { reps: number; stability: number }) {
+    const shelf = MEMORY_SHELVES.find(s => s.filter({ reps, stability })) ?? MEMORY_SHELVES[0]
+    const style = PHASE_STYLE[shelf.phase]
     return (
-        <div className="vc-dots">
-            {Array.from({ length: 5 }, (_, i) => (
-                <span key={i} className={`vc-dot${i < score ? " is-filled" : ""}`} />
-            ))}
-        </div>
+        <span className="vc-stage" style={{ color: style.color, background: style.bg, borderColor: style.border }}>
+            {shelf.label}
+        </span>
     )
 }
 
+// ── Cloze word display ────────────────────────────────────────────────────────
+
+function formatWord(word: string, cardKind?: string, comment?: string): string {
+    if (cardKind !== "cloze" || !word.includes("___")) return word
+    const answers = (comment ?? "").split(",").map(a => a.trim()).filter(Boolean)
+    let idx = 0
+    return word.replace(/___/g, () => {
+        const ans = answers[idx++]
+        return ans ? `(${ans})` : "( )"
+    })
+}
+
+// ── Search highlight ──────────────────────────────────────────────────────────
+
 function highlight(text: string, term: string) {
     if (!term) return <>{text}</>
-    const parts = text.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
+    const parts = text.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"))
     return (
         <>
             {parts.map((part, i) =>
@@ -28,9 +52,11 @@ function highlight(text: string, term: string) {
     )
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export const VocabularyPage = () => {
     const { decks } = useContext(DeckContext)
-    const [searchTerm, setSearchTerm] = useState('')
+    const [searchTerm, setSearchTerm] = useState("")
     const debouncedSearch = useDebounce(searchTerm, 300)
 
     const totalCards = useMemo(
@@ -39,14 +65,25 @@ export const VocabularyPage = () => {
     )
 
     const allWords = useMemo(() => {
-        const words: { word: string; translation: string; deckName: string; score: number }[] = []
+        const words: {
+            word: string
+            displayWord: string
+            translation: string
+            deckName: string
+            reps: number
+            stability: number
+        }[] = []
         for (const deck of decks) {
             for (const card of deck.cards) {
+                const word = card.userLangCard
+                const displayWord = formatWord(word, card.cardKind, card.comment)
                 words.push({
-                    word: card.userLangCard,
+                    word,
+                    displayWord,
                     translation: card.engCard,
                     deckName: deck.deckName,
-                    score: card.cardScore ?? 0,
+                    reps: card.reps ?? 0,
+                    stability: card.stability ?? 0,
                 })
             }
         }
@@ -57,7 +94,7 @@ export const VocabularyPage = () => {
         if (!debouncedSearch) return allWords
         const q = debouncedSearch.toLowerCase()
         return allWords.filter(
-            w => w.word.toLowerCase().includes(q) || w.translation.toLowerCase().includes(q)
+            w => w.displayWord.toLowerCase().includes(q) || w.translation.toLowerCase().includes(q)
         )
     }, [allWords, debouncedSearch])
 
@@ -93,10 +130,10 @@ export const VocabularyPage = () => {
                 ) : (
                     filtered.map((w, i) => (
                         <div key={i} className="vc-row">
-                            <span className="vc-word">{highlight(w.word, debouncedSearch)}</span>
+                            <span className="vc-word">{highlight(w.displayWord, debouncedSearch)}</span>
                             <span className="vc-translation">{highlight(w.translation, debouncedSearch)}</span>
                             <span className="vc-deck-tag">{w.deckName}</span>
-                            <ScoreDots score={w.score} />
+                            <StageLabel reps={w.reps} stability={w.stability} />
                         </div>
                     ))
                 )}
