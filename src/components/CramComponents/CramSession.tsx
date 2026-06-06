@@ -34,6 +34,23 @@ function levenshtein(a: string, b: string): number {
   return v1[b.length];
 }
 
+/**
+ * Returns a random re-insertion index so cards don't cycle predictably.
+ * "got"  → latter 50 % of queue (spaced well apart).
+ * "miss" → middle third (comes back soon enough to reinforce, but not immediately).
+ */
+function reinsertPos(queueLen: number, mode: "got" | "miss"): number {
+  if (queueLen <= 0) return 0;
+  if (queueLen === 1) return 1;
+  if (mode === "got") {
+    const lo = Math.max(1, Math.floor(queueLen * 0.5));
+    return lo + Math.floor(Math.random() * (queueLen - lo + 1));
+  }
+  const lo = Math.max(1, Math.floor(queueLen * 0.3));
+  const hi = Math.max(lo, Math.min(queueLen, Math.floor(queueLen * 0.7)));
+  return lo + Math.floor(Math.random() * (hi - lo + 1));
+}
+
 function crShuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -190,24 +207,22 @@ export const CramSession: React.FC<Props> = ({ deck, config, onExit, onComplete 
         entry.streak += 1;
         if (entry.streak >= threshold) {
           setCleared(c => { const n = new Set(c); n.add(cardId); return n; });
-          next[idx] = entry;
+          next.splice(idx, 1);
           return next;
         }
-        const insertAt = Math.min(next.length, idx + 4);
         next.splice(idx, 1);
-        next.splice(insertAt - 1, 0, entry);
+        next.splice(reinsertPos(next.length, "got"), 0, entry);
         return next;
       } else {
         entry.streak = 0;
         if (!coached) setCoached(true);
         if (!loop) {
           setCleared(c => { const n = new Set(c); n.add(cardId); return n; });
-          next[idx] = entry;
+          next.splice(idx, 1);
           return next;
         }
-        const insertAt = Math.min(next.length, idx + 3);
         next.splice(idx, 1);
-        next.splice(insertAt - 1, 0, entry);
+        next.splice(reinsertPos(next.length, "miss"), 0, entry);
         return next;
       }
     });
@@ -284,7 +299,7 @@ export const CramSession: React.FC<Props> = ({ deck, config, onExit, onComplete 
 
   const uniqueCount = initialCards.length;
   const progressPct = (cleared.size / uniqueCount) * 100;
-  const toReSee = queue.length - cleared.size;
+  const toReSee = queue.length;
   const firstTryCorrect = history.filter(h => h.firstTry === "got").length;
   const firstTrySeen = history.filter(h => h.firstTry !== null).length;
   const accuracy = firstTrySeen > 0 ? Math.round((firstTryCorrect / firstTrySeen) * 100) : 100;

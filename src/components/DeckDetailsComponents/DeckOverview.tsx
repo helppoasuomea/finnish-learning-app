@@ -67,7 +67,7 @@ export const DeckOverview: React.FC<Props> = ({ deckId, deckName, cards, stillLe
               <div key={r.key} style={{ width: `${phases[r.key] / total * 100}%`, background: r.color }} title={`${r.label}: ${phases[r.key]}`} />
             ))}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+          <div className="dd-phase-grid">
             {PHASE_ROWS.map(r => (
               <div key={r.key} className="dd-phase-col" style={{ borderLeftColor: r.color }}>
                 <div className="dd-phase-count">{phases[r.key]}</div>

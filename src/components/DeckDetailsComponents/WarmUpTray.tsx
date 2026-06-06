@@ -60,7 +60,7 @@ export const WarmUpTray: React.FC<Props> = ({ onOpen, onCram }) => (
         Doesn't affect your review schedule.
       </span>
     </div>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+    <div className="wu-game-grid">
       {/* Flashcards, Match */}
       {GAMES.slice(0, 2).map(g => (
         <button
