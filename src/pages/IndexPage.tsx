@@ -13,6 +13,9 @@ import { ArrowRight, BookOpen, Plus, Check, X, Play } from "lucide-react";
 import { GRAMMAR_BY_ID } from "@/data/grammar/index";
 import { Popover, PopoverTrigger, PopoverContent, PopoverClose } from "@/components/ui/popover";
 import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { GrammarInTranslation } from "@/components/IndexPage/GrammarInTranslation";
+import { TakeWithYou } from "@/components/IndexPage/TakeWithYou";
+import { topicStyle } from "@/data/grammar/topic-colors";
 
 const ConfidenceRing = ({ value }: { value: number }) => {
     const r = 11;
@@ -217,6 +220,12 @@ const IndexPageContent = () => {
         setCreateFlashcardsOpen(true);
     };
 
+    const openSaveWords = (words: any[]) => {
+        if (!user) { setAuthGateWord(null); setAuthGateOpen(true); return; }
+        setWordsToSave(words);
+        setCreateFlashcardsOpen(true);
+    };
+
     // Decks matching the current language — used to count already-saved words
     const langDecks = useMemo(() => decks.filter(deck =>
         deck.deckTags && deck.deckTags.length > 0 &&
@@ -308,6 +317,130 @@ const IndexPageContent = () => {
     const greeting = timeOfDay();
     const userName = user?.name || user?.username || '';
     const firstName = userName.split(' ')[0];
+
+    type WordSegment =
+        | { type: 'single'; word: any; index: number }
+        | { type: 'group'; key: string; words: any[]; startIndex: number };
+
+    const wordSegments: WordSegment[] = (() => {
+        const segs: WordSegment[] = [];
+        let i = 0;
+        while (i < activeWords.length) {
+            const w = activeWords[i];
+            if (w.group) {
+                const groupKey = w.group;
+                const groupWords = [w];
+                let j = i + 1;
+                while (j < activeWords.length && activeWords[j].group === groupKey) {
+                    groupWords.push(activeWords[j]);
+                    j++;
+                }
+                segs.push({ type: 'group', key: groupKey, words: groupWords, startIndex: i });
+                i = j;
+            } else {
+                segs.push({ type: 'single', word: w, index: i });
+                i++;
+            }
+        }
+        return segs;
+    })();
+
+    const renderWordToken = (w: any, i: number) => {
+        const saved = isWordSaved(w);
+        const isLastStreaming = isStreaming && i === activeWords.length - 1;
+        return (
+            <Popover key={w.id || i}>
+                <PopoverTrigger asChild>
+                    <span
+                        className="tx-il-word"
+                        data-common={w.common && !w.highlight ? 'true' : 'false'}
+                        data-saved={saved ? 'true' : 'false'}
+                        data-topic={w.highlight || ''}
+                        data-stream-cursor={isLastStreaming ? 'true' : 'false'}
+                        style={topicStyle(w.highlight)}
+                    >
+                        {w.fi}
+                        {(w.gloss || w.en)
+                            ? <span className="tx-il-gloss">{(w.gloss || w.en).replace(/\s*\([^)]*\)/g, '').trim()}</span>
+                            : <span className="tx-il-gloss-pending"><span className="tx-il-gloss-shimmer"/></span>
+                        }
+                    </span>
+                </PopoverTrigger>
+                <PopoverContent
+                    className="p-0"
+                    style={{ width: 320, background: 'var(--tk-card)', border: '1px solid var(--tk-rule)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+                    align="start"
+                    sideOffset={8}
+                >
+                    <div style={{ padding: 14 }}>
+                        <div className="tx-peek-head">
+                            <div className="tx-peek-seal">{w.fi?.[0]?.toUpperCase()}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className="tx-peek-fi">{w.fi}</div>
+                                <div className="tx-peek-en">{w.en}</div>
+                            </div>
+                        </div>
+                        {w.comment && <div className="tx-peek-note">{w.comment}</div>}
+                        {(w.lemma || (w.features && w.features.length > 0)) && (
+                            <div className="tx-morph-badge">
+                                {w.lemma && <span className="tx-morph-lemma">{w.lemma}</span>}
+                                {w.features && w.features.length > 0 && (
+                                    <span className="tx-morph-features">{w.features.join(' · ')}</span>
+                                )}
+                            </div>
+                        )}
+                        {w.highlight && GRAMMAR_BY_ID[w.highlight] && (
+                            <div className="tx-grammar-card">
+                                <div className="tx-grammar-card-title">{GRAMMAR_BY_ID[w.highlight].title}</div>
+                                {(GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle) && (
+                                    <div className="tx-grammar-card-desc">{GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle}</div>
+                                )}
+                                <div className="tx-grammar-card-actions">
+                                    <PopoverClose asChild>
+                                        <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                                            <BookOpen size={12} /> Open topic
+                                        </button>
+                                    </PopoverClose>
+                                    <PopoverClose asChild>
+                                        <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}?drill=1`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+                                            <Play size={12} /> Drill this
+                                        </button>
+                                    </PopoverClose>
+                                </div>
+                            </div>
+                        )}
+                        <div className="tx-peek-meta">
+                            <span>{w.type}</span>
+                            {w.original_word && w.original_word !== w.fi && (
+                                <><span style={{ opacity: 0.4 }}>·</span><span>base: {w.original_word}</span></>
+                            )}
+                            {w.pronunciation && (
+                                <><span style={{ opacity: 0.4 }}>·</span><span>{w.pronunciation}</span></>
+                            )}
+                        </div>
+                        {w.en_base && w.en_base !== w.en && (
+                            <div className="tx-peek-meta" style={{ marginTop: 2 }}>
+                                <span style={{ letterSpacing: '0.06em' }}>BASE (EN):</span>
+                                <span style={{ color: 'var(--tk-ink-2)', textTransform: 'none', letterSpacing: 0 }}>{w.en_base}</span>
+                            </div>
+                        )}
+                        <div className="tx-peek-actions">
+                            <PopoverClose asChild>
+                                <button
+                                    className={`tk-btn tk-btn-sm ${saved ? 'tk-btn-ghost' : 'tk-btn-accent'}`}
+                                    style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}
+                                    onClick={() => !saved && openSaveWord(w)}
+                                    disabled={saved}
+                                >
+                                    {saved ? <><Check size={12} /> Saved</> : <><Plus size={12} /> Save to deck…</>}
+                                </button>
+                            </PopoverClose>
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
+        );
+    };
 
     const wordsForDisplay = hideCommon
         ? activeWords.filter((w: any) => !w.common)
@@ -447,166 +580,32 @@ const IndexPageContent = () => {
                                     </div>
                                 ) : (
                                     <div className="tx-interlinear" data-streaming={isStreaming ? 'true' : 'false'}>
-                                        {activeWords.map((w: any, i: number) => {
-                                            const saved = isWordSaved(w);
-                                            const isLastStreaming = isStreaming && i === activeWords.length - 1;
-                                            return (
-                                                <Popover key={w.id || i}>
-                                                    <PopoverTrigger asChild>
-                                                        <span
-                                                            className="tx-il-word"
-                                                            data-common={w.common && !w.highlight ? 'true' : 'false'}
-                                                            data-saved={saved ? 'true' : 'false'}
-                                                            data-highlight={w.highlight ? 'true' : 'false'}
-                                                            data-stream-cursor={isLastStreaming ? 'true' : 'false'}
-                                                        >
-                                                            {w.fi}
-                                                            {(w.gloss || w.en)
-                                                                ? <span className="tx-il-gloss">{(w.gloss || w.en).replace(/\s*\([^)]*\)/g, '').trim()}</span>
-                                                                : <span className="tx-il-gloss-pending"><span className="tx-il-gloss-shimmer"/></span>
-                                                            }
-                                                        </span>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent
-                                                        className="p-0"
-                                                        style={{ width: 320, background: 'var(--tk-card)', border: '1px solid var(--tk-rule)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
-                                                        align="start"
-                                                        sideOffset={8}
-                                                    >
-                                                        <div style={{ padding: 14 }}>
-                                                            <div className="tx-peek-head">
-                                                                <div className="tx-peek-seal">{w.fi?.[0]?.toUpperCase()}</div>
-                                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                                    <div className="tx-peek-fi">{w.fi}</div>
-                                                                    <div className="tx-peek-en">{w.en}</div>
-                                                                </div>
-                                                            </div>
-                                                            {w.comment && <div className="tx-peek-note">{w.comment}</div>}
-                                                            {/* Morphology badge — Tier 2/4 output */}
-                                                            {(w.lemma || (w.features && w.features.length > 0)) && (
-                                                                <div className="tx-morph-badge">
-                                                                    {w.lemma && <span className="tx-morph-lemma">{w.lemma}</span>}
-                                                                    {w.features && w.features.length > 0 && (
-                                                                        <span className="tx-morph-features">{w.features.join(' · ')}</span>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                            {/* Grammar card — Tier 3/4 highlight */}
-                                                            {w.highlight && GRAMMAR_BY_ID[w.highlight] && (
-                                                                <div className="tx-grammar-card">
-                                                                    <div className="tx-grammar-card-title">{GRAMMAR_BY_ID[w.highlight].title}</div>
-                                                                    {(GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle) && (
-                                                                        <div className="tx-grammar-card-desc">{GRAMMAR_BY_ID[w.highlight].overview?.theme || GRAMMAR_BY_ID[w.highlight].subtitle}</div>
-                                                                    )}
-                                                                    <div className="tx-grammar-card-actions">
-                                                                        <PopoverClose asChild>
-                                                                            <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-                                                                                <BookOpen size={12} /> Open topic
-                                                                            </button>
-                                                                        </PopoverClose>
-                                                                        <PopoverClose asChild>
-                                                                            <button className="tx-grammar-btn" onClick={() => { navigate(`/grammar/${w.highlight}?drill=1`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-                                                                                <Play size={12} /> Drill this
-                                                                            </button>
-                                                                        </PopoverClose>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            <div className="tx-peek-meta">
-                                                                <span>{w.type}</span>
-                                                                {w.original_word && w.original_word !== w.fi && (
-                                                                    <><span style={{ opacity: 0.4 }}>·</span><span>base: {w.original_word}</span></>
-                                                                )}
-                                                                {w.pronunciation && (
-                                                                    <><span style={{ opacity: 0.4 }}>·</span><span>{w.pronunciation}</span></>
-                                                                )}
-                                                            </div>
-                                                            {w.en_base && w.en_base !== w.en && (
-                                                                <div className="tx-peek-meta" style={{ marginTop: 2 }}>
-                                                                    <span style={{ letterSpacing: '0.06em' }}>BASE (EN):</span>
-                                                                    <span style={{ color: 'var(--tk-ink-2)', textTransform: 'none', letterSpacing: 0 }}>{w.en_base}</span>
-                                                                </div>
-                                                            )}
-                                                            <div className="tx-peek-actions">
-                                                                <PopoverClose asChild>
-                                                                    <button
-                                                                        className={`tk-btn tk-btn-sm ${saved ? 'tk-btn-ghost' : 'tk-btn-accent'}`}
-                                                                        style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}
-                                                                        onClick={() => !saved && openSaveWord(w)}
-                                                                        disabled={saved}
-                                                                    >
-                                                                        {saved ? <><Check size={12} /> Saved</> : <><Plus size={12} /> Save to deck…</>}
-                                                                    </button>
-                                                                </PopoverClose>
-                                                            </div>
-                                                        </div>
-                                                    </PopoverContent>
-                                                </Popover>
-                                            );
-                                        })}
+                                        {wordSegments.map((seg) =>
+                                            seg.type === 'single'
+                                                ? renderWordToken(seg.word, seg.index)
+                                                : (
+                                                    <div key={seg.key} className="tx-il-group">
+                                                        {seg.words.map((w, gi) => renderWordToken(w, seg.startIndex + gi))}
+                                                        {seg.words[0]?.group_en && (
+                                                            <span className="tx-il-group-en">{seg.words[0].group_en}</span>
+                                                        )}
+                                                    </div>
+                                                )
+                                        )}
                                         <span className="tx-il-punct">.</span>
                                     </div>
                                 )}
 
-                                {/* Word grid header */}
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 22, marginBottom: 10 }}>
-                                    <div className="tk-eyebrow">
-                                        Words in this sentence · {wordsForDisplay.length}
-                                    </div>
-                                    {wordsForDisplay.length > 0 && (
-                                        <button
-                                            className="tk-btn tk-btn-sm tk-btn-accent"
-                                            onClick={openSaveAll}
-                                            style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-                                        >
-                                            <Plus size={12} />
-                                            Save {wordsForDisplay.length} to deck
-                                        </button>
-                                    )}
-                                </div>
+                                <GrammarInTranslation words={activeWords} />
 
-                                {/* Word cards grid */}
-                                <div className="tx-word-grid">
-                                    {wordsForDisplay.map((w: any, i: number) => {
-                                        const saved = isWordSaved(w);
-                                        return (
-                                            <div
-                                                key={w.id || i}
-                                                className="tx-word-card"
-                                                data-saved={saved ? 'true' : 'false'}
-                                            >
-                                                <div className="tx-word-seal">
-                                                    {w.fi?.[0]?.toUpperCase() || '?'}
-                                                </div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div className="tx-word-fi">{w.fi}</div>
-                                                    <div className="tx-word-en">{w.en}</div>
-                                                    <div className="tx-word-type">{w.type}{w.pronunciation ? ` · ${w.pronunciation}` : ''}</div>
-                                                </div>
-                                                <button
-                                                    className={`tx-word-add${saved ? ' is-saved' : ''}`}
-                                                    onClick={() => !saved && openSaveWord(w)}
-                                                    title={saved ? 'Already saved' : 'Save to deck'}
-                                                >
-                                                    {saved ? <Check size={12} /> : <Plus size={12} />}
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Hidden common words note */}
-                                {hideCommon && commonCount > 0 && (
-                                    <div style={{ marginTop: 16, padding: '10px 14px', background: 'var(--tk-paper-deep)', borderRadius: 'var(--r-md)', fontSize: 12.5, color: 'var(--tk-ink-4)', fontStyle: 'italic', fontFamily: 'var(--font-display)' }}>
-                                        + {commonCount} common word{commonCount !== 1 ? 's' : ''} hidden. {' '}
-                                        <button
-                                            onClick={() => setHideCommon(false)}
-                                            style={{ color: 'var(--tk-accent)', background: 'transparent', fontFamily: 'var(--font-sans)', fontStyle: 'normal', fontSize: 12 }}
-                                        >
-                                            Show
-                                        </button>
-                                    </div>
-                                )}
+                                <TakeWithYou
+                                    words={activeWords}
+                                    savedWordDecks={savedWordDecks}
+                                    langDecks={langDecks}
+                                    localSavedIds={localSavedIds}
+                                    onSaveWord={openSaveWord}
+                                    onSaveNew={openSaveWords}
+                                />
                             </div>
                         )}
                     </div>
