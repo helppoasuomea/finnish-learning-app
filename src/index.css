@@ -2312,6 +2312,160 @@
 .rvs-done-grid-label { font-size: 11px; color: var(--tk-ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
 
 /* ═══════════════════════════════════════════════════════════
+   SRS Policy layer — Active Pool, Mix, Intake, Strength, Leech
+═══════════════════════════════════════════════════════════ */
+
+/* Active pool meter */
+.rv-pool-meter {
+  background: var(--tk-card); border: 1px solid var(--tk-rule); border-radius: 12px;
+  padding: 14px 20px; margin-bottom: 16px;
+}
+.rv-pool-meter-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.rv-pool-meter-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tk-ink-3); }
+.rv-pool-meter-count { font-size: 18px; font-weight: 600; color: var(--tk-ink); }
+.rv-pool-meter-count span { font-size: 13px; color: var(--tk-ink-3); font-weight: 400; }
+.rv-pool-track { height: 5px; background: var(--tk-paper-deep); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
+.rv-pool-fill { height: 100%; border-radius: 999px; transition: width 400ms; }
+.rv-pool-foot { font-size: 12px; color: var(--tk-ink-3); font-style: italic; }
+
+/* Today's plan strip */
+.rv-plan-strip {
+  display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;
+  background: var(--tk-card); border: 1px solid var(--tk-rule); border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 20px;
+}
+
+/* Today's mix bar */
+.rv-mix { flex: 1; min-width: 180px; }
+.rv-mix-bar { display: flex; height: 6px; border-radius: 999px; overflow: hidden; gap: 1px; margin-bottom: 8px; }
+.rv-mix-seg { height: 100%; transition: width 400ms; }
+.rv-mix-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+.rv-mix-legend span { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--tk-ink-3); }
+.rv-mix-legend i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; font-style: normal; }
+
+/* Intake readout */
+.rv-intake { flex: 1; min-width: 200px; }
+.rv-intake-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rv-intake-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.rv-intake-chip {
+  display: inline-block; padding: 2px 8px;
+  background: var(--tk-paper-deep); border: 1px solid var(--tk-rule);
+  border-radius: 100px; font-size: 11px; color: var(--tk-ink-3);
+  font-family: var(--font-mono); white-space: nowrap;
+}
+.rv-intake-result {
+  font-size: 12.5px; color: var(--tk-accent-deep); font-weight: 600; white-space: nowrap;
+}
+.rv-intake-why {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--tk-ink-4); background: none; border: none;
+  cursor: pointer; padding: 0; text-decoration: underline; text-decoration-style: dotted;
+}
+.rv-intake-why:hover { color: var(--tk-ink-2); }
+.rv-intake-panel {
+  margin-top: 10px; padding: 10px 12px;
+  background: var(--tk-paper-deep); border: 1px solid var(--tk-rule-soft);
+  border-radius: 8px;
+}
+.rv-intake-panel-title { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tk-ink-3); margin-bottom: 6px; }
+.rv-intake-panel-body { font-size: 13px; color: var(--tk-ink-2); line-height: 1.55; }
+
+/* Review-kind pill on card */
+.rvs-review-kind {
+  margin-left: auto; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tk-ink-4); font-family: var(--font-mono);
+}
+
+/* Strength strips */
+.rvs-strength {
+  display: flex; gap: 10px; margin: 10px 0 4px; padding: 8px 0;
+  border-top: 1px solid var(--tk-rule-soft);
+}
+.rvs-strength-dim { display: flex; gap: 3px; }
+.rvs-strength-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--tk-paper-deep); border: 1px solid var(--tk-rule);
+  transition: background 200ms;
+}
+.rvs-strength-dot.is-on { background: var(--tk-accent); border-color: var(--tk-accent); }
+
+/* Leech badge on footnote */
+.rvs-leech-badge {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  background: rgba(220,80,60,0.12); border: 1px solid rgba(220,80,60,0.25);
+  border-radius: 100px; font-size: 10px; color: var(--tk-persimmon);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* Leech rescue sheet */
+.rvs-leech-overlay {
+  position: absolute; inset: 0; z-index: 20;
+  background: rgba(28,27,23,0.7); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.rvs-leech {
+  background: var(--tk-card); border: 1px solid var(--tk-rule); border-radius: 16px;
+  padding: 28px; max-width: 460px; width: 100%;
+}
+.rvs-leech-title {
+  font-size: 17px; font-weight: 600; color: var(--tk-ink);
+  font-family: var(--font-display); margin-bottom: 10px;
+}
+.rvs-leech-body { font-size: 13.5px; color: var(--tk-ink-3); line-height: 1.6; margin-bottom: 20px; }
+.rvs-leech-actions { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.rvs-leech-action {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 8px; text-align: left;
+  background: var(--tk-paper); border: 1px solid var(--tk-rule);
+  cursor: pointer; font-size: 13.5px; color: var(--tk-ink); width: 100%;
+  transition: background 120ms, border-color 120ms;
+}
+.rvs-leech-action:hover { background: var(--tk-paper-deep); border-color: var(--tk-accent-soft); }
+.rvs-leech-action-label { flex: 1; }
+.rvs-leech-rec {
+  font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--tk-accent-deep); font-family: var(--font-mono);
+}
+.rvs-leech-skip {
+  display: block; width: 100%; text-align: center; padding: 8px;
+  font-size: 12.5px; color: var(--tk-ink-4); background: none; border: none;
+  cursor: pointer; text-decoration: underline; text-decoration-style: dotted;
+}
+.rvs-leech-skip:hover { color: var(--tk-ink-2); }
+
+/* Learning Pace Card — Settings */
+.lp-card {
+  background: var(--tk-card); border: 1px solid var(--tk-rule); border-radius: 16px;
+  padding: 24px;
+}
+.lp-card-head { margin-bottom: 18px; }
+.lp-card-title { font-size: 15px; font-weight: 600; color: var(--tk-ink); margin-bottom: 4px; }
+.lp-card-sub { font-size: 12.5px; color: var(--tk-ink-3); }
+.lp-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+@media (max-width: 600px) { .lp-options { grid-template-columns: 1fr; } }
+.lp-option {
+  display: flex; flex-direction: column; gap: 5px; text-align: left;
+  padding: 14px 16px; border-radius: 10px; cursor: pointer;
+  background: var(--tk-paper); border: 1px solid var(--tk-rule);
+  transition: border-color 150ms, background 150ms;
+}
+.lp-option:hover { border-color: var(--tk-accent-soft); background: var(--tk-accent-wash); }
+.lp-option.is-selected { border-color: var(--tk-accent); background: var(--tk-accent-wash); }
+.lp-option:disabled { opacity: 0.6; cursor: default; }
+.lp-option-emoji { font-size: 22px; margin-bottom: 2px; }
+.lp-option-title { font-size: 14px; font-weight: 600; color: var(--tk-ink); }
+.lp-option-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.lp-option-stats span { font-size: 11px; color: var(--tk-ink-3); font-family: var(--font-mono); }
+.lp-option-label { font-size: 11.5px; color: var(--tk-ink-4); font-style: italic; }
+.lp-pool { padding-top: 12px; border-top: 1px solid var(--tk-rule-soft); }
+.lp-pool-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.lp-pool-label { font-size: 12px; color: var(--tk-ink-3); }
+.lp-pool-count { font-size: 13px; font-weight: 600; color: var(--tk-ink); }
+.lp-pool-track { height: 4px; background: var(--tk-paper-deep); border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
+.lp-pool-fill { height: 100%; background: var(--tk-accent); border-radius: 999px; transition: width 400ms; }
+.lp-pool-desc { font-size: 11.5px; color: var(--tk-ink-4); font-style: italic; }
+
+/* ═══════════════════════════════════════════════════════════
    Shared utility: icon button, field layout, modal, drawer
 ═══════════════════════════════════════════════════════════ */
 

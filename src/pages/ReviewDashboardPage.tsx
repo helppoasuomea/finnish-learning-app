@@ -1,6 +1,6 @@
 import { useState, useMemo, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Play, Check, CalendarDays } from "lucide-react";
+import { Play, Check, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { useDeckContext } from "@/contexts/DeckContext";
 import { UserContext } from "@/contexts/UserContext";
 import { ProgressRing } from "@/components/ui/ProgressRing";
@@ -10,10 +10,16 @@ import { Card } from "@/types";
 import {
   type DeckCard,
   type Rating,
+  type LearningPace,
   isDueToday as isDueTodayFn,
   detectLoadState,
   dueQueueComparator,
   MEMORY_SHELVES,
+  PACE_CONFIG,
+  deriveCardState,
+  computeTodayMix,
+  computeIntakeBudget,
+  computePoolCounts,
 } from "@/utils/srs";
 import axios from "axios";
 
@@ -128,6 +134,124 @@ const ForecastChart: React.FC<{
   </>
 );
 
+// ── Active Pool Meter ─────────────────────────────────────────────────────────
+
+const ActivePoolMeter: React.FC<{
+  activeCount: number;
+  poolSize: number;
+  statePool: Record<string, number>;
+}> = ({ activeCount, poolSize, statePool }) => {
+  const pct = poolSize > 0 ? Math.min(100, Math.round(activeCount / poolSize * 100)) : 0;
+  const isFull = pct >= 100;
+  const isNearlyFull = pct >= 85;
+  const room = Math.max(0, poolSize - activeCount);
+  const totalCards = Object.values(statePool).reduce((s, n) => s + n, 0);
+
+  return (
+    <div className="rv-pool-meter">
+      <div className="rv-pool-meter-head">
+        <span className="rv-pool-meter-label">Active garden</span>
+        <span className="rv-pool-meter-count">{activeCount} <span>/ {poolSize}</span></span>
+      </div>
+      <div className="rv-pool-track">
+        <div
+          className="rv-pool-fill"
+          style={{ width: `${pct}%`, background: isFull ? "var(--tk-persimmon)" : isNearlyFull ? "#C79B6E" : "var(--tk-accent)" }}
+        />
+      </div>
+      <div className="rv-pool-foot">
+        {isFull
+          ? "Your active garden is full. New words will wait until some settle."
+          : isNearlyFull
+          ? `Room for ${room} more — the garden is nearly full.`
+          : totalCards > 0
+          ? `Library of ${totalCards} total cards. The system is actively growing ${activeCount} of them.`
+          : "Add cards to start growing your garden."
+        }
+      </div>
+    </div>
+  );
+};
+
+// ── Today's Mix Bar ───────────────────────────────────────────────────────────
+
+const REVIEW_KIND_COLORS: Record<string, string> = {
+  recognition: "var(--tk-accent)",
+  listening:   "#8AA0B0",
+  contrast:    "var(--tk-persimmon)",
+  production:  "#C79B6E",
+};
+
+const TodaysMixBar: React.FC<{
+  mix: { recognition: number; listening: number; contrast: number; production: number; total: number };
+}> = ({ mix }) => {
+  if (mix.total === 0) return null;
+  const kinds = [
+    { key: "recognition", label: "Recall" },
+    { key: "listening",   label: "Listen" },
+    { key: "contrast",    label: "Compare" },
+    { key: "production",  label: "Write" },
+  ] as const;
+  const visible = kinds.filter(k => mix[k.key] > 0);
+  return (
+    <div className="rv-mix">
+      <div className="rv-mix-bar">
+        {visible.map(k => (
+          <div
+            key={k.key}
+            className="rv-mix-seg"
+            style={{ width: `${(mix[k.key] / mix.total) * 100}%`, background: REVIEW_KIND_COLORS[k.key] }}
+            title={`${k.label}: ${mix[k.key]}`}
+          />
+        ))}
+      </div>
+      <div className="rv-mix-legend">
+        {visible.map(k => (
+          <span key={k.key}>
+            <i style={{ background: REVIEW_KIND_COLORS[k.key] }} />
+            {k.label} {mix[k.key]}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── Intake Readout ────────────────────────────────────────────────────────────
+
+const IntakeReadout: React.FC<{
+  intake: { budget: number; basePace: number; reasons: string[]; result: string; pace: string };
+}> = ({ intake }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rv-intake">
+      <div className="rv-intake-row">
+        <div className="rv-intake-chips">
+          {intake.reasons.map((r, i) => (
+            <span key={i} className="rv-intake-chip">{r}</span>
+          ))}
+        </div>
+        <span className="rv-intake-result">{intake.result}</span>
+        <button className="rv-intake-why" onClick={() => setOpen(o => !o)}>
+          Why? {open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+        </button>
+      </div>
+      {open && (
+        <div className="rv-intake-panel">
+          <div className="rv-intake-panel-title">How today's plan was built</div>
+          <div className="rv-intake-panel-body">
+            Base pace is <strong>{intake.basePace} new</strong> / day ({intake.pace}).{" "}
+            {intake.reasons.filter(r => r.includes("↓") || r.includes("backlog") || r.includes("missed")).length > 0
+              ? "The pace was reduced because of: " + intake.reasons.filter(r => r.includes("↓") || r.includes("backlog") || r.includes("missed")).join(", ") + "."
+              : "No limiting factors — full pace applies today."
+            }
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export const ReviewDashboardPage: React.FC = () => {
@@ -237,6 +361,32 @@ export const ReviewDashboardPage: React.FC = () => {
   const streak    = user?.currentStreak ?? 0;
   const hasCalendar = user?.hasCalendarToken ?? false;
 
+  // ── Learning policy layer ──────────────────────────────────────────────────
+  const pace = ((user as any)?.learningPace ?? "balanced") as LearningPace;
+  const paceCfg = PACE_CONFIG[pace] ?? PACE_CONFIG.balanced;
+
+  const statePool = useMemo(() => computePoolCounts(allCards), [allCards]);
+  const activeCount = statePool.active + statePool.leech;
+  const poolSize = paceCfg.activePoolSize;
+  const room = Math.max(0, poolSize - activeCount);
+
+  const todayMix = useMemo(() => computeTodayMix(dueCards), [dueCards]);
+
+  const retention = useMemo(() => {
+    const total = allCards.length;
+    if (total === 0) return 90;
+    return Math.round(matureCards / total * 100);
+  }, [allCards, matureCards]);
+
+  const backlog = useMemo(() => allCards.filter(c => {
+    if ((c.reps ?? 0) === 0 || !c.dueAt) return false;
+    return new Date(c.dueAt) < today;
+  }).length, [allCards, today]);
+
+  const intake = useMemo(() => computeIntakeBudget({
+    retention, backlog, missed: awayDays, pace, room,
+  }), [retention, backlog, awayDays, pace, room]);
+
   const [session, setSession] = useState<"running" | null>(null);
   const [sessionQueue, setSessionQueue] = useState<DeckCard[]>([]);
   const [summary, setSummary] = useState<{ reviewed: number; history: { card: DeckCard; grade: Rating }[] } | null>(null);
@@ -330,19 +480,18 @@ export const ReviewDashboardPage: React.FC = () => {
             <div className="rv-hero-label" style={{ fontStyle: "italic" }}>waiting for you</div>
           </div>
           <div className="rv-hero-sub">
-            Some are older than they wanted to be. We'll show the ones that miss you first — one small sitting at a time.
+            Some are older than they wanted to be. We'll start you with {Math.min(DAILY_CAP, totalDue)} — the rest spread out over your next few sessions.
           </div>
           <div className="rv-hero-chips">
             {overdueCount > 0 && <span className="rv-chip rv-chip--overdue"><span className="rv-chip-dot" style={{ background: "var(--tk-persimmon)" }} />{overdueCount} overdue</span>}
             {learnCount > 0   && <span className="rv-chip"><span className="rv-chip-dot" style={{ background: "#C79B6E" }} />{learnCount} learning</span>}
-            {reviewCount > 0  && <span className="rv-chip"><span className="rv-chip-dot" style={{ background: "var(--tk-accent)" }} />{reviewCount} due today</span>}
           </div>
           <div className="rv-hero-cta">
             <button className="rv-start-btn" onClick={() => startSession(sortedDue.slice(0, DAILY_CAP))}>
               <span className="rv-start-btn-label"><Play size={14} /> Ease back in</span>
-              <span className="mono">{Math.min(DAILY_CAP, totalDue)} cards · ~{Math.max(1, Math.round(Math.min(DAILY_CAP, totalDue) * 0.32))} min</span>
+              <span className="mono">{Math.min(DAILY_CAP, totalDue)} of {totalDue} · ~{Math.max(1, Math.round(Math.min(DAILY_CAP, totalDue) * 0.32))} min</span>
             </button>
-            <button className="rv-cta-secondary" onClick={() => startSession()}>Show me everything</button>
+            <button className="rv-cta-secondary" onClick={() => startSession()}>Show me all {totalDue}</button>
           </div>
         </div>
       );
@@ -505,10 +654,21 @@ export const ReviewDashboardPage: React.FC = () => {
         <AwayBanner awayDays={awayDays} onRestart={() => startSession(sortedDue.slice(0, DAILY_CAP))} />
       )}
 
+      {loadState !== "zero-fresh" && (
+        <ActivePoolMeter activeCount={activeCount} poolSize={poolSize} statePool={statePool} />
+      )}
+
       <div className="rv-hero">
         {renderHeroMain()}
         {renderHeroSide()}
       </div>
+
+      {loadState !== "zero-fresh" && totalDue > 0 && (
+        <div className="rv-plan-strip">
+          <TodaysMixBar mix={todayMix} />
+          <IntakeReadout intake={intake} />
+        </div>
+      )}
 
       {loadState !== "zero-fresh" && (
         <>

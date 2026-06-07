@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { X, RotateCcw, Volume2, Clock, ArrowRight } from "lucide-react";
+import { X, RotateCcw, Volume2, Clock, ArrowRight, SkipForward } from "lucide-react";
 import { Card } from "@/types";
 import { enqueue, dequeue, getPendingCount, type PrevSnapshot } from "@/utils/reviewAnswerQueue";
 import {
@@ -10,7 +10,84 @@ import {
   projectIntervals,
   gradePhaseTransition,
   relativeTime,
+  deriveCardState,
 } from "@/utils/srs";
+
+const LEECH_THRESHOLD = 6;
+
+// ── Strength strips (4 dots: meaning / listen / contrast / produce) ───────────
+
+function StrengthStrips({ card }: { card: Partial<Card> }) {
+  // Approximate strength from stability: 0→25→50→75→100 as stability grows
+  const stab = card.stability ?? card.reviewInterval ?? 0;
+  const reps  = card.reps ?? card.cardScore ?? 0;
+  if (reps === 0) return null;
+  const meaningStrength = Math.min(4, Math.floor(stab / 7));
+  const dims = [
+    { key: "meaning",  val: meaningStrength,                    title: "Meaning recall" },
+    { key: "listen",   val: 0,                                  title: "Listening (not yet tested)" },
+    { key: "contrast", val: (card as any).confusionPartnerId ? Math.min(2, meaningStrength) : 0, title: "Contrast" },
+    { key: "produce",  val: 0,                                  title: "Production (not yet tested)" },
+  ];
+  return (
+    <div className="rvs-strength" title="Word strength (meaning · listen · contrast · produce)">
+      {dims.map(d => (
+        <div key={d.key} className="rvs-strength-dim" title={d.title}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className={`rvs-strength-dot ${i < d.val ? "is-on" : ""}`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Leech rescue sheet ────────────────────────────────────────────────────────
+
+const LEECH_ACTIONS = [
+  { id: "contrast", label: "Add a contrast pair", desc: "recommended" },
+  { id: "edit",     label: "Edit the card — add a clearer note", desc: "" },
+  { id: "rest",     label: "Rest this card for two weeks", desc: "" },
+  { id: "suspend",  label: "Suspend it — I'll come back to it", desc: "" },
+] as const;
+
+function LeechRescueSheet({
+  card,
+  onAction,
+  onSkip,
+}: {
+  card: DeckCard;
+  onAction: (action: string) => void;
+  onSkip: () => void;
+}) {
+  const lapses = card.lapses ?? 0;
+  const hasPartner = !!(card as any).confusionPartnerId;
+  return (
+    <div className="rvs-leech-overlay">
+      <div className="rvs-leech">
+        <div className="rvs-leech-title">This word needs a different shape.</div>
+        <div className="rvs-leech-body">
+          <strong>{card.userLangCard}</strong> has lapsed {lapses} times.{" "}
+          {hasPartner
+            ? "Looking at your history, you might be confusing it with a similar word."
+            : "That usually means the card is ambiguous, not that you can't learn it."
+          }
+        </div>
+        <div className="rvs-leech-actions">
+          {LEECH_ACTIONS.map(a => (
+            <button key={a.id} className="rvs-leech-action" onClick={() => onAction(a.id)}>
+              <span className="rvs-leech-action-label">{a.label}</span>
+              {a.id === "contrast" && hasPartner && (
+                <span className="rvs-leech-rec">recommended</span>
+              )}
+            </button>
+          ))}
+        </div>
+        <button className="rvs-leech-skip" onClick={onSkip}>Skip for now</button>
+      </div>
+    </div>
+  );
+}
 
 function kindDotColor(kind: string | undefined): string {
   switch (kind) {
@@ -52,6 +129,7 @@ export const ReviewSession: React.FC<{
     pendingGrade: Rating;
   } | null>(null);
   const gradTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [leechSheet, setLeechSheet] = useState<DeckCard | null>(null);
 
   // Cloze state
   const [clozeInput, setClozeInput] = useState("");
@@ -103,12 +181,36 @@ export const ReviewSession: React.FC<{
 
   const grade = (g: Rating) => {
     if (!current) return;
+    // Leech rescue: show sheet after "again" on cards past the lapse threshold
+    if (g === "again" && (current.reps ?? 0) > 0) {
+      const newLapses = (current.lapses ?? 0) + 1;
+      if (newLapses >= LEECH_THRESHOLD) {
+        commitGrade(g, history, idx);
+        setLeechSheet(current);
+        return;
+      }
+    }
     const transition = gradePhaseTransition(current, g);
     if (transition) {
       setGraduation({ card: current, from: phaseOf(current), to: transition, pendingGrade: g });
     } else {
       commitGrade(g, history, idx);
     }
+  };
+
+  const handleLeechAction = (action: string) => {
+    if (!leechSheet) return;
+    // Suspend the card if user picks 'suspend' or 'rest'
+    if (action === "suspend" || action === "rest") {
+      const days = action === "rest" ? 14 : 0;
+      const dueAt = days > 0 ? new Date(Date.now() + days * 86400000).toISOString() : null;
+      axios.post(`/review/cards/${leechSheet._id}/suspend`, {
+        deckId: leechSheet.deckId,
+        suspended: action === "suspend",
+        ...(dueAt && { dueAt }),
+      }).catch(() => {});
+    }
+    setLeechSheet(null);
   };
 
   useEffect(() => {
@@ -232,6 +334,9 @@ export const ReviewSession: React.FC<{
           <div className="rvs-card-top">
             <span className="rvs-card-phase" data-phase={phaseOf(current)}>{phaseOf(current)}</span>
             <span className="rvs-card-deck">{current.deckName}</span>
+            <span className="rvs-review-kind">
+              {(current as any).confusionPartnerId ? "Compare" : "Recall"}
+            </span>
           </div>
 
           {/* Kind pill (sentence / cloze / grammar only) */}
@@ -335,12 +440,18 @@ export const ReviewSession: React.FC<{
             </>
           )}
 
+          {/* Strength strips */}
+          {revealed && <StrengthStrips card={current} />}
+
           {/* Footnote */}
           <div className="rvs-card-footnote">
             <Clock size={11} />
             {lastSeen ? `Last seen ${lastSeen}` : "Not yet reviewed"}
             {reviewCount > 0 && <> · {reviewCount} review{reviewCount !== 1 ? "s" : ""}</>}
             {lapses > 0 && <> · {lapses} lapse{lapses !== 1 ? "s" : ""}</>}
+            {deriveCardState(current) === "leech" && (
+              <span className="rvs-leech-badge" title={`Lapsed ${lapses} times`}>stuck</span>
+            )}
           </div>
         </div>
 
@@ -374,6 +485,14 @@ export const ReviewSession: React.FC<{
           </div>
         )}
       </div>
+
+      {leechSheet && (
+        <LeechRescueSheet
+          card={leechSheet}
+          onAction={handleLeechAction}
+          onSkip={() => setLeechSheet(null)}
+        />
+      )}
 
       {graduation && (
         <div className="rvs-grad-overlay">

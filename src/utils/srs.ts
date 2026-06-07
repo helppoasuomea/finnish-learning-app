@@ -16,8 +16,141 @@ import type { Card } from "@/types";
 export type Rating    = "again" | "hard" | "good" | "easy";
 export type Phase     = "seed" | "sprout" | "sapling" | "tree";
 export type LoadState = "calm" | "full" | "flood" | "backlog" | "seedling" | "zero-clear" | "zero-fresh";
+export type CardState = "pending" | "active" | "maintenance" | "paused" | "leech";
+export type ReviewKind = "recognition" | "listening" | "contrast" | "production";
+export type LearningPace = "light" | "balanced" | "intense";
 
 export type DeckCard = Card & { deckId: string; deckName: string };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Learning Pace
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type PaceConfig = {
+  newPerDay: number;
+  reviewBudgetMin: number;
+  activePoolSize: number;
+  label: string;
+};
+
+export const PACE_CONFIG: Record<LearningPace, PaceConfig> = {
+  light:    { newPerDay: 3,  reviewBudgetMin: 7,  activePoolSize: 100, label: "Casual — a few new words a day." },
+  balanced: { newPerDay: 5,  reviewBudgetMin: 12, activePoolSize: 250, label: "Recommended for most learners." },
+  intense:  { newPerDay: 10, reviewBudgetMin: 25, activePoolSize: 500, label: "Power user." },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card lifecycle state
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Derive a card's lifecycle state — the product layer above FSRS phase.
+ *
+ * Order:
+ *   suspended           → 'paused'
+ *   lapses >= threshold → 'leech'
+ *   stability >= 30 AND lapses <= 1 AND reps > 0 → 'maintenance'
+ *   reps === 0          → 'pending'
+ *   else                → 'active'
+ */
+export function deriveCardState(card: Partial<Card> | null | undefined, leechThreshold = 6): CardState {
+  if (!card) return "pending";
+  if (card.suspended) return "paused";
+  const lapses = card.lapses ?? 0;
+  if (lapses >= leechThreshold) return "leech";
+  const stability = card.stability ?? card.reviewInterval ?? 1;
+  const reps = card.reps ?? card.cardScore ?? 0;
+  if (stability >= 30 && lapses <= 1 && reps > 0) return "maintenance";
+  if (reps === 0) return "pending";
+  return "active";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Today's Mix
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TodayMix = {
+  recognition: number;
+  listening: number;
+  contrast: number;
+  production: number;
+  total: number;
+};
+
+/**
+ * Compute the review-kind breakdown for a set of cards.
+ *
+ * Rules (simplified — full rules require audioUrl and confusionPartnerId):
+ *   - Cards with confusionPartnerId → 'contrast'
+ *   - All others → 'recognition'
+ *   - 'listening' and 'production' are always 0 (require audio / typing UI)
+ */
+export function computeTodayMix(cards: Partial<Card>[]): TodayMix {
+  let contrast = 0;
+  cards.forEach(c => {
+    if ((c as any).confusionPartnerId) contrast++;
+  });
+  const recognition = cards.length - contrast;
+  return { recognition, listening: 0, contrast, production: 0, total: cards.length };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Intake budget
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type IntakeBudget = {
+  budget: number;
+  basePace: number;
+  reasons: string[];
+  result: string;
+  pace: LearningPace;
+};
+
+/**
+ * Compute how many new cards should enter today's queue.
+ * Mirrors the backend `computeIntakeBudget` in services/srs.js.
+ */
+export function computeIntakeBudget(opts: {
+  retention?: number;
+  backlog?: number;
+  missed?: number;
+  pace?: LearningPace;
+  room?: number;
+}): IntakeBudget {
+  const { retention = 90, backlog = 0, missed = 0, pace = "balanced", room = 250 } = opts;
+  const cfg = PACE_CONFIG[pace] ?? PACE_CONFIG.balanced;
+  const basePace = cfg.newPerDay;
+  const reasons: string[] = [];
+
+  if (retention >= 88) reasons.push(`retention ${retention}%`);
+  else reasons.push(`retention ${retention}% ↓`);
+  if (backlog > 0) reasons.push(`backlog ${backlog}`);
+  if (missed > 0)  reasons.push(`missed ${missed}d`);
+
+  if (room <= 0)    return { budget: 0, basePace, reasons, result: "pool full · new words paused", pace };
+  if (missed >= 2)  return { budget: 0, basePace, reasons, result: "new words paused · ease back in first", pace };
+  if (backlog > 30) return { budget: 0, basePace, reasons, result: "new words paused · clear backlog first", pace };
+  if (retention < 80) return { budget: 0, basePace, reasons, result: "new words paused · retention too low", pace };
+  if (backlog > 10 || retention < 88) {
+    const budget = Math.floor(basePace / 2);
+    return { budget, basePace, reasons, result: `${budget} new · half pace`, pace };
+  }
+  const budget = Math.min(basePace, room);
+  return { budget, basePace, reasons, result: `${budget} new today`, pace };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pool counts from cards
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function computePoolCounts(cards: Partial<Card>[], leechThreshold = 6) {
+  const pool = { pending: 0, active: 0, maintenance: 0, paused: 0, leech: 0 };
+  cards.forEach(c => {
+    const state = deriveCardState(c, leechThreshold);
+    pool[state]++;
+  });
+  return pool;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase

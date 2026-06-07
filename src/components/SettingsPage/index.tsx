@@ -3,18 +3,20 @@ import { DeckContext } from "@/contexts/DeckContext"
 import { useProfileEdit } from "@/state/hooks/useProfileEdit"
 import { useSettingsData } from "@/state/hooks/useSettingsData"
 import { getTimeStamp } from "@/utils/getTimestamp"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { PersonalInfoCard } from "./PersonalInfoCard"
 import { HowTokoRemembers } from "./HowTokoRemembers"
 import { LibraryDataCard, ThisSessionCard, LeaveQuietlyCard } from "./SettingsFooterSections"
 import { GoogleConsentCard } from "./GoogleConsentCard"
 import { DailyNudgeCard } from "./DailyNudgeCard"
+import { LearningPaceCard } from "./LearningPaceCard"
 import { Switch } from "../ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 import ProfilePicture from "./ProfilePicture"
 import { useToast } from "../ui/use-toast"
 import { DifficultyLabelPicker } from "@/components/DifficultyLabelPicker"
+import { type LearningPace, deriveCardState } from "@/utils/srs"
 import axios from "axios"
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -57,12 +59,14 @@ export const SettingsPage = () => {
     const [baseForm, setBaseForm] = useState(user?.flashcardWordForm === 'base')
     const [audioFlip, setAudioFlip] = useState(user?.audioOnCardFlip ?? false)
     const [difficultyLabel, setDifficultyLabel] = useState<'plain' | 'cefr' | 'both'>(user?.difficultyLabel ?? 'plain')
+    const [learningPace, setLearningPace] = useState<LearningPace>(((user as any)?.learningPace ?? 'balanced') as LearningPace)
 
     useEffect(() => {
         if (!user) return
         setBaseForm(user.flashcardWordForm === 'base')
         setAudioFlip(user.audioOnCardFlip ?? false)
         setDifficultyLabel(user.difficultyLabel ?? 'plain')
+        setLearningPace((((user as any)?.learningPace ?? 'balanced') as LearningPace))
     }, [user])
 
     useEffect(() => {
@@ -112,6 +116,14 @@ export const SettingsPage = () => {
 
     const cardsLearned = decks.reduce((sum: number, d: any) =>
         sum + d.cards.filter((c: any) => (c.cardScore ?? 0) >= 5).length, 0)
+
+    const activeCount = useMemo(() => {
+        const allCards = decks.flatMap((d: any) => d.cards)
+        return allCards.filter((c: any) => {
+            const state = deriveCardState(c)
+            return state === 'active' || state === 'leech'
+        }).length
+    }, [decks])
 
     const displayName = user?.name || user?.username || "You"
     const initial = displayName[0]?.toUpperCase() ?? "?"
@@ -211,6 +223,13 @@ export const SettingsPage = () => {
                         <DifficultyLabelPicker value={difficultyLabel} onChange={handleDifficultyLabel} compact />
                     </div>
                 </div>
+
+                {/* Learning pace */}
+                <LearningPaceCard
+                    currentPace={learningPace}
+                    activeCount={activeCount}
+                    onPaceChange={pace => { setLearningPace(pace); refreshUserStats() }}
+                />
 
                 {/* Daily nudge */}
                 <DailyNudgeCard
