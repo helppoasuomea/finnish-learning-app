@@ -1,4 +1,5 @@
 import { UserContext } from "@/contexts/UserContext"
+import { LegalModal, type LegalType } from "@/components/LegalModal"
 import { DeckContext } from "@/contexts/DeckContext"
 import { useProfileEdit } from "@/state/hooks/useProfileEdit"
 import { useSettingsData } from "@/state/hooks/useSettingsData"
@@ -54,6 +55,7 @@ export const SettingsPage = () => {
     const { toast } = useToast()
     const [searchParams, setSearchParams] = useSearchParams()
     const [avatarOpen, setAvatarOpen] = useState(false)
+    const [legalModal, setLegalModal] = useState<LegalType | null>(null)
 
     // Preferences state — seeded from user object
     const [baseForm, setBaseForm] = useState(user?.flashcardWordForm === 'base')
@@ -260,6 +262,20 @@ export const SettingsPage = () => {
                 <LeaveQuietlyCard />
 
                 {user?.authProvider === 'google' && <GoogleConsentCard />}
+
+                <div className="st-legal-footer">
+                    <button className="st-legal-link" onClick={() => setLegalModal("privacy")}>Privacy Policy</button>
+                    <span className="st-legal-sep">·</span>
+                    <button className="st-legal-link" onClick={() => setLegalModal("terms")}>Terms of Service</button>
+                </div>
+
+                {legalModal && (
+                    <LegalModal
+                        type={legalModal}
+                        open={true}
+                        onOpenChange={open => { if (!open) setLegalModal(null) }}
+                    />
+                )}
             </div>
         </div>
     )

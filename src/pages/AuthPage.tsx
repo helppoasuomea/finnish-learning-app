@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Eye, EyeOff, Check, X, Delete } from "lucide-rea
 import axios, { AxiosError } from "axios";
 import { DifficultyLabelPicker } from "@/components/DifficultyLabelPicker";
 import { WelcomeOnboarding, type OnboardingResult } from "@/components/WelcomeOnboarding";
+import { LegalModal, type LegalType } from "@/components/LegalModal";
 
 // ─── Device ID ───────────────────────────────────────────────────────────────
 function getDeviceId(): string {
@@ -373,6 +374,7 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [difficultyLabel, setDifficultyLabel] = useState<'plain' | 'cefr' | 'both'>('plain');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [legalModal, setLegalModal] = useState<LegalType | null>(null);
 
   const strength = pwStrength(pw);
 
@@ -398,6 +400,7 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="au-form" autoComplete="on">
       <div className="au-field-row">
         <div className="au-field">
@@ -453,7 +456,12 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <label className="au-check">
           <input type="checkbox" required />
           <span className="au-check-box"><Check size={11} /></span>
-          <span>I agree to the Terms and Privacy Policy.</span>
+          <span>
+            I agree to the{" "}
+            <button type="button" className="au-link" onClick={() => setLegalModal("terms")}>Terms of Service</button>
+            {" "}and{" "}
+            <button type="button" className="au-link" onClick={() => setLegalModal("privacy")}>Privacy Policy</button>.
+          </span>
         </label>
       </div>
 
@@ -465,6 +473,15 @@ const RegisterForm = ({ onSuccess }: { onSuccess: () => void }) => {
           : <>Create account <ArrowRight size={14} /></>}
       </button>
     </form>
+
+    {legalModal && (
+      <LegalModal
+        type={legalModal}
+        open={true}
+        onOpenChange={open => { if (!open) setLegalModal(null); }}
+      />
+    )}
+    </>
   );
 };
 

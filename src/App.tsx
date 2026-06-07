@@ -22,6 +22,9 @@ import { GrammarTopicPage } from './components/GrammarPage/GrammarTopicPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { PublicDeckPage } from './pages/PublicDeckPage'
 import { SharedDeckPage } from './pages/SharedDeckPage'
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
+import { TermsPage } from './pages/TermsPage'
+import { CookieBanner } from './components/CookieBanner'
 
 const _apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:2323').replace(/\/$/, '')
 axios.defaults.baseURL = _apiBase.endsWith('/api') ? _apiBase + '/' : _apiBase + '/api/'
@@ -30,6 +33,7 @@ axios.defaults.withCredentials = true
 const AUTH_ROUTES = ["/login", "/register"];
 const PUBLIC_ROUTES = ["/grammar"];
 const SHARE_ROUTES = ["/s"];
+const LEGAL_ROUTES = ["/privacy", "/terms"];
 
 function App() {
   const location = useLocation();
@@ -60,11 +64,12 @@ const AppContent = ({ location }: { location: any }) => {
   const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
   const isPublicRoute = PUBLIC_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
   const isShareRoute = SHARE_ROUTES.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
+  const isLegalRoute = LEGAL_ROUTES.includes(location.pathname);
 
   // Guard: wait for session check, then redirect unauthenticated users
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated && !isAuthRoute && !isPublicRoute && !isShareRoute) navigate('/login');
+    if (!isAuthenticated && !isAuthRoute && !isPublicRoute && !isShareRoute && !isLegalRoute) navigate('/login');
   }, [isLoading, isAuthenticated, isAuthRoute, isPublicRoute, isShareRoute, navigate, location.pathname]);
 
   if (isAuthRoute) {
@@ -84,6 +89,18 @@ const AppContent = ({ location }: { location: any }) => {
       <>
         <Routes>
           <Route path="/s/:slug" element={<SharedDeckPage />} />
+        </Routes>
+        <Toaster />
+      </>
+    );
+  }
+
+  if (isLegalRoute) {
+    return (
+      <>
+        <Routes>
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
         </Routes>
         <Toaster />
       </>
@@ -121,6 +138,7 @@ const AppContent = ({ location }: { location: any }) => {
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </div>
+      <CookieBanner />
       <Toaster />
     </div>
   )

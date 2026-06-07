@@ -13,6 +13,8 @@ dist-ssr
 *.local
 
 .env
+.env.backup
+.env.local
 node_modules/
 
 
