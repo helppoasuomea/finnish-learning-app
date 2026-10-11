@@ -31,7 +31,15 @@ axios.defaults.baseURL = _apiBase.endsWith('/api') ? _apiBase + '/' : _apiBase +
 axios.defaults.withCredentials = true
 
 const AUTH_ROUTES = ["/login", "/register"];
-const PUBLIC_ROUTES = ["/grammar"];
+// Reachable without signing in. The translator is the point of the product,
+// so "/" is here: a first-time visitor should be able to translate a sentence
+// before deciding whether to make an account. The Sidebar already has a
+// signed-out branch with a "Sign in" chip, so nothing else needs to change.
+//
+// The match below is `pathname === r || pathname.startsWith(r + '/')`, and
+// for "/" that second test looks for "//" — so this opens the root exactly,
+// not everything under it.
+const PUBLIC_ROUTES = ["/", "/grammar"];
 const SHARE_ROUTES = ["/s"];
 const LEGAL_ROUTES = ["/privacy", "/terms"];
 
