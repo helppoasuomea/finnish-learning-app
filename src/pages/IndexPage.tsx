@@ -102,12 +102,27 @@ const IndexPageContent = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Put the sentence back in the box on a reload, so the input matches the
+    // translation that is still on screen.
+    //
+    // Restored once per response, tracked by a ref. The previous version had
+    // `inputText` in the dependency array, which meant the effect also ran the
+    // moment the user emptied the field - saw an empty input and a stored
+    // response, and wrote the sentence straight back. Select-all and delete
+    // looked like it did nothing, because the text returned in the same tick.
+    // The clear button escaped it only by accident: it also drops `response`
+    // from localStorage, so there was nothing left to restore.
+    const restoredFor = useRef<string | null>(null);
     useEffect(() => {
         const original = (response as any)?.originalText;
-        if (original && typeof original === 'string' && inputText.trim() === '') {
-            setInputText(original);
-        }
-    }, [response, inputText, setInputText]);
+        if (!original || typeof original !== 'string') return;
+        if (restoredFor.current === original) return;
+        restoredFor.current = original;
+        // Only fill an empty box: never overwrite what someone is typing.
+        if (inputText.trim() === '') setInputText(original);
+    // inputText is deliberately not a dependency - reacting to it is the bug.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [response, setInputText]);
 
     const resetDialog = () => {
         setDialogStep(0);
