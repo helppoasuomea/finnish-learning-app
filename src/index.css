@@ -6,148 +6,11 @@
 /* ──────────────────────────────────────────────────────────────
    Lukeā — a quiet design system for a language-learning app
    Inspired by Muji, washi paper, Japanese stationery
+
+   Design tokens live in @lukea/sivu and are imported in main.tsx.
+   --tk-*, --ph-*, --font-*, --r-* and the shadcn HSL variables all
+   come from there. Do not redefine them here.
    ────────────────────────────────────────────────────────────── */
-
-@layer base {
-  :root {
-    /* ── shadcn/ui HSL variables — remapped to Lukeā palette ── */
-    --background:         38 53% 97%;     /* #FAF7F2 washi paper */
-    --foreground:         46 10% 10%;     /* #1C1B17 warm near-black */
-    --card:               44 100% 98%;   /* #FEFCF7 card lift */
-    --card-foreground:    46 10% 10%;
-    --popover:            44 100% 98%;
-    --popover-foreground: 46 10% 10%;
-    --primary:            46 10% 10%;     /* warm black — primary buttons */
-    --primary-foreground: 38 53% 97%;     /* paper on black */
-    --secondary:          40 37% 93%;     /* #F3EEE4 paper-deep */
-    --secondary-foreground: 46 10% 10%;
-    --muted:              40 37% 93%;
-    --muted-foreground:   38 5% 47%;      /* #78756A ink-3 */
-    --accent:             150 18% 31%;    /* #3F5D4C matcha green */
-    --accent-foreground:  38 53% 97%;
-    --destructive:        14 55% 50%;     /* #C85C3C persimmon */
-    --destructive-foreground: 38 53% 97%;
-    --border:             42 26% 84%;     /* #E4DDCC rule */
-    --input:              42 26% 84%;
-    --ring:               150 18% 31%;    /* matcha green focus ring */
-    --radius:             0.5rem;
-
-    /* ── Lukeā raw tokens (hex — used in custom components & CSS) ── */
-    --tk-paper:          #FAF7F2;
-    --tk-paper-deep:     #F3EEE4;
-    --tk-paper-edge:     #EAE3D4;
-    --tk-card:           #FEFCF7;
-    --tk-card-hover:     #FFFEFA;
-
-    --tk-ink:            #1C1B17;
-    --tk-ink-2:          #403E36;
-    --tk-ink-3:          #78756A;
-    --tk-ink-4:          #A8A396;
-    --tk-ink-5:          #D2CCBB;
-
-    --tk-rule:           #E4DDCC;
-    --tk-rule-soft:      #EDE7D7;
-
-    --tk-accent:         #3F5D4C;
-    --tk-accent-deep:    #2D4438;
-    --tk-accent-soft:    #D8E1D7;
-    --tk-accent-wash:    #EBEFE6;
-
-    --tk-persimmon:      #C85C3C;
-    --tk-persimmon-soft: #F5E0D5;
-
-    /* ── Phase system (Seed → Sprout → Sapling → Tree) ── */
-    --ph-seed:    #C49A6C;   /* warm tan */
-    --ph-sprout:  #A8C285;   /* pale grass */
-    --ph-sapling: #7BA582;   /* mid leaf */
-    --ph-tree:    #3F5D4C;   /* deep matcha */
-
-    --tk-correct:        #3F5D4C;
-    --tk-incorrect:      #B04E3A;
-
-    /* ── Tag tones ── */
-    --tk-tag-moss:       #8BA084;
-    --tk-tag-sky:        #8AA0B0;
-    --tk-tag-clay:       #C89B7C;
-    --tk-tag-plum:       #A07D8E;
-    --tk-tag-wheat:      #C4B090;
-
-    /* ── Shadows (warm, sparse) ── */
-    --tk-sh-1:   0 1px 0 rgba(28,27,23,0.04), 0 1px 2px rgba(28,27,23,0.04);
-    --tk-sh-2:   0 1px 0 rgba(28,27,23,0.04), 0 4px 12px rgba(28,27,23,0.06);
-    --tk-sh-3:   0 2px 0 rgba(28,27,23,0.04), 0 12px 28px rgba(28,27,23,0.08);
-    --tk-sh-hero:0 1px 0 rgba(28,27,23,0.05), 0 30px 60px -20px rgba(28,27,23,0.18);
-
-    /* ── Easing ── */
-    --tk-ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
-    --tk-ease-spring: cubic-bezier(0.5, 1.5, 0.5, 1);
-    --tk-dur-1: 160ms;
-    --tk-dur-2: 260ms;
-    --tk-dur-3: 420ms;
-
-    /* ── Typography ── */
-    --font-display: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
-    --font-body:    "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-mono:    "IBM Plex Mono", "SF Mono", Menlo, monospace;
-
-    /* ── Radii ── */
-    --r-xs:   4px;
-    --r-sm:   6px;
-    --r-md:   8px;
-    --r-lg:   12px;
-    --r-xl:   18px;
-    --r-card: 20px;
-    --r-pill: 999px;
-  }
-
-  /* ── Dark mode: "evening study" ── */
-  .dark {
-    --background:         46 10% 8%;      /* #161513 */
-    --foreground:         40 37% 93%;     /* #F3EEE4 */
-    --card:               46 10% 10%;     /* #1F1E1A */
-    --card-foreground:    40 37% 93%;
-    --popover:            46 10% 10%;
-    --popover-foreground: 40 37% 93%;
-    --primary:            40 37% 93%;
-    --primary-foreground: 46 10% 10%;
-    --secondary:          46 7% 12%;      /* #1C1B17 */
-    --secondary-foreground: 40 37% 93%;
-    --muted:              46 7% 12%;
-    --muted-foreground:   38 5% 56%;      /* #8F8B7E */
-    --accent:             150 18% 56%;    /* #8FB09C — lighter for dark bg */
-    --accent-foreground:  46 10% 8%;
-    --destructive:        18 63% 62%;     /* #E0835E */
-    --destructive-foreground: 46 10% 8%;
-    --border:             46 5% 16%;      /* #2A2925 */
-    --input:              46 5% 16%;
-    --ring:               150 18% 56%;
-
-    --tk-paper:          #161513;
-    --tk-paper-deep:     #1C1B17;
-    --tk-paper-edge:     #242320;
-    --tk-card:           #1F1E1A;
-    --tk-card-hover:     #252420;
-    --tk-ink:            #F3EEE4;
-    --tk-ink-2:          #D2CCBB;
-    --tk-ink-3:          #8F8B7E;
-    --tk-ink-4:          #5F5C53;
-    --tk-ink-5:          #3D3B35;
-    --tk-rule:           #2A2925;
-    --tk-rule-soft:      #232220;
-    --tk-accent:         #8FB09C;
-    --tk-accent-deep:    #B0C9B8;
-    --tk-accent-soft:    #2A3830;
-    --tk-accent-wash:    #1F2A25;
-    --tk-persimmon:      #E0835E;
-    --tk-persimmon-soft: #3A2820;
-
-    /* ── Phase system (dark) ── */
-    --ph-seed:    #B48A5E;
-    --ph-sprout:  #9BB578;
-    --ph-sapling: #7FA885;
-    --ph-tree:    #8FB09C;
-  }
-}
 
 @layer base {
   * {
@@ -1098,14 +961,14 @@
 }
 
 /* ── Save-to-deck dialog ── */
-.sv-modal-head {
+.idx-modal-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   padding: 20px 24px 14px;
   border-bottom: 1px solid var(--tk-rule);
 }
-.sv-modal-eyebrow {
+.idx-modal-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -1113,13 +976,13 @@
   color: var(--tk-ink-4);
   margin-bottom: 4px;
 }
-.sv-modal-title {
+.idx-modal-title {
   font-family: var(--font-display);
   font-size: 22px;
   color: var(--tk-ink);
   line-height: 1.2;
 }
-.sv-stepper {
+.idx-stepper {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1127,15 +990,15 @@
   background: var(--tk-paper-deep);
   border-bottom: 1px solid var(--tk-rule);
 }
-.sv-step {
+.idx-step {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 13px;
   color: var(--tk-ink-4);
 }
-.sv-step[data-active="true"] { color: var(--tk-ink); }
-.sv-step-num {
+.idx-step[data-active="true"] { color: var(--tk-ink); }
+.idx-step-num {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -1149,19 +1012,19 @@
   color: var(--tk-ink-3);
   background: var(--tk-card);
 }
-.sv-step[data-active="true"] .sv-step-num {
+.idx-step[data-active="true"] .idx-step-num {
   background: var(--tk-ink);
   border-color: var(--tk-ink);
   color: var(--tk-paper);
 }
-.sv-step[data-done="true"] .sv-step-num {
+.idx-step[data-done="true"] .idx-step-num {
   background: var(--tk-accent);
   border-color: var(--tk-accent);
   color: #fff;
 }
-.sv-step-arrow { color: var(--tk-ink-4); }
-.sv-body { padding: 16px 24px; }
-.sv-section-label {
+.idx-step-arrow { color: var(--tk-ink-4); }
+.idx-body { padding: 16px 24px; }
+.idx-section-label {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -1169,7 +1032,7 @@
   color: var(--tk-ink-4);
   margin: 0 0 8px;
 }
-.sv-deck-row {
+.idx-deck-row {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1183,48 +1046,48 @@
   margin-bottom: 8px;
   text-align: left;
 }
-.sv-deck-row:hover { border-color: var(--tk-ink-3); background: var(--tk-paper-deep); }
-.sv-deck-row[data-selected="true"] {
+.idx-deck-row:hover { border-color: var(--tk-ink-3); background: var(--tk-paper-deep); }
+.idx-deck-row[data-selected="true"] {
   border-color: var(--tk-accent);
   background: var(--tk-accent-wash);
 }
-.sv-deck-name { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; color: var(--tk-ink); line-height: 1.2; }
-.sv-deck-meta { font-size: 12px; color: var(--tk-ink-4); margin-top: 2px; }
-.sv-footer {
+.idx-deck-name { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; color: var(--tk-ink); line-height: 1.2; }
+.idx-deck-meta { font-size: 12px; color: var(--tk-ink-4); margin-top: 2px; }
+.idx-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 24px;
   border-top: 1px solid var(--tk-rule);
 }
-.sv-footer-hint {
+.idx-footer-hint {
   font-family: var(--font-mono);
   font-size: 11.5px;
   color: var(--tk-ink-4);
 }
 
 /* ── Save dialog: new-deck create step ── */
-.sv-create-body { padding: 0; }
-.sv-create-grid {
+.idx-create-body { padding: 0; }
+.idx-create-grid {
   display: grid;
   grid-template-columns: 1fr 280px;
   gap: 0;
 }
-.sv-create-main {
+.idx-create-main {
   padding: 20px 20px 20px 24px;
   border-right: 1px solid var(--tk-rule);
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.sv-create-side {
+.idx-create-side {
   padding: 20px 24px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   background: var(--tk-paper-deep);
 }
-.sv-tag-row {
+.idx-tag-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1235,7 +1098,7 @@
   background: var(--tk-paper);
   min-height: 40px;
 }
-.sv-tag {
+.idx-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1246,7 +1109,7 @@
   font-size: 12px;
   color: var(--tk-ink-2);
 }
-.sv-tag button {
+.idx-tag button {
   display: flex;
   align-items: center;
   color: var(--tk-ink-4);
@@ -1256,7 +1119,7 @@
   padding: 0;
   line-height: 1;
 }
-.sv-tag-input {
+.idx-tag-input {
   flex: 1;
   min-width: 80px;
   border: none;
@@ -1266,13 +1129,13 @@
   color: var(--tk-ink);
   font-family: var(--font-sans);
 }
-.sv-tag-input::placeholder { color: var(--tk-ink-4); }
-.sv-goal-list {
+.idx-tag-input::placeholder { color: var(--tk-ink-4); }
+.idx-goal-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.sv-goal-row {
+.idx-goal-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1285,28 +1148,28 @@
   text-align: left;
   width: 100%;
 }
-.sv-goal-row:hover { border-color: var(--tk-ink-3); background: var(--tk-paper); }
-.sv-goal-row[data-selected="true"] { border-color: var(--tk-accent); background: var(--tk-accent-wash); }
-.sv-goal-dot {
+.idx-goal-row:hover { border-color: var(--tk-ink-3); background: var(--tk-paper); }
+.idx-goal-row[data-selected="true"] { border-color: var(--tk-accent); background: var(--tk-accent-wash); }
+.idx-goal-dot {
   width: 10px; height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
   background: var(--tk-ink-4);
 }
-.sv-goal-dot[data-goal="seedling"] { background: #9abf88; }
-.sv-goal-dot[data-goal="sapling"]  { background: #5a9a5a; }
-.sv-goal-dot[data-goal="tree"]     { background: #2d6e2d; }
-.sv-goal-dot[data-goal="heartwood"]{ background: #1a3d1a; }
-.sv-goal-text {
+.idx-goal-dot[data-goal="seedling"] { background: #9abf88; }
+.idx-goal-dot[data-goal="sapling"]  { background: #5a9a5a; }
+.idx-goal-dot[data-goal="tree"]     { background: #2d6e2d; }
+.idx-goal-dot[data-goal="heartwood"]{ background: #1a3d1a; }
+.idx-goal-text {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.sv-goal-label { font-size: 13.5px; font-weight: 500; color: var(--tk-ink); line-height: 1.2; }
-.sv-goal-sub   { font-size: 11px; color: var(--tk-ink-4); }
-.sv-create-preview { margin-top: auto; }
-.sv-preview-card {
+.idx-goal-label { font-size: 13.5px; font-weight: 500; color: var(--tk-ink); line-height: 1.2; }
+.idx-goal-sub   { font-size: 11px; color: var(--tk-ink-4); }
+.idx-create-preview { margin-top: auto; }
+.idx-preview-card {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1315,7 +1178,7 @@
   border-radius: 10px;
   background: var(--tk-paper);
 }
-.sv-preview-name {
+.idx-preview-name {
   font-family: var(--font-display);
   font-size: 15px;
   color: var(--tk-ink);
@@ -1323,7 +1186,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.sv-preview-meta { font-size: 11px; color: var(--tk-ink-4); margin-top: 2px; }
+.idx-preview-meta { font-size: 11px; color: var(--tk-ink-4); margin-top: 2px; }
 
 /* ── Decks page (dk-*) ── */
 .dk-grid {
@@ -6027,26 +5890,26 @@ textarea.tk-textfield { resize: vertical; line-height: 1.55; }
 }
 
 /* Save dialog — Done state */
-.sv-done {
+.idx-done {
   display: flex; flex-direction: column; align-items: center;
   padding: 40px 32px 36px; text-align: center; gap: 0;
 }
-.sv-done-check {
+.idx-done-check {
   width: 56px; height: 56px; border-radius: 50%;
   background: #2d4438; color: #fff;
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 20px;
 }
-.sv-done-count {
+.idx-done-count {
   font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
   color: var(--tk-ink); margin-bottom: 8px;
 }
-.sv-done-desc {
+.idx-done-desc {
   font-size: 14px; color: var(--tk-ink-3);
   font-style: italic; margin-bottom: 28px;
 }
-.sv-done-desc em { color: var(--tk-ink-2); font-style: italic; }
-.sv-done-actions {
+.idx-done-desc em { color: var(--tk-ink-2); font-style: italic; }
+.idx-done-actions {
   display: flex; gap: 10px; align-items: center;
 }
 

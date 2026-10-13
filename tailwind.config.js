@@ -1,12 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 
 module.exports = {
+  presets: [require("@lukea/sivu/tailwind-preset")],
   darkMode: ["class"],
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
+    './node_modules/@lukea/sivu/dist/**/*.js',
     'node_modules/preline/dist/*.js'
   ],
   prefix: "",
@@ -25,34 +27,7 @@ module.exports = {
         mono:    ['"IBM Plex Mono"', '"SF Mono"', 'Menlo', 'monospace'],
       },
       colors: {
-        /* ── Tokō tokens — use as bg-tk-paper, text-tk-ink-3, border-tk-rule, etc. ── */
-        tk: {
-          paper:         'var(--tk-paper)',
-          'paper-deep':  'var(--tk-paper-deep)',
-          'paper-edge':  'var(--tk-paper-edge)',
-          card:          'var(--tk-card)',
-          'card-hover':  'var(--tk-card-hover)',
-          ink:           'var(--tk-ink)',
-          'ink-2':       'var(--tk-ink-2)',
-          'ink-3':       'var(--tk-ink-3)',
-          'ink-4':       'var(--tk-ink-4)',
-          'ink-5':       'var(--tk-ink-5)',
-          rule:          'var(--tk-rule)',
-          'rule-soft':   'var(--tk-rule-soft)',
-          accent:        'var(--tk-accent)',
-          'accent-deep': 'var(--tk-accent-deep)',
-          'accent-soft': 'var(--tk-accent-soft)',
-          'accent-wash': 'var(--tk-accent-wash)',
-          persimmon:     'var(--tk-persimmon)',
-          'persimmon-soft': 'var(--tk-persimmon-soft)',
-          correct:       'var(--tk-correct)',
-          incorrect:     'var(--tk-incorrect)',
-          'tag-moss':    'var(--tk-tag-moss)',
-          'tag-sky':     'var(--tk-tag-sky)',
-          'tag-clay':    'var(--tk-tag-clay)',
-          'tag-plum':    'var(--tk-tag-plum)',
-          'tag-wheat':   'var(--tk-tag-wheat)',
-        },
+        /* tk-* now comes from the sivu preset. Do not redefine it here. */
 
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
