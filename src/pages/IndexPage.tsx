@@ -774,10 +774,10 @@ const IndexPageContent = () => {
                     <DialogTitle className="sr-only">Save to a deck</DialogTitle>
 
                     {/* Header */}
-                    <div className="sv-modal-head">
+                    <div className="idx-modal-head">
                         <div>
-                            <div className="sv-modal-eyebrow">Save to a deck</div>
-                            <div className="sv-modal-title">
+                            <div className="idx-modal-eyebrow">Save to a deck</div>
+                            <div className="idx-modal-title">
                                 {saveDone ? 'Done' : dialogStep === 'create' ? 'New shelf' : 'Pick a shelf'}
                             </div>
                         </div>
@@ -788,11 +788,11 @@ const IndexPageContent = () => {
 
                     {/* Done confirmation panel */}
                     {saveDone && (
-                        <div className="sv-done">
-                            <div className="sv-done-check"><Check size={22} strokeWidth={2.5} /></div>
-                            <div className="sv-done-count">{saveDone.count} {saveDone.count === 1 ? "word" : "words"} saved</div>
-                            <div className="sv-done-desc">Into <em>{saveDone.deckName}</em>. Ready to study tonight.</div>
-                            <div className="sv-done-actions">
+                        <div className="idx-done">
+                            <div className="idx-done-check"><Check size={22} strokeWidth={2.5} /></div>
+                            <div className="idx-done-count">{saveDone.count} {saveDone.count === 1 ? "word" : "words"} saved</div>
+                            <div className="idx-done-desc">Into <em>{saveDone.deckName}</em>. Ready to study tonight.</div>
+                            <div className="idx-done-actions">
                                 <button className="tk-btn tk-btn-ghost tk-btn-sm" onClick={closeSaveDialog}>Back to sentence</button>
                                 <button className="tk-btn tk-btn-sm" style={{ background: '#2d4438', color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}
                                     onClick={() => { closeSaveDialog(); navigate('/review'); }}>
@@ -804,44 +804,44 @@ const IndexPageContent = () => {
 
                     {!saveDone && <>
                     {/* Step indicator */}
-                    <div className="sv-stepper">
-                        <div className="sv-step" data-active="true">
-                            <span className="sv-step-num">1</span>
+                    <div className="idx-stepper">
+                        <div className="idx-step" data-active="true">
+                            <span className="idx-step-num">1</span>
                             <span>{dialogStep === 'create' ? 'New deck' : 'Deck'}</span>
                         </div>
-                        <ArrowRight size={12} className="sv-step-arrow" />
-                        <div className="sv-step">
-                            <span className="sv-step-num">2</span>
+                        <ArrowRight size={12} className="idx-step-arrow" />
+                        <div className="idx-step">
+                            <span className="idx-step-num">2</span>
                             <span>Review</span>
                         </div>
-                        <ArrowRight size={12} className="sv-step-arrow" />
-                        <div className="sv-step">
-                            <span className="sv-step-num">3</span>
+                        <ArrowRight size={12} className="idx-step-arrow" />
+                        <div className="idx-step">
+                            <span className="idx-step-num">3</span>
                             <span>Save</span>
                         </div>
                     </div>
 
                     {/* Step 0: Deck picker */}
                     {dialogStep === 0 && (
-                        <div className="sv-body" style={{ maxHeight: 360, overflowY: 'auto' }}>
-                            {langDecks.length > 0 && <div className="sv-section-label">{fromLanguage} decks</div>}
+                        <div className="idx-body" style={{ maxHeight: 360, overflowY: 'auto' }}>
+                            {langDecks.length > 0 && <div className="idx-section-label">{fromLanguage} decks</div>}
                             {filteredDecks.length === 0 && (
                                 <p style={{ color: 'var(--tk-ink-3)', fontSize: 14, padding: '8px 0 16px' }}>No decks yet.</p>
                             )}
                             {filteredDecks.map((deck: any, i: number) => (
                                 <React.Fragment key={deck._id}>
                                     {i === langDecks.length && langDecks.length > 0 && filteredDecks.length > langDecks.length && (
-                                        <div className="sv-section-label" style={{ marginTop: 12 }}>Other decks</div>
+                                        <div className="idx-section-label" style={{ marginTop: 12 }}>Other decks</div>
                                     )}
                                     <button
-                                        className="sv-deck-row"
+                                        className="idx-deck-row"
                                         data-selected={selectedDeckId === deck._id ? 'true' : 'false'}
                                         onClick={() => setSelectedDeckId(deck._id)}
                                     >
                                         <DeckProgressRing value={deck.deckPercentage ?? 0} />
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div className="sv-deck-name">{deck.deckName}</div>
-                                            <div className="sv-deck-meta">
+                                            <div className="idx-deck-name">{deck.deckName}</div>
+                                            <div className="idx-deck-meta">
                                                 {deck.cards?.length || 0} cards
                                                 {deck.updatedAt ? ` · ${relativeTime(deck.updatedAt)}` : ''}
                                             </div>
@@ -850,9 +850,9 @@ const IndexPageContent = () => {
                                     </button>
                                 </React.Fragment>
                             ))}
-                            <div className="sv-section-label" style={{ marginTop: 16 }}>Or create</div>
+                            <div className="idx-section-label" style={{ marginTop: 16 }}>Or create</div>
                             <button
-                                className="sv-deck-row"
+                                className="idx-deck-row"
                                 style={{ borderStyle: 'dashed', background: 'transparent' }}
                                 onClick={() => { setDialogStep('create'); setSelectedDeckId(''); }}
                             >
@@ -860,8 +860,8 @@ const IndexPageContent = () => {
                                     <Plus size={14} />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <div className="sv-deck-name" style={{ color: 'var(--tk-ink-2)' }}>New deck…</div>
-                                    <div className="sv-deck-meta">
+                                    <div className="idx-deck-name" style={{ color: 'var(--tk-ink-2)' }}>New deck…</div>
+                                    <div className="idx-deck-meta">
                                         Start a fresh shelf for {(wordsToSave ?? response?.words ?? []).length} word{(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''}
                                     </div>
                                 </div>
@@ -885,10 +885,10 @@ const IndexPageContent = () => {
                         };
                         const removeTag = (t: string) => setD({ tags: d.tags.filter(x => x !== t) });
                         return (
-                            <div className="sv-body sv-create-body">
-                                <div className="sv-create-grid">
+                            <div className="idx-body idx-create-body">
+                                <div className="idx-create-grid">
                                     {/* Left column */}
-                                    <div className="sv-create-main">
+                                    <div className="idx-create-main">
                                         <div className="tk-field">
                                             <div className="tk-field-label">
                                                 <span>Name</span>
@@ -921,16 +921,16 @@ const IndexPageContent = () => {
                                                 <span>Tags</span>
                                                 <small>Up to 4 · helps you find it later</small>
                                             </div>
-                                            <div className="sv-tag-row">
+                                            <div className="idx-tag-row">
                                                 {d.tags.map(t => (
-                                                    <span key={t} className="sv-tag">
+                                                    <span key={t} className="idx-tag">
                                                         #{t}
                                                         <button onClick={() => removeTag(t)} aria-label={`Remove ${t}`}><X size={10} /></button>
                                                     </span>
                                                 ))}
                                                 {d.tags.length < 4 && (
                                                     <input
-                                                        className="sv-tag-input"
+                                                        className="idx-tag-input"
                                                         placeholder={d.tags.length ? '+ tag' : '+ tag (e.g. travel)'}
                                                         value={d.tagInput}
                                                         onChange={e => setD({ tagInput: e.target.value })}
@@ -946,7 +946,7 @@ const IndexPageContent = () => {
                                     </div>
 
                                     {/* Right column */}
-                                    <div className="sv-create-side">
+                                    <div className="idx-create-side">
                                         <div className="tk-field">
                                             <div className="tk-field-label"><span>Level</span><small>Optional</small></div>
                                             <div className="tk-chips" style={{ flexWrap: 'wrap' }}>
@@ -963,32 +963,32 @@ const IndexPageContent = () => {
                                                 <span>Retention goal</span>
                                                 <small>How long should these stick?</small>
                                             </div>
-                                            <div className="sv-goal-list">
+                                            <div className="idx-goal-list">
                                                 {([
                                                     { id: 'seedling',  label: 'Seedling',  sub: 'A few days · just curious' },
                                                     { id: 'sapling',   label: 'Sapling',   sub: 'A few weeks · phrasebook' },
                                                     { id: 'tree',      label: 'Tree',      sub: 'Months · everyday vocabulary' },
                                                     { id: 'heartwood', label: 'Heartwood', sub: 'Years · core fluency' },
                                                 ] as const).map(g => (
-                                                    <button key={g.id} className="sv-goal-row" data-selected={d.goal === g.id}
+                                                    <button key={g.id} className="idx-goal-row" data-selected={d.goal === g.id}
                                                         onClick={() => setD({ goal: g.id })}>
-                                                        <span className="sv-goal-dot" data-goal={g.id} />
-                                                        <span className="sv-goal-text">
-                                                            <span className="sv-goal-label">{g.label}</span>
-                                                            <span className="sv-goal-sub">{g.sub}</span>
+                                                        <span className="idx-goal-dot" data-goal={g.id} />
+                                                        <span className="idx-goal-text">
+                                                            <span className="idx-goal-label">{g.label}</span>
+                                                            <span className="idx-goal-sub">{g.sub}</span>
                                                         </span>
                                                         {d.goal === g.id && <Check size={13} style={{ color: 'var(--tk-accent)', flexShrink: 0 }} />}
                                                     </button>
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="sv-create-preview">
-                                            <div className="sv-section-label" style={{ marginBottom: 6 }}>Preview</div>
-                                            <div className="sv-preview-card">
+                                        <div className="idx-create-preview">
+                                            <div className="idx-section-label" style={{ marginBottom: 6 }}>Preview</div>
+                                            <div className="idx-preview-card">
                                                 <DeckProgressRing value={0} />
                                                 <div style={{ minWidth: 0, flex: 1 }}>
-                                                    <div className="sv-preview-name">{d.name.trim() || suggestName}</div>
-                                                    <div className="sv-preview-meta">
+                                                    <div className="idx-preview-name">{d.name.trim() || suggestName}</div>
+                                                    <div className="idx-preview-meta">
                                                         {wordCount} card{wordCount !== 1 ? 's' : ''}{d.level ? ` · ${d.level}` : ''} · {d.goal}
                                                     </div>
                                                 </div>
@@ -1001,8 +1001,8 @@ const IndexPageContent = () => {
                     })()}
 
                     {/* Footer */}
-                    <div className="sv-footer">
-                        <span className="sv-footer-hint">
+                    <div className="idx-footer">
+                        <span className="idx-footer-hint">
                             {dialogStep === 'create'
                                 ? `→ new shelf · ${(wordsToSave ?? response?.words ?? []).length} card${(wordsToSave ?? response?.words ?? []).length !== 1 ? 's' : ''}`
                                 : selectedDeckId
