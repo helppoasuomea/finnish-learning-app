@@ -17,6 +17,7 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@google/generative-ai": "^0.12.0",
+    "@lukea/sivu": "file:../sivu",
     "@nivo/bar": "^0.87.0",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-avatar": "^1.0.4",
